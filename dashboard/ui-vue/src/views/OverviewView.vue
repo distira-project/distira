@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 import MetricCard from '../components/MetricCard.vue'
 import EfficiencyGauge from '../components/EfficiencyGauge.vue'
@@ -41,17 +42,30 @@ import TvChart from '../components/TvChart.vue'
 
 const metrics = useMetricsStore()
 
-const rawHistory = [14200, 15800, 16100, 17400, 16900, 18100, 17600, 18420]
-const compiledHistory = [4100, 4600, 4400, 5100, 4800, 5300, 5000, 5210]
-const memoryHistory = [3200, 4100, 4800, 5200, 5500, 5800, 5900, 6030]
-const localHistory = [52, 54, 56, 58, 57, 59, 60, 61]
+// Sparklines: direct SSE history arrays (reactive)
+const rawHistory = computed(() => metrics.historyRaw.length ? metrics.historyRaw : [0])
+const compiledHistory = computed(() => metrics.historyCompiled.length ? metrics.historyCompiled : [0])
+const memoryHistory = computed(() => metrics.historyReused.length ? metrics.historyReused : [0])
+const localHistory = computed(() => {
+  const total = metrics.routesLocal + metrics.routesCloud + metrics.routesMidtier
+  if (!total || !metrics.historyRaw.length) return [0]
+  // Derive a local-ratio sparkline from history length (same cardinality)
+  return metrics.historyRaw.map((_: number, i: number) =>
+    Math.round((metrics.routesLocal / Math.max(1, total)) * 100)
+  )
+})
 
-const trendLabels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00']
-const trendSeries = [
-  { name: 'Raw', data: [12400, 14800, 18200, 21600, 19400, 17800, 18420], color: '#ffa940' },
-  { name: 'Compiled', data: [3600, 4200, 5400, 6100, 5600, 5100, 5210], color: 'var(--primary)' },
-  { name: 'Reused', data: [2800, 3400, 4600, 5800, 5200, 5900, 6030], color: 'var(--secondary)' },
-]
+// TvChart: label each history point as #1, #2, …
+const trendLabels = computed(() =>
+  metrics.historyRaw.length
+    ? metrics.historyRaw.map((_: number, i: number) => `#${i + 1}`)
+    : ['—']
+)
+const trendSeries = computed(() => [
+  { name: 'Raw', data: metrics.historyRaw.length ? [...metrics.historyRaw] : [0], color: '#ffa940' },
+  { name: 'Compiled', data: metrics.historyCompiled.length ? [...metrics.historyCompiled] : [0], color: 'var(--primary)' },
+  { name: 'Reused', data: metrics.historyReused.length ? [...metrics.historyReused] : [0], color: 'var(--secondary)' },
+])
 </script>
 
 <style scoped>

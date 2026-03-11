@@ -27,6 +27,30 @@ It sits between clients and LLM providers, optimizing every request.
 └────────────────────────┘
 ```
 
+## Live data flow
+
+```text
+┌─────────────────────┐         POST /v1/compile           ┌──────────────────────────┐
+│   Client (curl,     │ ──────────────────────────────────► │   KATARA Rust Backend    │
+│   VS Code ext,      │                                     │                          │
+│   any AI tool)      │ ◄────── JSON response ───────────── │  compile() → fingerprint │
+└─────────────────────┘                                     │   → cache → compiler     │
+                                                            │   → memory → router      │
+┌─────────────────────┐                                     │                          │
+│   Vue Dashboard     │ ◄── SSE /v1/metrics/stream ──────── │  MetricsCollector (Arc)  │
+│   (Pinia store)     │     text/event-stream               │   - totals cumulés       │
+│                     │     { raw, compiled, reused, ... }   │   - historique 24 pts    │
+│   EventSource API   │     toutes les 2 secondes           │   - compteurs par route  │
+└─────────────────────┘                                     └──────────────────────────┘
+```
+
+**How it works:**
+
+1. Any client sends a `POST /v1/compile` with raw context.
+2. The backend runs the full pipeline: fingerprint → semantic cache → compiler → memory lensing → hybrid router → metrics.
+3. A `MetricsCollector` (shared via `Arc<Mutex>`) accumulates totals, cache hits, provider counters, and a rolling 24-point history.
+4. The Vue dashboard connects once via `EventSource` to `GET /v1/metrics/stream` (SSE) and receives a JSON snapshot every 2 seconds — zero polling, zero WebSocket overhead.
+
 ## Crate responsibilities
 
 | Crate | Role |

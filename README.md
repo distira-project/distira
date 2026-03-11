@@ -55,6 +55,25 @@ Clients / IDE / Agents
   Local / Private / Cloud Providers
 ```
 
+## Live data flow
+
+```text
+┌─────────────────────┐         POST /v1/compile           ┌──────────────────────────┐
+│   Client (curl,     │ ──────────────────────────────────► │   KATARA Rust Backend    │
+│   VS Code ext,      │                                     │                          │
+│   any AI tool)      │ ◄────── JSON response ───────────── │  compile() → fingerprint │
+└─────────────────────┘                                     │   → cache → compiler     │
+                                                            │   → memory → router      │
+┌─────────────────────┐                                     │                          │
+│   Vue Dashboard     │ ◄── SSE /v1/metrics/stream ──────── │  MetricsCollector (Arc)  │
+│   (Pinia store)     │     text/event-stream               │   - cumulative totals    │
+│                     │     { raw, compiled, reused, ... }   │   - 24-point history     │
+│   EventSource API   │     every 2 seconds                 │   - per-provider counts  │
+└─────────────────────┘                                     └──────────────────────────┘
+```
+
+Every `POST /v1/compile` runs the full pipeline (fingerprint → cache → compiler → memory → router → metrics) and feeds a shared `MetricsCollector`. The Vue dashboard auto-connects via SSE and updates in real time — no polling, no WebSocket.
+
 ## Monorepo layout
 
 | Directory | Purpose |

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1584 396">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1422"/>
+      <stop offset="100%" stop-color="#050914"/>
+    </linearGradient>
+    <linearGradient id="k" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#39d3ff"/>
+      <stop offset="100%" stop-color="#9f8bff"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#3ad8ff" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#9f8bff" stop-opacity="0"/>
+    </radialGradient>
+    <symbol id="k-glyph" viewBox="0 0 512 512">
+      <rect x="183" y="118" width="40" height="221"/>
+      <path d="M294 118H336C336 184 314 231 273 260C256 272 240 279 223 282V236C248 231 270 220 286 199C300 181 307 156 307 118Z"/>
+      <rect x="223" y="229" width="73" height="28"/>
+      <path d="M261 257H309L346 340H293Z"/>
+    </symbol>
+  </defs>
+  <rect width="1584" height="396" rx="36" fill="url(#bg)"/>
+  <rect x="44" y="44" width="308" height="308" rx="58" fill="#091226"/>
+  <ellipse cx="198" cy="148" rx="112" ry="78" fill="url(#aura)"/>
+  <use href="#k-glyph" x="44" y="44" width="308" height="308" fill="url(#k)"/>
+  <rect x="58" y="58" width="280" height="280" rx="48" fill="none" stroke="url(#k)" stroke-width="2" opacity="0.22"/>
+  <text x="400" y="203" fill="#eaf0ff" font-family="Space Grotesk, Sora, Segoe UI, sans-serif" font-size="170" font-weight="700" letter-spacing="8">KATARA</text>
+  <text x="404" y="264" fill="#93a1b2" font-family="Space Grotesk, Sora, Segoe UI, sans-serif" font-size="44" font-weight="500">The Sovereign AI Flow Engine</text>
+</svg>

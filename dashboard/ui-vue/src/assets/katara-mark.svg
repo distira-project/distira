@@ -1,10 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
-  <rect width="96" height="96" rx="18" fill="#0b0f14"/>
-  <rect x="42" y="10" width="12" height="12" fill="#39d3ff"/>
-  <rect x="64" y="28" width="12" height="12" fill="#8c6dff"/>
-  <rect x="68" y="50" width="12" height="12" fill="#2cffb3"/>
-  <rect x="50" y="68" width="12" height="12" fill="#8c6dff"/>
-  <rect x="28" y="64" width="12" height="12" fill="#39d3ff"/>
-  <rect x="16" y="42" width="12" height="12" fill="#2cffb3"/>
-  <rect x="22" y="22" width="12" height="12" fill="#8c6dff"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1422"/>
+      <stop offset="100%" stop-color="#050914"/>
+    </linearGradient>
+    <linearGradient id="k" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#39d3ff"/>
+      <stop offset="100%" stop-color="#9f8bff"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="18" fill="url(#bg)"/>
+  <g fill="url(#k)">
+    <rect x="34.3125" y="22.125" width="7.5" height="41.4375"/>
+    <path d="M55.125 22.125H63C63 34.5 58.875 43.3125 51.1875 48.75C48 51 45 52.3125 41.8125 52.875V44.25C46.5 43.3125 50.625 41.25 53.625 37.3125C56.25 33.9375 57.5625 29.25 57.5625 22.125Z"/>
+    <rect x="41.8125" y="42.9375" width="13.6875" height="5.25"/>
+    <path d="M48.9375 48.1875H57.9375L64.875 63.75H54.9375Z"/>
+  </g>
+  <rect x="4" y="4" width="88" height="88" rx="15" fill="none" stroke="url(#k)" stroke-width="1" opacity="0.25"/>
 </svg>

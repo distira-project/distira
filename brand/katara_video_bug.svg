@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="pill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1422" stop-opacity="0.84"/>
+      <stop offset="100%" stop-color="#050914" stop-opacity="0.84"/>
+    </linearGradient>
+    <linearGradient id="k" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#39d3ff"/>
+      <stop offset="100%" stop-color="#9f8bff"/>
+    </linearGradient>
+    <symbol id="k-glyph" viewBox="0 0 512 512">
+      <rect x="183" y="118" width="40" height="221"/>
+      <path d="M294 118H336C336 184 314 231 273 260C256 272 240 279 223 282V236C248 231 270 220 286 199C300 181 307 156 307 118Z"/>
+      <rect x="223" y="229" width="73" height="28"/>
+      <path d="M261 257H309L346 340H293Z"/>
+    </symbol>
+  </defs>
+  <rect x="18" y="18" width="308" height="92" rx="24" fill="url(#pill)"/>
+  <rect x="30" y="30" width="68" height="68" rx="16" fill="#091226"/>
+  <use href="#k-glyph" x="30" y="30" width="68" height="68" fill="url(#k)"/>
+  <text x="118" y="76" fill="#eaf0ff" font-family="Space Grotesk, Sora, Segoe UI, sans-serif" font-size="42" font-weight="700" letter-spacing="2">KATARA</text>
+</svg>

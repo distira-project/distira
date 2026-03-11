@@ -1,14 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120">
-  <rect width="320" height="120" rx="24" fill="#0b0f14"/>
-  <g transform="translate(20,18)">
-    <rect x="42" y="0" width="14" height="14" fill="#39d3ff"/>
-    <rect x="68" y="18" width="14" height="14" fill="#8c6dff"/>
-    <rect x="72" y="44" width="14" height="14" fill="#2cffb3"/>
-    <rect x="54" y="66" width="14" height="14" fill="#8c6dff"/>
-    <rect x="28" y="62" width="14" height="14" fill="#39d3ff"/>
-    <rect x="10" y="40" width="14" height="14" fill="#2cffb3"/>
-    <rect x="14" y="16" width="14" height="14" fill="#8c6dff"/>
-  </g>
-  <text x="120" y="62" fill="#e9eef5" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">KATARA</text>
-  <text x="120" y="88" fill="#93a1b2" font-family="Inter, Arial, sans-serif" font-size="14">The Sovereign AI Flow Engine</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 480">
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1422"/>
+      <stop offset="100%" stop-color="#050914"/>
+    </linearGradient>
+    <linearGradient id="k" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#39d3ff"/>
+      <stop offset="100%" stop-color="#9f8bff"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#3ad8ff" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#9f8bff" stop-opacity="0"/>
+    </radialGradient>
+    <symbol id="k-glyph" viewBox="0 0 512 512">
+      <rect x="183" y="118" width="40" height="221"/>
+      <path d="M294 118H336C336 184 314 231 273 260C256 272 240 279 223 282V236C248 231 270 220 286 199C300 181 307 156 307 118Z"/>
+      <rect x="223" y="229" width="73" height="28"/>
+      <path d="M261 257H309L346 340H293Z"/>
+    </symbol>
+    <symbol id="appicon" viewBox="0 0 512 512">
+      <rect width="512" height="512" rx="96" fill="url(#panel)"/>
+      <ellipse cx="256" cy="184" rx="176" ry="126" fill="url(#aura)"/>
+      <use href="#k-glyph" fill="url(#k)"/>
+      <rect x="24" y="24" width="464" height="464" rx="80" fill="none" stroke="url(#k)" stroke-width="2" opacity="0.20"/>
+    </symbol>
+  </defs>
+  <rect width="1600" height="480" rx="56" fill="url(#panel)"/>
+  <use href="#appicon" x="64" y="64" width="352" height="352"/>
+  <text x="470" y="224" fill="#eaf0ff" font-family="Space Grotesk, Sora, Segoe UI, sans-serif" font-size="164" font-weight="700" letter-spacing="12">KATARA</text>
+  <text x="474" y="300" fill="#93a1b2" font-family="Space Grotesk, Sora, Segoe UI, sans-serif" font-size="44" font-weight="500" letter-spacing="1">The Sovereign AI Flow Engine</text>
 </svg>
