@@ -124,6 +124,34 @@ a {
 .sidebar-footer {
   margin-top: auto;
   padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sse-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.sse-indicator .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  transition: background 0.3s;
+}
+
+.sse-indicator.live .dot {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e80;
+}
+
+.sse-indicator.live {
+  color: #22c55e;
 }
 
 .version-tag {

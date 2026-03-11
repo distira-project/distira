@@ -25,6 +25,9 @@
         <RouterLink :to="{ name: 'benchmarks' }" @click="menuOpen = false"><SvgIcon name="trending-up" :size="18" /> Benchmarks</RouterLink>
       </nav>
       <div class="sidebar-footer">
+        <span class="sse-indicator" :class="{ live: metrics.connected }">
+          <span class="dot" /> {{ metrics.connected ? 'Live' : 'Offline' }}
+        </span>
         <span class="version-tag">v7.0.0</span>
       </div>
     </aside>
@@ -37,6 +40,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import SvgIcon from './components/SvgIcon.vue'
+import { useMetricsStore } from './store/metrics'
 
 const menuOpen = ref(false)
+const metrics = useMetricsStore()
 </script>
