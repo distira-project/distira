@@ -2,6 +2,8 @@
 # KATARA policy configuration
 # Controls data handling, optimization targets, and token limits.
 
+name: katara-policies
+
 terms:
   - license: "AGPL-3.0 WITH Commons-Clause"
   - notice: >

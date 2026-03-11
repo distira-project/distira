@@ -1,5 +1,7 @@
 # KATARA
 
+![KATARA](brand/katara_logo.svg)
+
 > **The Sovereign AI Flow Engine** — compile the smallest useful context before every LLM call.
 
 [![CI](https://github.com/katara-project/katara/actions/workflows/ci.yml/badge.svg)](https://github.com/katara-project/katara/actions/workflows/ci.yml)
@@ -109,6 +111,6 @@ It is not yet a fully production-complete gateway across every provider.
 
 ## License
 
-[AGPL-3.0 + Commons Clause](LICENSE) — Copyright 2024–2026 Christophe Henri Foulon and KATARA contributors.
+[AGPL-3.0 + Commons Clause](LICENSE) — Copyright 2024–2026 Christophe Freijanes and KATARA contributors.
 
 Free for personal, educational, and non-commercial use. Commercial redistribution or resale requires explicit written authorization from the original author.
