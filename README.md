@@ -4,7 +4,7 @@
 
 > **The Sovereign AI Flow Engine** — compile the smallest useful context before every LLM call.
 
-[![CI](https://github.com/katara-project/katara/actions/workflows/ci.yml/badge.svg)](https://github.com/katara-project/katara/actions/workflows/ci.yml)
+[![CI](https://github.com/katara-project/katara/actions/workflows/ci.yml/badge.svg?branch=wip-chf)](https://github.com/katara-project/katara/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20Commons%20Clause-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-7.0.0-brightgreen.svg)](VERSION)
 

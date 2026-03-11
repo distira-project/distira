@@ -17,20 +17,29 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  margin: 0;
 }
+
+h1, h2, h3, h4 { font-weight: 600; }
 
 body {
   margin: 0;
   background:
     radial-gradient(circle at top right, rgba(140, 109, 255, 0.12), transparent 20%),
+    radial-gradient(circle at bottom left, rgba(57, 211, 255, 0.06), transparent 30%),
     var(--bg);
   color: var(--text);
   font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+html { scroll-behavior: smooth; }
 
 a {
   color: var(--text);
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 /* ── Shell Layout ────────────────────────────────────── */
@@ -47,24 +56,37 @@ a {
   background: rgba(12, 16, 22, 0.88);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   margin-top: 28px;
 }
 
 .sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
+  transition: background 0.2s, transform 0.15s;
+  font-size: 0.95rem;
+}
+
+.sidebar nav a:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar nav a.router-link-active {
   background: linear-gradient(90deg, rgba(57, 211, 255, 0.16), rgba(140, 109, 255, 0.16));
 }
+
+.nav-icon { font-size: 1.15rem; }
 
 .brand-wrap {
   display: flex;
@@ -72,15 +94,57 @@ a {
   align-items: center;
 }
 
-.brand-mark {
+.brand-icon {
   width: 42px;
   height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--bg);
+  flex-shrink: 0;
+}
+
+.brand-wrap h1 { margin: 0; font-size: 1.2rem; }
+.brand-sub { margin: 0; font-size: 0.75rem; color: var(--muted); }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.version-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.5px;
 }
 
 /* ── Content ─────────────────────────────────────────── */
 
 .content {
   padding: 28px;
+  overflow-y: auto;
+}
+
+/* ── View Header ─────────────────────────────────────── */
+
+.view-header {
+  margin-bottom: 24px;
+}
+
+.view-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.view-header p {
+  margin: 0;
 }
 
 /* ── Card ────────────────────────────────────────────── */
@@ -141,17 +205,6 @@ a {
   border-radius: 999px;
   display: grid;
   place-items: center;
-}
-
-.gauge-ring span {
-  width: 136px;
-  height: 136px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: var(--bg);
-  font-size: 2.4rem;
-  font-weight: 700;
 }
 
 /* ── Flow Visualizer ─────────────────────────────────── */
