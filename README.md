@@ -58,7 +58,7 @@ Clients / IDE / Agents
 ## Live data flow
 
 ```text
-┌─────────────────────┐         POST /v1/compile           ┌──────────────────────────┐
+┌─────────────────────┐         POST /v1/compile            ┌──────────────────────────┐
 │   Client (curl,     │ ──────────────────────────────────► │   KATARA Rust Backend    │
 │   VS Code ext,      │                                     │                          │
 │   any AI tool)      │ ◄────── JSON response ───────────── │  compile() → fingerprint │
@@ -67,7 +67,7 @@ Clients / IDE / Agents
 ┌─────────────────────┐                                     │                          │
 │   Vue Dashboard     │ ◄── SSE /v1/metrics/stream ──────── │  MetricsCollector (Arc)  │
 │   (Pinia store)     │     text/event-stream               │   - cumulative totals    │
-│                     │     { raw, compiled, reused, ... }   │   - 24-point history     │
+│                     │     { raw, compiled, reused, ... }  │   - 24-point history     │
 │   EventSource API   │     every 2 seconds                 │   - per-provider counts  │
 └─────────────────────┘                                     └──────────────────────────┘
 ```
