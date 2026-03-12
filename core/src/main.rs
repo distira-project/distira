@@ -115,7 +115,16 @@ impl MetricsCollector {
     }
 
     fn record(&mut self, e: RecordEntry<'_>) {
-        let RecordEntry { raw, compiled, reused, provider, model, cache_hit, cache_saved_tokens, intent } = e;
+        let RecordEntry {
+            raw,
+            compiled,
+            reused,
+            provider,
+            model,
+            cache_hit,
+            cache_saved_tokens,
+            intent,
+        } = e;
         let s = &mut self.snapshot;
         s.total_requests += 1;
         s.raw_tokens += raw;
@@ -205,7 +214,8 @@ impl MetricsCollector {
         } else {
             (model_avoided as f32 / model_entry.raw_tokens as f32) * 100.0
         };
-        let model_total_routes = model_entry.sovereign_requests + model_entry.non_sovereign_requests;
+        let model_total_routes =
+            model_entry.sovereign_requests + model_entry.non_sovereign_requests;
         model_entry.sovereign_ratio = if model_total_routes == 0 {
             0.0
         } else {
