@@ -169,7 +169,7 @@ fn load_config() -> router::RouterConfig {
     router::RouterConfig::defaults()
 }
 
-/// ── Handlers ──────────────────────────────────────────
+// -- Handlers ---------------------------------------------------
 
 async fn health() -> Json<serde_json::Value> {
     Json(json!({ "status": "ok", "service": "katara-core", "version": "7.0.0" }))
