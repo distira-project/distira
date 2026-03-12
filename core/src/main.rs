@@ -75,6 +75,17 @@ struct CachedChatResponse {
     completion_tokens: Option<usize>,
 }
 
+struct RecordEntry<'a> {
+    raw: usize,
+    compiled: usize,
+    reused: usize,
+    provider: &'a str,
+    model: &'a str,
+    cache_hit: bool,
+    cache_saved_tokens: usize,
+    intent: &'a str,
+}
+
 impl MetricsCollector {
     fn new() -> Self {
         Self {
@@ -103,17 +114,8 @@ impl MetricsCollector {
         }
     }
 
-    fn record(
-        &mut self,
-        raw: usize,
-        compiled: usize,
-        reused: usize,
-        provider: &str,
-        model: &str,
-        cache_hit: bool,
-        cache_saved_tokens: usize,
-        intent: &str,
-    ) {
+    fn record(&mut self, e: RecordEntry<'_>) {
+        let RecordEntry { raw, compiled, reused, provider, model, cache_hit, cache_saved_tokens, intent } = e;
         let s = &mut self.snapshot;
         s.total_requests += 1;
         s.raw_tokens += raw;
@@ -305,16 +307,16 @@ async fn compile(
     if !cache_hit {
         collector.sem_cache.insert(fp, result.summary.clone());
     }
-    collector.record(
-        result.raw_tokens_estimate,
-        result.compiled_tokens_estimate,
-        mem.reused_tokens,
-        &route.provider,
-        &route.model,
+    collector.record(RecordEntry {
+        raw: result.raw_tokens_estimate,
+        compiled: result.compiled_tokens_estimate,
+        reused: mem.reused_tokens,
+        provider: &route.provider,
+        model: &route.model,
         cache_hit,
-        0,
-        &result.intent,
-    );
+        cache_saved_tokens: 0,
+        intent: &result.intent,
+    });
     drop(collector);
 
     Json(json!({
@@ -379,16 +381,16 @@ async fn chat_completions(
             let saved_tokens = cached.prompt_tokens.unwrap_or(result.raw_tokens_estimate)
                 + cached.completion_tokens.unwrap_or(0);
 
-            collector.record(
-                result.raw_tokens_estimate,
-                result.compiled_tokens_estimate,
-                mem.reused_tokens,
-                &route.provider,
-                &model,
-                true,
-                saved_tokens,
-                &result.intent,
-            );
+            collector.record(RecordEntry {
+                raw: result.raw_tokens_estimate,
+                compiled: result.compiled_tokens_estimate,
+                reused: mem.reused_tokens,
+                provider: &route.provider,
+                model: &model,
+                cache_hit: true,
+                cache_saved_tokens: saved_tokens,
+                intent: &result.intent,
+            });
 
             return Json(json!({
                 "id": format!("katara-{fp}"),
@@ -440,16 +442,16 @@ async fn chat_completions(
                         completion_tokens: fwd.completion_tokens,
                     },
                 );
-                collector.record(
-                    result.raw_tokens_estimate,
-                    result.compiled_tokens_estimate,
-                    mem.reused_tokens,
-                    &route.provider,
-                    &model,
-                    false,
-                    0,
-                    &result.intent,
-                );
+                collector.record(RecordEntry {
+                    raw: result.raw_tokens_estimate,
+                    compiled: result.compiled_tokens_estimate,
+                    reused: mem.reused_tokens,
+                    provider: &route.provider,
+                    model: &model,
+                    cache_hit: false,
+                    cache_saved_tokens: 0,
+                    intent: &result.intent,
+                });
             }
 
             // Return OpenAI-compatible format
