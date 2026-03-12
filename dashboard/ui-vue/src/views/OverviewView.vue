@@ -19,6 +19,9 @@
       <MetricCard label="Local Routing" :value="metrics.localRatio + '%'" hint="Requests kept local" accent="accent">
         <SparklineChart :data="localHistory" color="var(--accent)" :height="40" />
       </MetricCard>
+      <MetricCard label="Cache Saved Tokens" :value="metrics.cacheSavedTokens.toLocaleString()" hint="Provider tokens avoided via cached responses" accent="primary">
+        <SparklineChart :data="cacheSavedHistory" color="var(--primary)" :height="40" />
+      </MetricCard>
     </div>
     <div class="two-col">
       <EfficiencyGauge :score="metrics.efficiencyScore" />
@@ -87,6 +90,13 @@ const localHistory = computed(() => {
   return metrics.historyRaw.map((_: number, i: number) =>
     Math.round((metrics.routesLocal / Math.max(1, total)) * 100)
   )
+})
+
+const cacheSavedHistory = computed(() => {
+  if (!metrics.historyRaw.length) return [0]
+  const steps = metrics.historyRaw.length
+  const current = metrics.cacheSavedTokens
+  return Array.from({ length: steps }, (_, idx) => Math.round((current * (idx + 1)) / steps))
 })
 
 // TvChart: label each history point as #1, #2, …

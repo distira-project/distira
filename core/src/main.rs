@@ -6,6 +6,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::HashMap;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -48,6 +49,7 @@ struct MetricsSnapshot {
     local_ratio: f32,
     cache_hits: u64,
     cache_misses: u64,
+    cache_saved_tokens: usize,
     history_raw: Vec<usize>,
     history_compiled: Vec<usize>,
     history_reused: Vec<usize>,
@@ -62,6 +64,15 @@ struct MetricsSnapshot {
 struct MetricsCollector {
     snapshot: MetricsSnapshot,
     sem_cache: cache::SemanticCache,
+    chat_cache: HashMap<String, CachedChatResponse>,
+}
+
+#[derive(Debug, Clone)]
+struct CachedChatResponse {
+    content: String,
+    model: String,
+    prompt_tokens: Option<usize>,
+    completion_tokens: Option<usize>,
 }
 
 impl MetricsCollector {
@@ -77,6 +88,7 @@ impl MetricsCollector {
                 local_ratio: 0.0,
                 cache_hits: 0,
                 cache_misses: 0,
+                cache_saved_tokens: 0,
                 history_raw: Vec::with_capacity(24),
                 history_compiled: Vec::with_capacity(24),
                 history_reused: Vec::with_capacity(24),
@@ -87,6 +99,7 @@ impl MetricsCollector {
                 model_stats: std::collections::HashMap::new(),
             },
             sem_cache: cache::SemanticCache::new(),
+            chat_cache: HashMap::new(),
         }
     }
 
@@ -98,6 +111,7 @@ impl MetricsCollector {
         provider: &str,
         model: &str,
         cache_hit: bool,
+        cache_saved_tokens: usize,
         intent: &str,
     ) {
         let s = &mut self.snapshot;
@@ -111,6 +125,7 @@ impl MetricsCollector {
         } else {
             s.cache_misses += 1;
         }
+        s.cache_saved_tokens += cache_saved_tokens;
 
         // Classify deployment type from provider name
         if provider.contains("local") || provider.contains("ollama") {
@@ -297,6 +312,7 @@ async fn compile(
         &route.provider,
         &route.model,
         cache_hit,
+        0,
         &result.intent,
     );
     drop(collector);
@@ -354,24 +370,55 @@ async fn chat_completions(
         mem.reused_tokens,
     );
 
-    // 2. Cache check — lock, update, drop before any .await
-    let cache_hit;
+    let cache_key = format!("{}::{}::{}", fp, route.provider, model);
+
+    // 2. Chat response cache short-circuit — no provider call on hit
     {
         let mut collector = state.collector.lock().unwrap();
-        cache_hit = collector.sem_cache.get(fp).is_some();
-        if !cache_hit {
-            collector.sem_cache.insert(fp, result.summary.clone());
+        if let Some(cached) = collector.chat_cache.get(&cache_key).cloned() {
+            let saved_tokens = cached.prompt_tokens.unwrap_or(result.raw_tokens_estimate)
+                + cached.completion_tokens.unwrap_or(0);
+
+            collector.record(
+                result.raw_tokens_estimate,
+                result.compiled_tokens_estimate,
+                mem.reused_tokens,
+                &route.provider,
+                &model,
+                true,
+                saved_tokens,
+                &result.intent,
+            );
+
+            return Json(json!({
+                "id": format!("katara-{fp}"),
+                "object": "chat.completion",
+                "model": cached.model,
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": cached.content
+                    },
+                    "finish_reason": "stop"
+                }],
+                "usage": {
+                    "prompt_tokens": cached.prompt_tokens,
+                    "completion_tokens": cached.completion_tokens
+                },
+                "katara": {
+                    "provider": route.provider,
+                    "intent": result.intent,
+                    "raw_tokens": result.raw_tokens_estimate,
+                    "compiled_tokens": result.compiled_tokens_estimate,
+                    "cache_hit": true,
+                    "cache_saved_tokens": saved_tokens,
+                    "cached_response": true,
+                    "token_avoidance_ratio": efficiency.token_avoidance_ratio
+                }
+            }));
         }
-        collector.record(
-            result.raw_tokens_estimate,
-            result.compiled_tokens_estimate,
-            mem.reused_tokens,
-            &route.provider,
-            &model,
-            cache_hit,
-            &result.intent,
-        );
-    } // MutexGuard dropped here, before .await
+    }
 
     // 3. Resolve API key from env
     let api_key = route
@@ -382,6 +429,29 @@ async fn chat_completions(
     // 4. Forward to LLM provider
     match adapters::forward(&route.base_url, &model, &raw, api_key.as_deref()).await {
         Ok(fwd) => {
+            {
+                let mut collector = state.collector.lock().unwrap();
+                collector.chat_cache.insert(
+                    cache_key,
+                    CachedChatResponse {
+                        content: fwd.content.clone(),
+                        model: fwd.model.clone(),
+                        prompt_tokens: fwd.prompt_tokens,
+                        completion_tokens: fwd.completion_tokens,
+                    },
+                );
+                collector.record(
+                    result.raw_tokens_estimate,
+                    result.compiled_tokens_estimate,
+                    mem.reused_tokens,
+                    &route.provider,
+                    &model,
+                    false,
+                    0,
+                    &result.intent,
+                );
+            }
+
             // Return OpenAI-compatible format
             Json(json!({
                 "id": format!("katara-{fp}"),
@@ -404,7 +474,9 @@ async fn chat_completions(
                     "intent": result.intent,
                     "raw_tokens": result.raw_tokens_estimate,
                     "compiled_tokens": result.compiled_tokens_estimate,
-                    "cache_hit": cache_hit,
+                    "cache_hit": false,
+                    "cache_saved_tokens": 0,
+                    "cached_response": false,
                     "token_avoidance_ratio": efficiency.token_avoidance_ratio
                 }
             }))

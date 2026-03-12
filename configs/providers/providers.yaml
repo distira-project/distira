@@ -47,10 +47,10 @@ providers:
     api_key_env: MISTRAL_API_KEY
     description: Mistral OCR 2512 cloud endpoint
 
-  # openai-cloud:
-  #   type: openai-compatible
-  #   base_url: https://api.openai.com/v1
-  #   model: gpt-4o-mini
-  #   deployment: cloud
-  #   api_key_env: OPENAI_API_KEY
-  #   description: OpenAI GPT-4o-mini cloud
+  openai-cloud:
+    type: openai-compatible
+    base_url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    deployment: cloud
+    api_key_env: OPENAI_API_KEY
+    description: OpenAI GPT-4o-mini cloud

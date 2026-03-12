@@ -7,7 +7,7 @@
 
 routing:
   strategy: hybrid
-  default_provider: ollama-llama3
+  default_provider: openai-cloud
   fallback_provider: ollama-llama3
   sensitive_override: ollama-llama3       # sensitive data NEVER leaves local
 
@@ -16,9 +16,9 @@ routing:
     review: ollama-qwen2.5-coder
     # ── Debug / analysis → local Mistral 7B ─────────────
     debug: ollama-mistral
-    # ── Summarization → fast local Llama 3 ──────────────
-    summarize: ollama-llama3
+    # ── Summarization → OpenAI cloud (for validation) ───
+    summarize: openai-cloud
     # ── OCR → cloud Mistral OCR (best quality) ──────────
     ocr: mistral-ocr-cloud
-    # ── General → local Llama 3 (sovereign default) ─────
-    general: ollama-llama3
+    # ── General → OpenAI cloud (default interactive mode) ─
+    general: openai-cloud

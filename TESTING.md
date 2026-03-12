@@ -263,7 +263,7 @@ If `@katara` does not appear, check:
 
 ### MCP Test 1 — List providers
 
-```
+```md
 @katara list all configured providers
 ```
 
@@ -273,7 +273,7 @@ If `@katara` does not appear, check:
 
 ### MCP Test 2 — Compile context
 
-```
+```md
 @katara compile this context: debug an error in the tokio runtime scheduler
 ```
 
@@ -283,7 +283,7 @@ If `@katara` does not appear, check:
 
 ### MCP Test 3 — Metrics after compile
 
-```
+```md
 @katara show current metrics
 ```
 
@@ -293,7 +293,7 @@ If `@katara` does not appear, check:
 
 ### MCP Test 4 — Chat (requires Ollama running with llama3:latest)
 
-```
+```md
 @katara what is the difference between Arc and Rc in Rust?
 ```
 
@@ -305,7 +305,7 @@ If Ollama is not running, you will see an error. Start it with `ollama serve`.
 
 ### MCP Test 5 — Sensitive mode
 
-```
+```md
 @katara explain what a JWT token is — treat this as sensitive
 ```
 
@@ -391,7 +391,7 @@ Run it:
 
 Expected output:
 
-```
+```md
 [PASS] Health check
 [PASS] Providers list
 [PASS] Compile (debug)

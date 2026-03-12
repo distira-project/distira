@@ -30,6 +30,7 @@ export interface MetricsSnapshot {
   local_ratio: number
   cache_hits: number
   cache_misses: number
+  cache_saved_tokens: number
   history_raw: number[]
   history_compiled: number[]
   history_reused: number[]
@@ -53,6 +54,7 @@ export const useMetricsStore = defineStore('metrics', () => {
   const totalRequests = ref(0)
   const cacheHits = ref(0)
   const cacheMisses = ref(0)
+  const cacheSavedTokens = ref(0)
   const historyRaw = ref<number[]>([])
   const historyCompiled = ref<number[]>([])
   const historyReused = ref<number[]>([])
@@ -82,6 +84,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     totalRequests.value = s.total_requests
     cacheHits.value = s.cache_hits
     cacheMisses.value = s.cache_misses
+    cacheSavedTokens.value = s.cache_saved_tokens ?? 0
     historyRaw.value = s.history_raw
     historyCompiled.value = s.history_compiled
     historyReused.value = s.history_reused
@@ -133,6 +136,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     totalRequests,
     cacheHits,
     cacheMisses,
+    cacheSavedTokens,
     cacheHitRatio,
     historyRaw,
     historyCompiled,
