@@ -44,25 +44,33 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 import SvgIcon from './SvgIcon.vue'
 
 const metrics = useMetricsStore()
 
-const stages = [
+const stages = computed(() => [
   { id: 'request', icon: 'inbox', label: 'Request', metric: `${metrics.rawTokens.toLocaleString()} tok`, variant: 'default' },
   { id: 'fingerprint', icon: 'fingerprint', label: 'Fingerprint', metric: 'SHA-256', variant: 'default' },
-  { id: 'cache', icon: 'zap', label: 'Cache', metric: '42% hit', variant: 'accent' },
+  { id: 'cache', icon: 'zap', label: 'Cache', metric: `${metrics.cacheHitRatio}% hit`, variant: 'accent' },
   { id: 'compiler', icon: 'wrench', label: 'Compiler', metric: `${metrics.compiledTokens.toLocaleString()} tok`, variant: 'primary' },
   { id: 'memory', icon: 'brain', label: 'Memory Lens', metric: `${metrics.memoryReusedTokens.toLocaleString()} reused`, variant: 'secondary' },
   { id: 'router', icon: 'shield', label: 'Router', metric: `${metrics.localRatio}% local`, variant: 'good' },
-]
+])
 
-const branches = [
-  { provider: 'Ollama Local', icon: 'home', tag: 'Sovereign', ratio: metrics.localRatio, variant: 'local' },
-  { provider: 'OpenAI Compatible', icon: 'cloud', tag: 'Cloud', ratio: Math.round(metrics.cloudRatio * 0.7), variant: 'cloud' },
-  { provider: 'Mistral Cloud', icon: 'globe', tag: 'Mid-tier', ratio: Math.round(metrics.cloudRatio * 0.3), variant: 'cloud' },
-]
+const branches = computed(() => {
+  const total = Math.max(1, metrics.routesLocal + metrics.routesCloud + metrics.routesMidtier)
+  const localPct = Math.round((metrics.routesLocal / total) * 100)
+  const cloudPct = Math.round((metrics.routesCloud / total) * 100)
+  const midPct = Math.round((metrics.routesMidtier / total) * 100)
+
+  return [
+    { provider: 'Ollama Local', icon: 'home', tag: `${metrics.routesLocal} req`, ratio: localPct, variant: 'local' },
+    { provider: 'Cloud Providers', icon: 'cloud', tag: `${metrics.routesCloud} req`, ratio: cloudPct, variant: 'cloud' },
+    { provider: 'Mid-tier Providers', icon: 'globe', tag: `${metrics.routesMidtier} req`, ratio: midPct, variant: 'midtier' },
+  ]
+})
 </script>
 
 <style scoped>
@@ -173,6 +181,7 @@ const branches = [
 }
 .route-branch.local .branch-bar { background: var(--accent); }
 .route-branch.cloud .branch-bar { background: var(--primary); }
+.route-branch.midtier .branch-bar { background: var(--secondary); }
 .branch-content {
   position: relative;
   display: flex;
@@ -193,6 +202,7 @@ const branches = [
 }
 .route-branch.local .branch-tag { background: rgba(44, 255, 179, 0.15); color: var(--accent); }
 .route-branch.cloud .branch-tag { background: rgba(57, 211, 255, 0.15); color: var(--primary); }
+.route-branch.midtier .branch-tag { background: rgba(140, 109, 255, 0.15); color: var(--secondary); }
 .branch-pct { font-size: 1.1rem; font-weight: 700; min-width: 48px; text-align: right; }
 
 @keyframes pulse {

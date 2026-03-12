@@ -30,7 +30,7 @@ It sits between clients and LLM providers, optimizing every request.
 ## Live data flow
 
 ```text
-┌─────────────────────┐         POST /v1/compile           ┌──────────────────────────┐
+┌─────────────────────┐         POST /v1/compile            ┌──────────────────────────┐
 │   Client (curl,     │ ──────────────────────────────────► │   KATARA Rust Backend    │
 │   VS Code ext,      │                                     │                          │
 │   any AI tool)      │ ◄────── JSON response ───────────── │  compile() → fingerprint │
@@ -38,9 +38,9 @@ It sits between clients and LLM providers, optimizing every request.
                                                             │   → memory → router      │
 ┌─────────────────────┐                                     │                          │
 │   Vue Dashboard     │ ◄── SSE /v1/metrics/stream ──────── │  MetricsCollector (Arc)  │
-│   (Pinia store)     │     text/event-stream               │   - totals cumulés       │
-│                     │     { raw, compiled, reused, ... }   │   - historique 24 pts    │
-│   EventSource API   │     toutes les 2 secondes           │   - compteurs par route  │
+│   (Pinia store)     │     text/event-stream               │   - cumulative totals    │
+│                     │     { raw, compiled, reused, ... }  │   - 24-point history     │
+│   EventSource API   │     every 2 seconds                 │   - per-route counters   │
 └─────────────────────┘                                     └──────────────────────────┘
 ```
 
@@ -69,9 +69,9 @@ It sits between clients and LLM providers, optimizing every request.
 KATARA exposes itself as an MCP (Model Context Protocol) tool server for IDE agents like VS Code Copilot Chat.
 
 ```text
-┌──────────────────────┐     stdio (JSON-RPC 2.0)     ┌─────────────────────────┐
+┌──────────────────────┐     stdio (JSON-RPC 2.0)      ┌─────────────────────────┐
 │  VS Code Copilot     │ ────────────────────────────► │  mcp/katara-server.mjs  │
-│  Chat (@katara)      │ ◄──────────────────────────── │  Content-Length framing  │
+│  Chat (@katara)      │ ◄──────────────────────────── │  Content-Length framing │
 └──────────────────────┘                               └──────────┬──────────────┘
                                                                   │ HTTP
                                                        ┌──────────▼──────────────┐

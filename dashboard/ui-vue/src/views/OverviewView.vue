@@ -28,6 +28,40 @@
       <h3>Token Trends (24h)</h3>
       <TvChart :series="trendSeries" :labels="trendLabels" :height="220" />
     </section>
+
+    <section class="card model-efficiency-section">
+      <h3>Live AI Efficiency by Model</h3>
+      <p class="muted">Per-model efficiency score with Sovereign Routing visibility.</p>
+      <div class="model-table-wrap">
+        <table class="model-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Provider</th>
+              <th>Requests</th>
+              <th>Efficiency</th>
+              <th>Sovereign</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="entry in modelRows" :key="entry.key">
+              <td>{{ entry.model }}</td>
+              <td>{{ entry.provider }}</td>
+              <td>{{ entry.requests }}</td>
+              <td>
+                <strong>{{ entry.efficiency }}%</strong>
+              </td>
+              <td>
+                <span class="sovereign-pill" :class="entry.sovereignClass">{{ entry.sovereignLabel }}</span>
+              </td>
+            </tr>
+            <tr v-if="!modelRows.length">
+              <td colspan="5" class="muted">No model data yet. Send a few requests to populate live stats.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -66,6 +100,23 @@ const trendSeries = computed(() => [
   { name: 'Compiled', data: metrics.historyCompiled.length ? [...metrics.historyCompiled] : [0], color: 'var(--primary)' },
   { name: 'Reused', data: metrics.historyReused.length ? [...metrics.historyReused] : [0], color: 'var(--secondary)' },
 ])
+
+const modelRows = computed(() => {
+  return Object.entries(metrics.modelStats)
+    .map(([key, stat]) => {
+      const sovereignRatio = Math.round(stat.sovereign_ratio ?? 0)
+      return {
+        key,
+        model: stat.model,
+        provider: stat.provider,
+        requests: stat.requests,
+        efficiency: Math.round(stat.efficiency_score ?? 0),
+        sovereignLabel: sovereignRatio >= 100 ? 'Sovereign' : `${sovereignRatio}% sovereign`,
+        sovereignClass: sovereignRatio >= 100 ? 'sovereign' : 'mixed',
+      }
+    })
+    .sort((a, b) => b.requests - a.requests)
+})
 </script>
 
 <style scoped>
@@ -75,5 +126,58 @@ const trendSeries = computed(() => [
 .chart-section h3 {
   margin: 0 0 16px;
   font-size: 1rem;
+}
+
+.model-efficiency-section {
+  margin-top: 20px;
+}
+
+.model-efficiency-section h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.model-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.model-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.model-table th,
+.model-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.88rem;
+}
+
+.model-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sovereign-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.sovereign-pill.sovereign {
+  background: rgba(44, 255, 179, 0.15);
+  color: var(--accent);
+}
+
+.sovereign-pill.mixed {
+  background: rgba(255, 169, 64, 0.15);
+  color: #ffa940;
 }
 </style>

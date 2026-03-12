@@ -27,24 +27,37 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{ score: number }>()
 
 const displayScore = ref(0)
+let animationTimer: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-  let current = 0
-  const step = Math.ceil(props.score / 40)
-  const interval = setInterval(() => {
-    current += step
-    if (current >= props.score) {
-      current = props.score
-      clearInterval(interval)
+watch(
+  () => props.score,
+  (next) => {
+    if (animationTimer) {
+      clearInterval(animationTimer)
+      animationTimer = null
     }
-    displayScore.value = current
-  }, 25)
-})
+    const target = Math.max(0, Math.round(next))
+    const direction = target >= displayScore.value ? 1 : -1
+    const delta = Math.abs(target - displayScore.value)
+    const step = Math.max(1, Math.ceil(delta / 20))
+
+    animationTimer = setInterval(() => {
+      const candidate = displayScore.value + direction * step
+      const reached = direction > 0 ? candidate >= target : candidate <= target
+      displayScore.value = reached ? target : candidate
+      if (reached && animationTimer) {
+        clearInterval(animationTimer)
+        animationTimer = null
+      }
+    }, 25)
+  },
+  { immediate: true }
+)
 
 const gaugeStyle = computed(() => {
   const pct = displayScore.value

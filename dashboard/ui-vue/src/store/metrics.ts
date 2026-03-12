@@ -7,6 +7,19 @@ export interface IntentStat {
   compiled_tokens: number
 }
 
+export interface ModelStat {
+  model: string
+  provider: string
+  requests: number
+  raw_tokens: number
+  compiled_tokens: number
+  memory_reused_tokens: number
+  efficiency_score: number
+  sovereign_requests: number
+  non_sovereign_requests: number
+  sovereign_ratio: number
+}
+
 export interface MetricsSnapshot {
   ts: number
   total_requests: number
@@ -24,6 +37,7 @@ export interface MetricsSnapshot {
   routes_cloud: number
   routes_midtier: number
   intent_stats: Record<string, IntentStat>
+  model_stats: Record<string, ModelStat>
 }
 
 const SSE_URL = 'http://localhost:8080/v1/metrics/stream'
@@ -48,6 +62,7 @@ export const useMetricsStore = defineStore('metrics', () => {
   const connected = ref(false)
   const lastTs = ref(0)
   const intentStats = ref<Record<string, IntentStat>>({})
+  const modelStats = ref<Record<string, ModelStat>>({})
 
   const cacheHitRatio = computed(() => {
     const total = cacheHits.value + cacheMisses.value
@@ -74,6 +89,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     routesCloud.value = s.routes_cloud
     routesMidtier.value = s.routes_midtier
     intentStats.value = s.intent_stats ?? {}
+    modelStats.value = s.model_stats ?? {}
     lastTs.value = s.ts
   }
 
@@ -127,6 +143,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     connected,
     lastTs,
     intentStats,
+    modelStats,
     connect,
     disconnect,
   }

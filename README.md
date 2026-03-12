@@ -141,12 +141,6 @@ cp .env.example .env
 
 See `.env.example` for the expected variables.
 
-### Google Drive users
-
-If your workspace lives on Google Drive, the Rust `target/` folder will cause file-locking errors.
-The included `.cargo/config.toml` redirects build artifacts to a local path (`C:/katara-target`).
-No manual action needed — `cargo build` and `cargo run` will use it automatically.
-
 ## VS Code Agent Integration
 
 KATARA ships with a built-in MCP (Model Context Protocol) server.
@@ -167,6 +161,45 @@ The MCP server uses `@modelcontextprotocol/sdk` v1.27.1 with stdio transport.
 Dependencies are installed in `mcp/node_modules/` — run `npm install` inside `mcp/` if pulling fresh.
 
 See [INSTALL.md](INSTALL.md#vs-code-agent-mcp) for setup instructions and [TESTING.md](TESTING.md#mcp-agent-tests-vs-code) for validation steps.
+
+## Workflow Schema (MCP -> Katara Agent -> Katara App)
+
+```text
+┌──────────────────────────────┐
+│ VS Code Copilot Chat         │
+│ (user prompt: @katara ...)   │
+└──────────────┬───────────────┘
+               │
+               │ MCP stdio (JSON-RPC 2.0)
+               ▼
+┌──────────────────────────────┐
+│ Katara MCP Server            │
+│ mcp/katara-server.mjs        │
+│ - katara_compile             │
+│ - katara_chat                │
+│ - katara_metrics             │
+│ - katara_providers           │
+└──────────────┬───────────────┘
+               │
+               │ HTTP (localhost:8080)
+               ▼
+┌──────────────────────────────┐
+│ Katara App (Rust backend)    │
+│ core + compiler + memory     │
+│ cache + router + metrics     │
+│ /v1/compile                  │
+│ /v1/chat/completions         │
+│ /v1/metrics                  │
+│ /v1/providers                │
+└──────────────┬───────────────┘
+               │
+               │ Routed request (policy + intent)
+               ▼
+┌──────────────────────────────┐
+│ LLM Providers                │
+│ local / private / cloud      │
+└──────────────────────────────┘
+```
 
 ## Version
 

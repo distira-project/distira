@@ -24,6 +24,20 @@ struct IntentStats {
 }
 
 #[derive(Debug, Clone, Serialize)]
+struct ModelStats {
+    model: String,
+    provider: String,
+    requests: u64,
+    raw_tokens: usize,
+    compiled_tokens: usize,
+    memory_reused_tokens: usize,
+    efficiency_score: f32,
+    sovereign_requests: u64,
+    non_sovereign_requests: u64,
+    sovereign_ratio: f32,
+}
+
+#[derive(Debug, Clone, Serialize)]
 struct MetricsSnapshot {
     ts: u64,
     total_requests: u64,
@@ -41,6 +55,7 @@ struct MetricsSnapshot {
     routes_cloud: u64,
     routes_midtier: u64,
     intent_stats: std::collections::HashMap<String, IntentStats>,
+    model_stats: std::collections::HashMap<String, ModelStats>,
 }
 
 #[derive(Debug)]
@@ -69,6 +84,7 @@ impl MetricsCollector {
                 routes_cloud: 0,
                 routes_midtier: 0,
                 intent_stats: std::collections::HashMap::new(),
+                model_stats: std::collections::HashMap::new(),
             },
             sem_cache: cache::SemanticCache::new(),
         }
@@ -80,6 +96,7 @@ impl MetricsCollector {
         compiled: usize,
         reused: usize,
         provider: &str,
+        model: &str,
         cache_hit: bool,
         intent: &str,
     ) {
@@ -138,6 +155,45 @@ impl MetricsCollector {
         entry.requests += 1;
         entry.raw_tokens += raw;
         entry.compiled_tokens += compiled;
+
+        let is_sovereign = provider.contains("local") || provider.contains("ollama");
+        let model_key = format!("{}@{}", model, provider);
+        let model_entry = s.model_stats.entry(model_key).or_insert(ModelStats {
+            model: model.to_string(),
+            provider: provider.to_string(),
+            requests: 0,
+            raw_tokens: 0,
+            compiled_tokens: 0,
+            memory_reused_tokens: 0,
+            efficiency_score: 0.0,
+            sovereign_requests: 0,
+            non_sovereign_requests: 0,
+            sovereign_ratio: 0.0,
+        });
+        model_entry.requests += 1;
+        model_entry.raw_tokens += raw;
+        model_entry.compiled_tokens += compiled;
+        model_entry.memory_reused_tokens += reused;
+        if is_sovereign {
+            model_entry.sovereign_requests += 1;
+        } else {
+            model_entry.non_sovereign_requests += 1;
+        }
+
+        let model_avoided = model_entry
+            .raw_tokens
+            .saturating_sub(model_entry.compiled_tokens);
+        model_entry.efficiency_score = if model_entry.raw_tokens == 0 {
+            0.0
+        } else {
+            (model_avoided as f32 / model_entry.raw_tokens as f32) * 100.0
+        };
+        let model_total_routes = model_entry.sovereign_requests + model_entry.non_sovereign_requests;
+        model_entry.sovereign_ratio = if model_total_routes == 0 {
+            0.0
+        } else {
+            (model_entry.sovereign_requests as f32 / model_total_routes as f32) * 100.0
+        };
 
         s.ts = now_epoch();
     }
@@ -239,6 +295,7 @@ async fn compile(
         result.compiled_tokens_estimate,
         mem.reused_tokens,
         &route.provider,
+        &route.model,
         cache_hit,
         &result.intent,
     );
@@ -289,6 +346,7 @@ async fn chat_completions(
     let route = state
         .router_config
         .choose_provider(&result.intent, sensitive);
+    let model = payload.model.clone().unwrap_or_else(|| route.model.clone());
 
     let efficiency = metrics::compute(
         result.raw_tokens_estimate,
@@ -309,6 +367,7 @@ async fn chat_completions(
             result.compiled_tokens_estimate,
             mem.reused_tokens,
             &route.provider,
+            &model,
             cache_hit,
             &result.intent,
         );
@@ -321,8 +380,6 @@ async fn chat_completions(
         .and_then(|env_var| std::env::var(env_var).ok());
 
     // 4. Forward to LLM provider
-    let model = payload.model.clone().unwrap_or_else(|| route.model.clone());
-
     match adapters::forward(&route.base_url, &model, &raw, api_key.as_deref()).await {
         Ok(fwd) => {
             // Return OpenAI-compatible format
