@@ -27,9 +27,14 @@
     </div>
 
     <div class="routing-panel">
-      <h3>Sovereign Routing</h3>
+      <h3>Routing par LLM</h3>
       <div class="route-branches">
-        <div v-for="branch in branches" :key="branch.provider" class="route-branch" :class="branch.variant">
+        <div
+          v-for="branch in branches"
+          :key="branch.provider"
+          class="route-branch"
+          :class="[branch.variant, { active: branch.active }]"
+        >
           <div class="branch-bar" :style="{ width: branch.ratio + '%' }"></div>
           <div class="branch-content">
             <SvgIcon :name="branch.icon" :size="20" class="branch-icon" />
@@ -50,6 +55,19 @@ import SvgIcon from './SvgIcon.vue'
 
 const metrics = useMetricsStore()
 
+function classifyRouteProvider(provider: string): 'local' | 'cloud' | 'midtier' {
+  const lower = provider.toLowerCase()
+  if (lower.includes('ollama') || lower.includes('local')) return 'local'
+  if (lower.includes('mistral')) return 'midtier'
+  return 'cloud'
+}
+
+const activeRouteClass = computed<null | 'local' | 'cloud' | 'midtier'>(() => {
+  const last = metrics.lastRequest
+  if (!last) return null
+  return classifyRouteProvider(last.routed_provider)
+})
+
 const stages = computed(() => [
   { id: 'request', icon: 'inbox', label: 'Request', metric: `${metrics.rawTokens.toLocaleString()} tok`, variant: 'default' },
   { id: 'fingerprint', icon: 'fingerprint', label: 'Fingerprint', metric: 'SHA-256', variant: 'default' },
@@ -66,9 +84,30 @@ const branches = computed(() => {
   const midPct = Math.round((metrics.routesMidtier / total) * 100)
 
   return [
-    { provider: 'Ollama Local', icon: 'home', tag: `${metrics.routesLocal} req`, ratio: localPct, variant: 'local' },
-    { provider: 'Cloud Providers', icon: 'cloud', tag: `${metrics.routesCloud} req`, ratio: cloudPct, variant: 'cloud' },
-    { provider: 'Mid-tier Providers', icon: 'globe', tag: `${metrics.routesMidtier} req`, ratio: midPct, variant: 'midtier' },
+    {
+      provider: 'Local LLM',
+      icon: 'home',
+      tag: `${metrics.routesLocal} req`,
+      ratio: localPct,
+      variant: 'local',
+      active: activeRouteClass.value === 'local',
+    },
+    {
+      provider: 'Cloud Providers',
+      icon: 'cloud',
+      tag: `${metrics.routesCloud} req`,
+      ratio: cloudPct,
+      variant: 'cloud',
+      active: activeRouteClass.value === 'cloud',
+    },
+    {
+      provider: 'Mid-tier Providers',
+      icon: 'globe',
+      tag: `${metrics.routesMidtier} req`,
+      ratio: midPct,
+      variant: 'midtier',
+      active: activeRouteClass.value === 'midtier',
+    },
   ]
 })
 </script>
@@ -204,6 +243,16 @@ const branches = computed(() => {
 .route-branch.cloud .branch-tag { background: rgba(57, 211, 255, 0.15); color: var(--primary); }
 .route-branch.midtier .branch-tag { background: rgba(140, 109, 255, 0.15); color: var(--secondary); }
 .branch-pct { font-size: 1.1rem; font-weight: 700; min-width: 48px; text-align: right; }
+
+.route-branch.active .branch-bar {
+  opacity: 0.28;
+  animation: branchPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes branchPulse {
+  0%, 100% { transform: scaleX(1); opacity: 0.22; }
+  50% { transform: scaleX(1.05); opacity: 0.35; }
+}
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }

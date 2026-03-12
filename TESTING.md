@@ -1,6 +1,6 @@
 # Testing KATARA
 
-> **KATARA v7.0.1** — This guide walks you through every layer of verification:
+> **KATARA v7.7.1** — This guide walks you through every layer of verification:
 > the Rust backend, the HTTP API, the Vue dashboard, and the MCP VS Code agent.
 
 ---
@@ -41,7 +41,7 @@ Confirm the backend is up:
 
 ```powershell
 Invoke-RestMethod http://localhost:8080/healthz
-# Expected: status=ok, service=katara-core, version=7.0.1
+# Expected: status=ok, service=katara-core, version=7.7.1
 ```
 
 **Ollama models (for LLM tests):**
@@ -71,7 +71,7 @@ Invoke-RestMethod http://localhost:8080/healthz
 {
   "status": "ok",
   "service": "katara-core",
-  "version": "7.0.1"
+  "version": "7.7.1"
 }
 ```
 
@@ -271,6 +271,16 @@ If `@katara` does not appear, check:
 
 ---
 
+### MCP Test 1b — Set live client context
+
+```md
+@katara set client context to Claude Sonnet 4.6 on Anthropic
+```
+
+**Expected in chat:** JSON response from `/v1/runtime/client-context` showing `upstream_provider="Anthropic"` and `upstream_model="Claude Sonnet 4.6"`.
+
+---
+
 ### MCP Test 2 — Compile context
 
 ```md
@@ -303,6 +313,143 @@ If Ollama is not running, you will see an error. Start it with `ollama serve`.
 
 ---
 
+### MCP Test 4b — Upstream model lineage
+
+Verify that the MCP bridge is forwarding upstream client metadata dynamically.
+
+1. Configure a runtime resolver command in `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "katara": {
+      "env": {
+        "KATARA_CLIENT_APP": "VS Code Copilot Chat",
+        "KATARA_CLIENT_CONTEXT_CMD": "powershell -File ..\\scripts\\resolve-upstream-context.ps1"
+      }
+    }
+  }
+}
+```
+
+2. Make the resolver return one model, for example:
+
+```json
+{
+  "client_app": "VS Code Copilot Chat",
+  "upstream_provider": "GitHub Copilot",
+  "upstream_model": "GPT-5.4"
+}
+```
+
+3. In Copilot Chat, run:
+
+```md
+@katara explain the difference between Arc and Mutex in Rust
+```
+
+4. Then call:
+
+```powershell
+Invoke-RestMethod http://localhost:8080/v1/metrics | ConvertTo-Json -Depth 8
+```
+
+**Expected in metrics JSON:**
+
+- `last_request.client_app = "VS Code Copilot Chat"`
+- `last_request.upstream_provider = "GitHub Copilot"`
+- `last_request.upstream_model = "GPT-5.4"`
+- `last_request.routed_model` may differ, which is the expected behavior
+
+This verifies that KATARA distinguishes the upstream assistant/client model from the routed model.
+
+5. Change the resolver output to:
+
+```json
+{
+  "client_app": "VS Code Copilot Chat",
+  "upstream_provider": "Anthropic",
+  "upstream_model": "Claude Sonnet 4.6"
+}
+```
+
+6. Run another `@katara` request and re-check `/v1/metrics`.
+
+**Expected:** `last_request.upstream_model = "Claude Sonnet 4.6"` without changing backend code or restarting KATARA.
+
+7. Open the Overview dashboard and confirm the `Last Request` panel now shows:
+
+- `Claude Sonnet 4.6` as the upstream model
+- the current routed provider and routed model
+- `Cache hit` or `Cache miss`
+- `Sensitive override` only when the request was sent as sensitive
+
+---
+
+### HTTP Test — Chat streaming
+
+KATARA now supports `stream=true` on `/v1/chat/completions` and proxies the provider SSE stream.
+
+```powershell
+$body = @{
+  model = "llama3:latest"
+  stream = $true
+  client_app = "powershell test"
+  upstream_provider = "manual"
+  upstream_model = "llama3:latest"
+  messages = @(@{ role = "user"; content = "Say hello in five words" })
+} | ConvertTo-Json -Depth 5
+
+Invoke-WebRequest http://localhost:8080/v1/chat/completions `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+**Expected:**
+
+- Response header `Content-Type: text/event-stream`
+- Response body contains `data:` frames and ends with `[DONE]`
+- `/v1/metrics` increments `total_requests`
+- Repeating the same streamed request should eventually surface a `Cache hit` in the Overview or Runtime Audit views after the first response has been fully cached
+
+---
+
+### HTTP Test — Multi-turn compatibility
+
+Verify that KATARA preserves prior chat turns and forwards extra OpenAI-compatible options.
+
+```powershell
+$body = @{
+  model = "llama3:latest"
+  temperature = 0.2
+  client_app = "powershell test"
+  upstream_provider = "manual"
+  upstream_model = "llama3:latest"
+  messages = @(
+    @{ role = "system"; content = "Answer in one sentence." },
+    @{ role = "assistant"; content = "Previous answer for context." },
+    @{ role = "user"; content = "Explain what a mutex does." }
+  )
+} | ConvertTo-Json -Depth 6
+
+Invoke-RestMethod http://localhost:8080/v1/chat/completions `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body | ConvertTo-Json -Depth 8
+```
+
+**Expected:**
+
+- request succeeds without dropping earlier `system` or `assistant` messages
+- `/v1/compile` returns a non-empty `compiled_context` for the active user prompt
+- routed provider receives the extra `temperature` option
+- the latest user turn is what gets reduced before forwarding, while prior history remains present
+- repeating the exact same payload can produce a cache hit
+- repeated compile/chat requests for the same input can also report `semantic_cache_hit = true` in the `katara` metadata once the compiler result has been reused
+
+---
+
 ### MCP Test 5 — Sensitive mode
 
 ```md
@@ -327,7 +474,15 @@ npm run dev
 
 3. Verify the green **Live** badge is visible (SSE connection to `/v1/metrics/stream`).
 
-4. Run a few compile requests in parallel:
+4. Verify the bottom-left version tag matches `GET /version`:
+
+```powershell
+Invoke-RestMethod http://localhost:8080/version
+```
+
+**Expected:** the sidebar version in the dashboard matches the `version` field returned by the backend.
+
+5. Run a few compile requests in parallel:
 
 ```powershell
 1..5 | ForEach-Object {
@@ -339,7 +494,22 @@ npm run dev
 }
 ```
 
-5. Watch the dashboard update in real time — the efficiency chart and intent breakdown should reflect the new requests within 2 seconds.
+6. Watch the dashboard update in real time — the efficiency chart, last-request lineage, and model scope panels should reflect the new requests within 2 seconds.
+
+7. Open the `Runtime Audit` navigation entry and verify that recent requests appear in reverse chronological order with:
+
+- upstream client/provider/model
+- routed provider/model
+- cache hit or miss
+- sensitive override or standard routing
+- intent and timestamp
+
+8. In the Overview page, verify that:
+
+- `Upstream Client Models` shows the model reported by the client, such as `GPT-5.4`, when that metadata is available
+- `Live AI Efficiency by Routed Model` can still show a different target such as `gpt-4o-mini` or a local Ollama model
+- this difference is expected and reflects upstream-vs-routed scope, not a dashboard mismatch
+- if the client does not expose upstream model metadata, a visible warning banner appears in `Model Scope Clarity` instead of pretending the upstream model is known
 
 ---
 

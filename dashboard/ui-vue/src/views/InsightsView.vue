@@ -25,6 +25,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useMetricsStore } from '../store/metrics'
+
 interface InsightItem {
   title: string
   description: string
@@ -145,7 +148,51 @@ function pickRandomInsights(pool: InsightItem[], count: number): InsightItem[] {
   return shuffled.slice(0, Math.min(count, shuffled.length))
 }
 
-const insights = pickRandomInsights(INSIGHT_POOL, 8)
+const metrics = useMetricsStore()
+
+const insights = computed(() => {
+  const result: InsightItem[] = []
+
+  // Dynamic efficiency guidance
+  if (metrics.efficiencyScore < 30 && metrics.totalRequests > 0) {
+    result.push({
+      title: 'Augmenter l’AI Efficiency Score',
+      description:
+        'Votre score moyen est en dessous de 30 %. Enchaînez plusieurs petites requêtes sur le même contexte (review + codegen) sans recoller les gros blocs pour augmenter la réutilisation.',
+      severity: 'medium',
+      category: 'Efficiency',
+      impact: '+10–20 % sur les scénarios récurrents',
+    })
+  }
+
+  // Dynamic cache suggestion
+  if (metrics.cacheHitRatio < 40 && metrics.totalRequests > 10) {
+    result.push({
+      title: 'Améliorer le cache sémantique',
+      description:
+        'Le taux de cache est faible. Réutilisez les mêmes prompts (review de diff, debug d’erreur) plutôt que de reformuler complètement pour bénéficier des hits de cache.',
+      severity: 'medium',
+      category: 'Cost',
+      impact: '-10–30 % de tokens envoyés',
+    })
+  }
+
+  // Dynamic sovereignty hint
+  if (metrics.localRatio < 50 && metrics.totalRequests > 0) {
+    result.push({
+      title: 'Renforcer l’usage du LLM local',
+      description:
+        'Une majorité de requêtes part encore vers le cloud. Vérifiez les intents sensibles (PII, logs internes) et ajustez la politique pour privilégier le provider local.',
+      severity: 'high',
+      category: 'Sovereignty',
+      impact: '+20–50 % de trafic souverain',
+    })
+  }
+
+  const remaining = INSIGHT_POOL.filter((item) => !result.some((r) => r.title === item.title))
+  const filler = pickRandomInsights(remaining, 8 - result.length)
+  return [...result, ...filler]
+})
 </script>
 
 <style scoped>

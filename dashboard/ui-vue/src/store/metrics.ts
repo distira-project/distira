@@ -20,6 +20,34 @@ export interface ModelStat {
   sovereign_ratio: number
 }
 
+export interface UpstreamStat {
+  client_app: string
+  upstream_provider: string
+  upstream_model: string
+  requests: number
+  last_seen_ts: number
+}
+
+export interface RequestLineage {
+  client_app?: string
+  upstream_provider?: string
+  upstream_model?: string
+  tenant_id?: string
+  project_id?: string
+  policy_pack?: string
+  routed_provider: string
+  routed_model: string
+  intent: string
+  cache_hit: boolean
+  sensitive: boolean
+  ts: number
+}
+
+export interface VersionInfo {
+  version: string
+  product: string
+}
+
 export interface MetricsSnapshot {
   ts: number
   total_requests: number
@@ -34,14 +62,22 @@ export interface MetricsSnapshot {
   history_raw: number[]
   history_compiled: number[]
   history_reused: number[]
+  history_hour_epochs?: number[]
+  history_hour_raw?: number[]
+  history_hour_compiled?: number[]
+  history_hour_reused?: number[]
   routes_local: number
   routes_cloud: number
   routes_midtier: number
   intent_stats: Record<string, IntentStat>
   model_stats: Record<string, ModelStat>
+  upstream_stats: Record<string, UpstreamStat>
+  last_request?: RequestLineage
+  request_history: RequestLineage[]
 }
 
 const SSE_URL = 'http://localhost:8080/v1/metrics/stream'
+const VERSION_URL = 'http://localhost:8080/version'
 
 export const useMetricsStore = defineStore('metrics', () => {
   // ── reactive state ─────────────────────────────────
@@ -58,13 +94,21 @@ export const useMetricsStore = defineStore('metrics', () => {
   const historyRaw = ref<number[]>([])
   const historyCompiled = ref<number[]>([])
   const historyReused = ref<number[]>([])
+  const historyHourEpochs = ref<number[]>([])
+  const historyHourRaw = ref<number[]>([])
+  const historyHourCompiled = ref<number[]>([])
+  const historyHourReused = ref<number[]>([])
   const routesLocal = ref(0)
   const routesCloud = ref(0)
   const routesMidtier = ref(0)
   const connected = ref(false)
   const lastTs = ref(0)
+  const appVersion = ref('...')
   const intentStats = ref<Record<string, IntentStat>>({})
   const modelStats = ref<Record<string, ModelStat>>({})
+  const upstreamStats = ref<Record<string, UpstreamStat>>({})
+  const lastRequest = ref<RequestLineage | null>(null)
+  const requestHistory = ref<RequestLineage[]>([])
 
   const cacheHitRatio = computed(() => {
     const total = cacheHits.value + cacheMisses.value
@@ -73,6 +117,18 @@ export const useMetricsStore = defineStore('metrics', () => {
 
   // ── SSE connection ─────────────────────────────────
   let es: EventSource | null = null
+  let versionPollHandle: number | null = null
+
+  async function fetchVersion() {
+    try {
+      const response = await fetch(VERSION_URL)
+      if (!response.ok) return
+      const payload: VersionInfo = await response.json()
+      appVersion.value = payload.version || 'unknown'
+    } catch {
+      // Keep the last known version when the backend is temporarily unavailable.
+    }
+  }
 
   function applySnapshot(s: MetricsSnapshot) {
     rawTokens.value = s.raw_tokens
@@ -88,17 +144,30 @@ export const useMetricsStore = defineStore('metrics', () => {
     historyRaw.value = s.history_raw
     historyCompiled.value = s.history_compiled
     historyReused.value = s.history_reused
+    historyHourEpochs.value = s.history_hour_epochs ?? []
+    historyHourRaw.value = s.history_hour_raw ?? []
+    historyHourCompiled.value = s.history_hour_compiled ?? []
+    historyHourReused.value = s.history_hour_reused ?? []
     routesLocal.value = s.routes_local
     routesCloud.value = s.routes_cloud
     routesMidtier.value = s.routes_midtier
     intentStats.value = s.intent_stats ?? {}
     modelStats.value = s.model_stats ?? {}
+    upstreamStats.value = s.upstream_stats ?? {}
+    lastRequest.value = s.last_request ?? null
+    requestHistory.value = s.request_history ?? []
     lastTs.value = s.ts
   }
 
   function connect() {
     if (es) return
     es = new EventSource(SSE_URL)
+    void fetchVersion()
+    if (versionPollHandle === null) {
+      versionPollHandle = window.setInterval(() => {
+        void fetchVersion()
+      }, 30000)
+    }
 
     es.addEventListener('metrics', (ev) => {
       try {
@@ -121,6 +190,10 @@ export const useMetricsStore = defineStore('metrics', () => {
       es = null
       connected.value = false
     }
+    if (versionPollHandle !== null) {
+      window.clearInterval(versionPollHandle)
+      versionPollHandle = null
+    }
   }
 
   // Auto‑connect on store creation
@@ -141,13 +214,21 @@ export const useMetricsStore = defineStore('metrics', () => {
     historyRaw,
     historyCompiled,
     historyReused,
+    historyHourEpochs,
+    historyHourRaw,
+    historyHourCompiled,
+    historyHourReused,
     routesLocal,
     routesCloud,
     routesMidtier,
     connected,
     lastTs,
+    appVersion,
     intentStats,
     modelStats,
+    upstreamStats,
+    lastRequest,
+    requestHistory,
     connect,
     disconnect,
   }

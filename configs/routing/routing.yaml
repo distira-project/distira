@@ -7,18 +7,20 @@
 
 routing:
   strategy: hybrid
-  default_provider: openai-cloud
+  default_provider: openrouter-step-3.5-flash-cloud
   fallback_provider: ollama-llama3
   sensitive_override: ollama-llama3       # sensitive data NEVER leaves local
 
   task_routing:
-    # ── Code tasks → best local code model ──────────────
+    # ── Code review / refactor → best local code model ──
     review: ollama-qwen2.5-coder
-    # ── Debug / analysis → local Mistral 7B ─────────────
-    debug: ollama-mistral
-    # ── Summarization → OpenAI cloud (for validation) ───
-    summarize: openai-cloud
-    # ── OCR → cloud Mistral OCR (best quality) ──────────
-    ocr: mistral-ocr-cloud
-    # ── General → OpenAI cloud (default interactive mode) ─
-    general: openai-cloud
+     # ── Code generation / snippets → dedicated codegen intent ──
+    codegen: ollama-qwen2.5-coder
+    # ── Debug / stack traces → local Mistral 7B ─────────
+    debug: ollama-mistral-7b-instruct
+    # ── Summarization → best free cloud (24B quality) ───
+    summarize: openrouter-mistral-small-3.1-24b-instruct-cloud
+    # ── General queries → StepFun Flash free cloud ──────
+    general: openrouter-step-3.5-flash-cloud
+    # ── OCR → cloud Mistral OCR (best accuracy) ─────────
+    ocr: mistral-ocr-2512-cloud
