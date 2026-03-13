@@ -7,12 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — Open-source release + Context OS vision (2026-03-13)
+
+- **License changed to pure AGPL-3.0** — Commons Clause removed; Distira is now fully free and open-source
+- `LICENSE` rewritten: no commercial restriction; only copyleft obligation on distribution/network use
+- `configs/policies/policies.yaml` updated to reflect AGPL-3.0 (removed Commons Clause notice)
+- `CONTRIBUTING.md` updated to reflect open-source status
+- `README.md` fully rewritten around the **Sovereign AI Context Operating System** vision:
+  - "Not a proxy. Not a gateway." positioning table vs Kong / LiteLLM / PortKey
+  - Proof-of-value table: raw tokens / compiled / reused / cloud avoided / cost / efficiency score
+  - Three credibility use cases: debug logs, git diff review, IDE agent workflows
+  - Four differentiating building blocks: Compiler, Memory Lensing, Sovereign Router, Flow Visualizer
+  - Monorepo layout aligned on Context OS terminology
+- Badge updated: `AGPL-3.0` (no longer `AGPL-3.0 + Commons Clause`)
+
+- Repositioned DISTIRA consistently across all project files as a **Sovereign AI Context Operating System** (not "AI gateway" or "AI Flow Engine")
+- Updated `docs/branding.md`: new tagline, corrected brand asset references to match actual files in `brand/`
+- Updated `docs/architecture.md`: description promoted to "Sovereign AI Context Operating System"
+- Updated `.github/agents/distira.agent.md`: description and agent persona now reflect Context OS identity
+- Updated `brand/brand_guide.md`: brand idea, positioning, and taglines aligned to Context OS
+- Updated `README.md`: intro section reframed from "AI gateway" to "Context Operating System"
+
+### Added — Transparent runtime persistence (2026-03-12)
+
+- Core runtime now saves and restores operational state automatically across backend restarts (metrics snapshot, request history, semantic cache, chat cache, and context-store blocks)
+- Persistence is transparent for users: dashboard data survives backend/application restarts without any manual export/import step
+- Runtime state is stored in `cache/runtime-state.json` by default and can be overridden with `DISTIRA_RUNTIME_STATE_PATH`
+
+### Changed — Roadmap product direction (2026-03-12)
+
+- Added `V7.8 — Transparent Optimization Autopilot (planned)` in `ROADMAP.md`
+- Clarified a zero-friction UX principle: users submit simple requests while DISTIRA applies canonicalization, intent shaping, adaptive reduction, cache optimization, and quality guardrails transparently
+- Added explicit 3-wave rollout framing (Wave A/B/C) to drive toward excellence-level efficiency gains without requiring user prompt education
+
+### Added — V7.8 Wave A kickoff (2026-03-12)
+
+- Added transparent canonicalization for semantic and chat cache key generation to increase cache hit probability on near-duplicate requests (volatile numeric IDs and UUID noise)
+- Preserved zero-friction UX: no user prompt changes required, optimization remains backend-native
+- Runtime lineage now carries semantic fingerprint/cache state, and the dashboard flow visualizer renders those values live (no static SHA label)
+- Added transparent intent shaping in compiler output with token-neutral intent markers to stabilize prompt structure without token-budget regressions
+
+### Fixed — Wave A UX consistency (2026-03-12)
+
+- Fixed memory reuse accounting so `Memory Reused` no longer mirrors compiled tokens on semantic-cache misses
+- Standardized AI Efficiency and help-panel copy to English
+- Updated flow pipeline labels/status to English (`LLM Routing`, fingerprint `pending`) for a consistent all-English dashboard experience
+- Standardized Overview fallback statuses to `pending` terminology to avoid mixed `waiting/pending` wording across pipeline views
+- Fingerprint stage now shows a visible `running` window (8s) after recent requests before switching to hash display, improving runtime observability
+
 ### Added — V7.7 Governance & Multi-tenant foundations (2026-03-12)
 
 - Added workspace scope config file `configs/workspace/workspace.yaml` with `tenant_id`, `project_id`, and optional `policy_pack`
 - Core runtime now loads workspace scope defaults and resolves effective request scope from request payload, runtime client context, and workspace defaults
 - `/v1/runtime/client-context` now supports `tenant_id` and `project_id` updates
-- Compile and chat contracts now accept and propagate `tenant_id` / `project_id` in `katara` metadata
+- Compile and chat contracts now accept and propagate `tenant_id` / `project_id` in `distira` metadata
 - Runtime audit lineage now includes `tenant_id`, `project_id`, and `policy_pack`
 - Dashboard Runtime Audit view now displays tenant/project scope per request
 
@@ -31,19 +79,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed — Version alignment (2026-03-12)
 
 - Root `VERSION` bumped to `7.7.1`
-- MCP fallback version in `mcp/katara-server.mjs` updated to `7.7.1`
+- MCP fallback version in `mcp/distira-server.mjs` updated to `7.7.1`
 
 ### Changed — Agent governance + version alignment (2026-03-12)
 
-- **Agent essentials-first policy** in `.github/agents/katara.agent.md`: the agent now defaults to logical baseline actions (review/validation/docs/versioning) without requiring repeated user reminders
+- **Agent essentials-first policy** in `.github/agents/distira.agent.md`: the agent now defaults to logical baseline actions (review/validation/docs/versioning) without requiring repeated user reminders
 - **Version bump**: root `VERSION` updated from `7.5.0` to `7.6.0` so runtime `/version` and dashboard tag remain aligned with current iteration
-- **MCP fallback alignment**: `mcp/katara-server.mjs` fallback version updated to `7.6.0`
+- **MCP fallback alignment**: `mcp/distira-server.mjs` fallback version updated to `7.6.0`
 - **ROADMAP sync**: V7.6 now explicitly tracks the delivered agent-governance improvement
 
 ### Added — Runtime Audit retention guardrails (2026-03-12)
 
-- `core` now applies automatic Runtime Audit pruning with a default **7-day TTL** (`KATARA_AUDIT_RETENTION_DAYS`, default `7`)
-- Runtime Audit history now also enforces a max entry cap (`KATARA_AUDIT_HISTORY_LIMIT`, default `2000`) to bound memory usage
+- `core` now applies automatic Runtime Audit pruning with a default **7-day TTL** (`DISTIRA_AUDIT_RETENTION_DAYS`, default `7`)
+- Runtime Audit history now also enforces a max entry cap (`DISTIRA_AUDIT_HISTORY_LIMIT`, default `2000`) to bound memory usage
 - Added unit test `prune_request_history_respects_ttl_and_limit` to validate both temporal pruning and size capping
 
 ### Improved — Dashboard readability + repository hygiene (2026-03-12)
@@ -51,14 +99,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Token Trends (24h)` now uses hour-based labels (`HH:mm`) instead of index-style labels
 - Chart X-axis labels are now sparsified to keep the timeline readable on dense data and smaller screens
 - Local `build*.txt` artifacts removed and ignored via `.gitignore` so they do not pollute Git history
-- `INSTALL.md` now documents `KATARA_AUDIT_RETENTION_DAYS` and `KATARA_AUDIT_HISTORY_LIMIT` with recommended production defaults
+- `INSTALL.md` now documents `DISTIRA_AUDIT_RETENTION_DAYS` and `DISTIRA_AUDIT_HISTORY_LIMIT` with recommended production defaults
 - `Token Trends (24h)` now uses backend hourly buckets for true hour-by-hour granularity (instead of sample-index style trends)
 - Added interactive `1h / 6h / 24h` window controls for Token Trends to improve readability during operations
 - Added a `Last update` timestamp in the Token Trends header, sourced from live metrics `lastTs`
 
 ### Changed — Agent execution ergonomics (2026-03-12)
 
-- `.github/agents/katara.agent.md` now explicitly requires automatic to-do list setup and updates before substantial tasks, reducing repeated user prompting and improving execution flow
+- `.github/agents/distira.agent.md` now explicitly requires automatic to-do list setup and updates before substantial tasks, reducing repeated user prompting and improving execution flow
 
 ### Added — V7.2 Compiler Runtime (2026-03-12)
 
@@ -89,7 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`scripts/test-api.ps1`**: PowerShell quick-test script (7 assertions covering health, providers, intents, sensitive mode, metrics)
 - **`mcp/test-mcp.mjs`**: standalone MCP handshake test harness (spawns server, sends `initialize` + `tools/list`, validates responses without VS Code)
-- **Dynamic upstream lineage resolution** in `mcp/katara-server.mjs`: request-by-request client/model/provider detection via MCP metadata or runtime resolver command
+- **Dynamic upstream lineage resolution** in `mcp/distira-server.mjs`: request-by-request client/model/provider detection via MCP metadata or runtime resolver command
 - **`scripts/resolve-upstream-context.ps1`**: example runtime resolver for dynamic upstream model context
 - **`scripts/set-upstream-context.ps1`**: helper to update the live upstream client context without restarting the backend
 - **Overview Last Request panel** in `dashboard/ui-vue/src/views/OverviewView.vue` showing upstream model, routed model, cache state, and sensitivity flag
@@ -100,15 +148,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **OpenAI-compatible chat passthrough**: `/v1/chat/completions` now preserves full message history and forwards extra request options such as `temperature`
 - **Compiler runtime output**: `CompileResult` now includes `compiled_context`, and the chat runtime uses it to rewrite the latest user turn before forwarding
 - **Semantic cache reuse**: semantic cache entries now persist full compiler outputs so repeated compile/chat requests can skip recompilation and reuse the same reduced payload
-- **Dashboard scope clarity**: Overview now has a dedicated upstream client models table, and routed-model efficiency is labeled explicitly so `GPT-5.4` upstream is not confused with the Katara-routed target
-- **Best-effort Copilot model detection**: the MCP bridge now scans generic metadata fields for upstream model/provider information when clients expose it without `katara/*` keys, and the dashboard warns clearly when upstream model metadata is missing
+- **Dashboard scope clarity**: Overview now has a dedicated upstream client models table, and routed-model efficiency is labeled explicitly so `GPT-5.4` upstream is not confused with the Distira-routed target
+- **Best-effort Copilot model detection**: the MCP bridge now scans generic metadata fields for upstream model/provider information when clients expose it without `distira/*` keys, and the dashboard warns clearly when upstream model metadata is missing
 
 ### Improved
 
 - License: Apache 2.0 → AGPL-3.0 + Commons Clause (protection against unauthorized commercial resale)
 - `.gitignore`: expanded to 70+ rules covering Rust, Node, IDE, secrets, IaC, Docker, OS artifacts
 - `policies.yaml`: added `terms` property and `fallback_provider`, `log_level`, `data_residency` fields
-- `mcp/katara-server.mjs`: migrated from custom Buffer-based stdio transport to official `@modelcontextprotocol/sdk` v1.27.1 (`McpServer` + `StdioServerTransport` + Zod tool schemas) — eliminates Windows stdin hang
+- `mcp/distira-server.mjs`: migrated from custom Buffer-based stdio transport to official `@modelcontextprotocol/sdk` v1.27.1 (`McpServer` + `StdioServerTransport` + Zod tool schemas) — eliminates Windows stdin hang
 - `.vscode/mcp.json`: added `"cwd": "${workspaceFolder}/mcp"` so Node resolves SDK imports from `mcp/node_modules/`
 - `scripts/start-win.ps1`: replaced `Get-NetTCPConnection` (unreliable) with `netstat -ano` for port 8080 process detection; passes `$cargoPath` explicitly to `Start-Job` to avoid PATH inheritance failures
 - `scripts/bootstrap-win.ps1`: adds `~\.cargo\bin` to PATH before `Get-Command cargo` check to detect freshly installed Rust
@@ -134,14 +182,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **MCP Server** (`mcp/katara-server.mjs`): stdio-based Model Context Protocol server exposing 4 tools — `katara_compile`, `katara_chat`, `katara_providers`, `katara_metrics`
-- **VS Code Agent** (`.github/agents/katara.agent.md`): custom Copilot agent invoking KATARA tools via `@katara`
+- **MCP Server** (`mcp/distira-server.mjs`): stdio-based Model Context Protocol server exposing 4 tools — `distira_compile`, `distira_chat`, `distira_providers`, `distira_metrics`
+- **VS Code Agent** (`.github/agents/distira.agent.md`): custom Copilot agent invoking DISTIRA tools via `@distira`
 - **MCP registration** (`.vscode/mcp.json`): VS Code discovers the MCP server automatically
 - **Live Benchmarks**: `BenchmarksView.vue` now consumes real-time SSE data instead of hardcoded demo values
 - **Per-intent metrics**: `IntentStats` struct in `MetricsSnapshot` tracks requests, raw tokens, and compiled tokens per intent
 - **OCR routing**: added `ocr` task routing to `TaskRouting` in `router/src/lib.rs` (→ `mistral-cloud`)
 - **Secret management**: `.env` + `.env.example` pattern for API keys (`.env` gitignored)
-- **Google Drive workaround**: `.cargo/config.toml` redirects `target/` to `C:/katara-target`
+- **Google Drive workaround**: `.cargo/config.toml` redirects `target/` to `C:/distira-target`
 
 ### Changed
 

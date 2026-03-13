@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * KATARA MCP Server (using official @modelcontextprotocol/sdk)
+ * DISTIRA MCP Server (using official @modelcontextprotocol/sdk)
  *
- * Exposes KATARA gateway endpoints as tools accessible from
+ * Exposes DISTIRA gateway endpoints as tools accessible from
  * VS Code Copilot Chat via the Model Context Protocol (stdio transport).
  *
  * Tools:
- *   katara_compile   - Compile context (no LLM call)
- *   katara_chat      - Compile + forward to LLM
- *   katara_providers - List configured providers
- *   katara_metrics   - Get current metrics snapshot
+ *   distira_compile   - Compile context (no LLM call)
+ *   distira_chat      - Compile + forward to LLM
+ *   distira_providers - List configured providers
+ *   distira_metrics   - Get current metrics snapshot
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -20,16 +20,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
-const KATARA_URL = process.env.KATARA_URL || "http://127.0.0.1:8080";
-const DEFAULT_CLIENT_APP = process.env.KATARA_CLIENT_APP || "VS Code Copilot Chat";
-const DEFAULT_UPSTREAM_PROVIDER = process.env.KATARA_UPSTREAM_PROVIDER;
-const DEFAULT_UPSTREAM_MODEL = process.env.KATARA_UPSTREAM_MODEL;
-const CLIENT_CONTEXT_CMD = process.env.KATARA_CLIENT_CONTEXT_CMD;
-const CLIENT_APP_CMD = process.env.KATARA_CLIENT_APP_CMD;
-const UPSTREAM_PROVIDER_CMD = process.env.KATARA_UPSTREAM_PROVIDER_CMD;
-const UPSTREAM_MODEL_CMD = process.env.KATARA_UPSTREAM_MODEL_CMD;
+const DISTIRA_URL = process.env.DISTIRA_URL || "http://127.0.0.1:8080";
+const DEFAULT_CLIENT_APP = process.env.DISTIRA_CLIENT_APP || "VS Code Copilot Chat";
+const DEFAULT_UPSTREAM_PROVIDER = process.env.DISTIRA_UPSTREAM_PROVIDER;
+const DEFAULT_UPSTREAM_MODEL = process.env.DISTIRA_UPSTREAM_MODEL;
+const CLIENT_CONTEXT_CMD = process.env.DISTIRA_CLIENT_CONTEXT_CMD;
+const CLIENT_APP_CMD = process.env.DISTIRA_CLIENT_APP_CMD;
+const UPSTREAM_PROVIDER_CMD = process.env.DISTIRA_UPSTREAM_PROVIDER_CMD;
+const UPSTREAM_MODEL_CMD = process.env.DISTIRA_UPSTREAM_MODEL_CMD;
 
-function readKataraVersion() {
+function readDistiraVersion() {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -175,16 +175,16 @@ function readRequestMeta(extra) {
   const generic = readGenericMeta(extra);
   return {
     clientApp:
-      typeof meta["katara/client_app"] === "string"
-        ? meta["katara/client_app"]
+      typeof meta["distira/client_app"] === "string"
+        ? meta["distira/client_app"]
         : generic.clientApp,
     upstreamProvider:
-      typeof meta["katara/upstream_provider"] === "string"
-        ? meta["katara/upstream_provider"]
+      typeof meta["distira/upstream_provider"] === "string"
+        ? meta["distira/upstream_provider"]
         : generic.upstreamProvider,
     upstreamModel:
-      typeof meta["katara/upstream_model"] === "string"
-        ? meta["katara/upstream_model"]
+      typeof meta["distira/upstream_model"] === "string"
+        ? meta["distira/upstream_model"]
         : generic.upstreamModel,
   };
 }
@@ -212,26 +212,26 @@ async function buildUpstreamMetadata({ clientApp, upstreamProvider, upstreamMode
   };
 }
 
-// -- HTTP helper to call KATARA backend -----------------
+// -- HTTP helper to call DISTIRA backend -----------------
 
-async function callKatara(path, method = "GET", body = undefined) {
+async function callDistira(path, method = "GET", body = undefined) {
   const opts = {
     method,
     headers: { "Content-Type": "application/json" },
   };
   if (body) opts.body = JSON.stringify(body);
 
-  const res = await fetch(`${KATARA_URL}${path}`, opts);
+  const res = await fetch(`${DISTIRA_URL}${path}`, opts);
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`KATARA ${res.status}: ${text}`);
+    throw new Error(`DISTIRA ${res.status}: ${text}`);
   }
   return res.json();
 }
 
 async function readBackendContext() {
   try {
-    const result = await callKatara("/v1/runtime/client-context");
+    const result = await callDistira("/v1/runtime/client-context");
     return {
       clientApp: result.client_app,
       upstreamProvider: result.upstream_provider,
@@ -245,23 +245,23 @@ async function readBackendContext() {
 // -- Create MCP Server ----------------------------------
 
 const server = new McpServer({
-  name: "katara-mcp",
-  version: readKataraVersion(),
+  name: "distira-mcp",
+  version: readDistiraVersion(),
 });
 
-// Tool: katara_compile
+// Tool: distira_compile
 server.tool(
-  "katara_compile",
-  "Send context through the KATARA pipeline (fingerprint, cache, compiler, memory, router) WITHOUT calling the LLM. Returns intent, compiled tokens, routing decision, cache hit status, and efficiency metrics.",
+  "distira_compile",
+  "Send context through the DISTIRA pipeline (fingerprint, cache, compiler, memory, router) WITHOUT calling the LLM. Returns intent, compiled tokens, routing decision, cache hit status, and efficiency metrics.",
   {
     context: z.string().describe("The raw context/prompt to compile and optimize."),
     sensitive: z.boolean().optional().default(false).describe("If true, forces routing to a local-only provider (sovereign mode)."),
     clientApp: z.string().optional().describe("Optional client application label. Defaults to 'VS Code Copilot Chat'."),
     upstreamProvider: z.string().optional().describe("Optional upstream provider label. Defaults from env or inferred when possible."),
-    upstreamModel: z.string().optional().describe("Optional upstream model label selected by the user before KATARA routing."),
+    upstreamModel: z.string().optional().describe("Optional upstream model label selected by the user before DISTIRA routing."),
   },
   async ({ context, sensitive, clientApp, upstreamProvider, upstreamModel }, extra) => {
-    const result = await callKatara("/v1/compile", "POST", {
+    const result = await callDistira("/v1/compile", "POST", {
       context,
       sensitive,
       ...await buildUpstreamMetadata({
@@ -274,20 +274,20 @@ server.tool(
   }
 );
 
-// Tool: katara_chat
+// Tool: distira_chat
 server.tool(
-  "katara_chat",
-  "Compile context through KATARA then forward to the best LLM provider (Ollama local, Mistral cloud, etc.). Returns an OpenAI-compatible chat completion with a katara section showing optimization stats.",
+  "distira_chat",
+  "Compile context through DISTIRA then forward to the best LLM provider (Ollama local, Mistral cloud, etc.). Returns an OpenAI-compatible chat completion with a distira section showing optimization stats.",
   {
-    message: z.string().describe("The user message to send to the LLM via KATARA."),
-    model: z.string().optional().describe("Optional: force a specific model (e.g. 'llama3:latest', 'mistral-ocr-2512'). If omitted, KATARA routes automatically based on intent."),
+    message: z.string().describe("The user message to send to the LLM via DISTIRA."),
+    model: z.string().optional().describe("Optional: force a specific model (e.g. 'llama3:latest', 'mistral-ocr-2512'). If omitted, DISTIRA routes automatically based on intent."),
     sensitive: z.boolean().optional().default(false).describe("If true, forces routing to a local-only provider."),
     clientApp: z.string().optional().describe("Optional client application label. Defaults to 'VS Code Copilot Chat'."),
     upstreamProvider: z.string().optional().describe("Optional upstream provider label. Defaults from env or inferred when possible."),
-    upstreamModel: z.string().optional().describe("Optional upstream model label selected by the user before KATARA routing."),
+    upstreamModel: z.string().optional().describe("Optional upstream model label selected by the user before DISTIRA routing."),
   },
   async ({ message, model, sensitive, clientApp, upstreamProvider, upstreamModel }, extra) => {
-    const result = await callKatara("/v1/chat/completions", "POST", {
+    const result = await callDistira("/v1/chat/completions", "POST", {
       messages: [{ role: "user", content: message }],
       model: model || undefined,
       sensitive,
@@ -303,15 +303,15 @@ server.tool(
 );
 
 server.tool(
-  "katara_set_client_context",
-  "Update the live upstream client context that Katara should associate with subsequent requests when the client itself cannot send the selected model dynamically.",
+  "distira_set_client_context",
+  "Update the live upstream client context that Distira should associate with subsequent requests when the client itself cannot send the selected model dynamically.",
   {
     clientApp: z.string().optional().describe("Client application label, for example 'VS Code Copilot Chat'."),
     upstreamProvider: z.string().optional().describe("Upstream provider label, for example 'Anthropic' or 'GitHub Copilot'."),
     upstreamModel: z.string().optional().describe("Upstream model label, for example 'Claude Sonnet 4.6' or 'GPT-5.4'."),
   },
   async ({ clientApp, upstreamProvider, upstreamModel }) => {
-    const result = await callKatara("/v1/runtime/client-context", "POST", {
+    const result = await callDistira("/v1/runtime/client-context", "POST", {
       client_app: clientApp,
       upstream_provider: upstreamProvider,
       upstream_model: upstreamModel,
@@ -320,24 +320,24 @@ server.tool(
   }
 );
 
-// Tool: katara_providers
+// Tool: distira_providers
 server.tool(
-  "katara_providers",
-  "List all LLM providers configured in KATARA.",
+  "distira_providers",
+  "List all LLM providers configured in DISTIRA.",
   {},
   async () => {
-    const result = await callKatara("/v1/providers");
+    const result = await callDistira("/v1/providers");
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   }
 );
 
-// Tool: katara_metrics
+// Tool: distira_metrics
 server.tool(
-  "katara_metrics",
-  "Get the current KATARA metrics snapshot: total requests, token counts, efficiency score, cache stats, routing breakdown, and per-intent statistics.",
+  "distira_metrics",
+  "Get the current DISTIRA metrics snapshot: total requests, token counts, efficiency score, cache stats, routing breakdown, and per-intent statistics.",
   {},
   async () => {
-    const result = await callKatara("/v1/metrics");
+    const result = await callDistira("/v1/metrics");
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   }
 );

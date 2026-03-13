@@ -1,6 +1,6 @@
 [package]
 name = "core"
-description = "KATARA gateway bootstrap and API entry point"
+description = "DISTIRA gateway bootstrap and API entry point"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -1,6 +1,6 @@
 # Installation & Configuration Guide
 
-> **KATARA v7.7.1** — Sovereign AI Context Operating System
+> **DISTIRA v7.7.1** — Sovereign AI Context Operating System
 
 ---
 
@@ -11,7 +11,7 @@
 3. [Configure Providers](#configure-providers)
 4. [Configure Routing](#configure-routing)
 5. [Configure Policies](#configure-policies)
-6. [Run KATARA](#run-katara)
+6. [Run DISTIRA](#run-distira)
 7. [Test Your Setup](#test-your-setup)
 8. [Dashboard](#dashboard)
 9. [Ollama Multi-Model Setup](#ollama-multi-model-setup)
@@ -44,8 +44,8 @@ ollama --version   # ollama version 0.3.x (if using local models)
 ## Clone & Bootstrap
 
 ```bash
-git clone https://github.com/katara-project/katara.git
-cd katara
+git clone https://github.com/distira-project/distira.git
+cd distira
 ```
 
 ### Automatic (recommended)
@@ -78,7 +78,7 @@ cd ../..
 
 ## Configure Providers
 
-Edit `configs/providers/providers.yaml` to declare every LLM endpoint KATARA can reach.
+Edit `configs/providers/providers.yaml` to declare every LLM endpoint DISTIRA can reach.
 
 ### Minimal example (Ollama only)
 
@@ -148,7 +148,7 @@ providers:
 
 ## Configure Routing
 
-Edit `configs/routing/routing.yaml` to tell KATARA which provider to use for each intent.
+Edit `configs/routing/routing.yaml` to tell DISTIRA which provider to use for each intent.
 
 ```yaml
 routing:
@@ -175,7 +175,7 @@ routing:
 
 ### How intent detection works
 
-KATARA automatically detects intent from the raw context:
+DISTIRA automatically detects intent from the raw context:
 
 | Detected keyword       | Intent      |
 |------------------------|-------------|
@@ -204,14 +204,30 @@ policies:
 To avoid keeping unnecessary audit data in memory, configure retention with these environment variables:
 
 ```bash
-KATARA_AUDIT_RETENTION_DAYS=7
-KATARA_AUDIT_HISTORY_LIMIT=2000
+DISTIRA_AUDIT_RETENTION_DAYS=7
+DISTIRA_AUDIT_HISTORY_LIMIT=2000
 ```
 
-- `KATARA_AUDIT_RETENTION_DAYS`: time-based retention window for Runtime Audit entries.
-- `KATARA_AUDIT_HISTORY_LIMIT`: max number of Runtime Audit entries kept in memory.
+- `DISTIRA_AUDIT_RETENTION_DAYS`: time-based retention window for Runtime Audit entries.
+- `DISTIRA_AUDIT_HISTORY_LIMIT`: max number of Runtime Audit entries kept in memory.
 
-If both are set, KATARA applies both guards: entries older than the retention window are pruned, and the remaining history is capped to the configured limit.
+If both are set, DISTIRA applies both guards: entries older than the retention window are pruned, and the remaining history is capped to the configured limit.
+
+### Runtime state persistence
+
+DISTIRA persists runtime operational state automatically and restores it on startup. By default, the snapshot is stored at:
+
+```bash
+cache/runtime-state.json
+```
+
+You can override the location with:
+
+```bash
+DISTIRA_RUNTIME_STATE_PATH=/absolute/path/to/runtime-state.json
+```
+
+Persisted state includes metrics snapshot, runtime audit history, semantic/chat caches, and context-store blocks.
 
 ---
 
@@ -225,7 +241,7 @@ Create or edit `configs/workspace/workspace.yaml`:
 ---
 workspace:
   tenant_id: "default-tenant"
-  project_id: "katara-platform"
+  project_id: "distira-platform"
   policy_pack: "baseline"
 ```
 
@@ -238,7 +254,7 @@ Resolution order is: request payload > runtime client-context > workspace defaul
 
 ---
 
-## Run KATARA
+## Run DISTIRA
 
 ### Automatic (recommended)
 
@@ -259,7 +275,7 @@ Start **all services** (Ollama + backend + dashboard) with a single command:
 This will:
 1. Load `.env` secrets
 2. Start Ollama (or detect it's already running)
-3. Start the KATARA Rust backend on `:8080`
+3. Start the DISTIRA Rust backend on `:8080`
 4. Start the Vue dashboard on `:5173`
 5. Stream backend logs — press **Ctrl+C** to stop everything
 
@@ -285,7 +301,7 @@ Verify Ollama is running:
 curl http://localhost:11434/v1/models
 ```
 
-#### Step 2: Load secrets and start KATARA backend
+#### Step 2: Load secrets and start DISTIRA backend
 
 **Linux / macOS:**
 
@@ -308,7 +324,7 @@ cargo run -p core
 You will see:
 
 ```md
-KATARA v7.7.1 — Sovereign AI Context OS
+DISTIRA v7.7.1 — Sovereign AI Context OS
 ────────────────────────────────────────
   Config loaded from configs/
     provider: ollama-llama3
@@ -344,7 +360,7 @@ Quick smoke tests below:
 
 ```bash
 curl http://localhost:8080/healthz
-# {"status":"ok","service":"katara-core","version":"7.7.1"}
+# {"status":"ok","service":"distira-core","version":"7.7.1"}
 ```
 
 ### List providers
@@ -380,7 +396,7 @@ This will:
 1. Detect intent → `general`
 2. Route to `ollama-llama3` (`llama3:latest`)
 3. Forward to Ollama on localhost:11434
-4. Return OpenAI-compatible response with a `katara` section showing optimization stats
+4. Return OpenAI-compatible response with a `distira` section showing optimization stats
 
 ### Force sensitive routing
 
@@ -431,7 +447,7 @@ ollama pull mistral:7b-instruct    # debug, analysis
 ollama list
 ```
 
-### Map models to KATARA providers
+### Map models to DISTIRA providers
 
 Each model you pull in Ollama must have a corresponding entry in `configs/providers/providers.yaml`:
 
@@ -482,7 +498,7 @@ cp .env.example .env
 # MISTRAL_API_KEY=your-key-here
 ```
 
-2. On Windows PowerShell, load the `.env` before starting KATARA:
+2. On Windows PowerShell, load the `.env` before starting DISTIRA:
 
 ```powershell
 Get-Content .env | ForEach-Object {
@@ -521,13 +537,13 @@ cargo run -p core
 
 ```bash
 # Build
-docker build -f deployments/docker/Dockerfile -t katara/core:7.7.1 .
+docker build -f deployments/docker/Dockerfile -t distira/core:7.7.1 .
 
 # Run (with config mounted)
 docker run -p 8080:8080 \
   -v $(pwd)/configs:/app/configs:ro \
   -e OPENAI_API_KEY="sk-..." \
-  katara/core:7.7.1
+  distira/core:7.7.1
 ```
 
 For Ollama running on the host:
@@ -536,7 +552,7 @@ For Ollama running on the host:
 docker run -p 8080:8080 \
   -v $(pwd)/configs:/app/configs:ro \
   --add-host host.docker.internal:host-gateway \
-  katara/core:7.7.1
+  distira/core:7.7.1
 ```
 
 Then change `base_url` in providers.yaml to `http://host.docker.internal:11434/v1`.
@@ -550,13 +566,13 @@ Then change `base_url` in providers.yaml to `http://host.docker.internal:11434/v
 kubectl apply -f deployments/kubernetes/deployment.yaml
 
 # Or via Helm
-helm install katara deployments/helm/
+helm install distira deployments/helm/
 ```
 
 Create a ConfigMap for your YAML configs:
 
 ```bash
-kubectl create configmap katara-config \
+kubectl create configmap distira-config \
   --from-file=configs/providers/providers.yaml \
   --from-file=configs/routing/routing.yaml \
   --from-file=configs/policies/policies.yaml
@@ -568,7 +584,7 @@ kubectl create configmap katara-config \
 
 ```md
 ┌─────────────────────┐         POST /v1/chat/completions   ┌──────────────────────────┐
-│   Client (curl,     │ ──────────────────────────────────► │   KATARA Rust Backend    │
+│   Client (curl,     │ ──────────────────────────────────► │   DISTIRA Rust Backend    │
 │   VS Code ext,      │                                     │                          │
 │   any AI tool)      │ ◄────── OpenAI-compatible JSON ──── │  ① fingerprint           │
 └─────────────────────┘                                     │  ② cache lookup          │
@@ -592,14 +608,14 @@ kubectl create configmap katara-config \
 
 ## VS Code Agent (MCP)
 
-KATARA includes an MCP (Model Context Protocol) server that integrates with VS Code Copilot Chat.
+DISTIRA includes an MCP (Model Context Protocol) server that integrates with VS Code Copilot Chat.
 It uses `@modelcontextprotocol/sdk` v1.27.1 with `StdioServerTransport` (JSON-RPC 2.0 over stdio).
 
 ### Requires
 
 - VS Code with GitHub Copilot Chat extension
 - Node.js 20+
-- KATARA backend running on port 8080
+- DISTIRA backend running on port 8080
 
 ### Setup
 
@@ -613,16 +629,16 @@ Set-Location ..
 
 2. The MCP server is already registered in `.vscode/mcp.json` with the correct `cwd`. VS Code detects it automatically on startup.
 
-3. Start the KATARA backend: `cargo run -p core`
+3. Start the DISTIRA backend: `cargo run -p core`
 
-4. In Copilot Chat, type `@katara` followed by your request.
+4. In Copilot Chat, type `@distira` followed by your request.
 
 ### How it works
 
 ```text
 VS Code Copilot Chat
   │
-  └─ spawns: node katara-server.mjs (cwd: mcp/)
+  └─ spawns: node distira-server.mjs (cwd: mcp/)
               │
               └─ stdio JSON-RPC 2.0 (Content-Length framing)
                    │
@@ -633,37 +649,37 @@ VS Code Copilot Chat
 
 | Tool | Description | Example |
 |------|-------------|---------|
-| `katara_compile` | Compile raw context (no LLM call) | `@katara compile this error trace` |
-| `katara_chat` | Compile + forward to LLM | `@katara explain circuit breaker pattern` |
-| `katara_set_client_context` | Update live upstream model/provider context | `@katara set client context to Claude Sonnet 4.6 on Anthropic` |
-| `katara_providers` | List configured providers | `@katara list providers` |
-| `katara_metrics` | Fetch live metrics snapshot | `@katara show metrics` |
+| `distira_compile` | Compile raw context (no LLM call) | `@distira compile this error trace` |
+| `distira_chat` | Compile + forward to LLM | `@distira explain circuit breaker pattern` |
+| `distira_set_client_context` | Update live upstream model/provider context | `@distira set client context to Claude Sonnet 4.6 on Anthropic` |
+| `distira_providers` | List configured providers | `@distira list providers` |
+| `distira_metrics` | Fetch live metrics snapshot | `@distira show metrics` |
 
 ### Upstream model lineage
 
-The MCP server automatically forwards upstream client metadata to KATARA so the dashboard can distinguish:
+The MCP server automatically forwards upstream client metadata to DISTIRA so the dashboard can distinguish:
 
 - the assistant or client model selected by the user
-- the model actually routed by KATARA
+- the model actually routed by DISTIRA
 
 Default behavior:
 
 - `client_app` → `VS Code Copilot Chat`
-- `upstream_model` → the `model` argument passed to `katara_chat`, MCP request `_meta`, or a runtime resolver command
+- `upstream_model` → the `model` argument passed to `distira_chat`, MCP request `_meta`, or a runtime resolver command
 - `upstream_provider` → MCP request `_meta`, runtime resolver command, or inferred from the model family when possible
 
 Optional environment overrides:
 
 ```text
-KATARA_CLIENT_APP=VS Code Copilot Chat
-KATARA_UPSTREAM_PROVIDER=GitHub Copilot
-KATARA_UPSTREAM_MODEL=GPT-5.4
+DISTIRA_CLIENT_APP=VS Code Copilot Chat
+DISTIRA_UPSTREAM_PROVIDER=GitHub Copilot
+DISTIRA_UPSTREAM_MODEL=GPT-5.4
 ```
 
 These static environment variables are only fallbacks. For dynamic behavior, prefer a runtime resolver command that is evaluated on every request:
 
 ```text
-KATARA_CLIENT_CONTEXT_CMD=powershell -File ..\scripts\resolve-upstream-context.ps1
+DISTIRA_CLIENT_CONTEXT_CMD=powershell -File ..\scripts\resolve-upstream-context.ps1
 ```
 
 Expected command output:
@@ -676,13 +692,13 @@ Expected command output:
 }
 ```
 
-KATARA also accepts request metadata keys when the MCP client can send them:
+DISTIRA also accepts request metadata keys when the MCP client can send them:
 
-- `katara/client_app`
-- `katara/upstream_provider`
-- `katara/upstream_model`
+- `distira/client_app`
+- `distira/upstream_provider`
+- `distira/upstream_model`
 
-This is the dynamic path. If the upstream client changes model from one request to another and exposes that value, KATARA will reflect it immediately without restart.
+This is the dynamic path. If the upstream client changes model from one request to another and exposes that value, DISTIRA will reflect it immediately without restart.
 
 If the client does not expose it directly, you can still update the live runtime context without restart:
 
@@ -690,7 +706,7 @@ If the client does not expose it directly, you can still update the live runtime
 .\scripts\set-upstream-context.ps1 -UpstreamProvider "Anthropic" -UpstreamModel "Claude Sonnet 4.6"
 ```
 
-KATARA also exposes `GET/POST /v1/runtime/client-context` for programmatic updates.
+DISTIRA also exposes `GET/POST /v1/runtime/client-context` for programmatic updates.
 
 ### Validate the MCP integration
 
@@ -700,7 +716,7 @@ See [TESTING.md — MCP Agent Tests](TESTING.md#mcp-agent-tests-vs-code) for ste
 
 ```powershell
 Set-Location mcp
-node katara-server.mjs
+node distira-server.mjs
 # Send JSON-RPC 2.0 initialize + tools/list messages via stdin
 ```
 
@@ -710,13 +726,13 @@ node katara-server.mjs
 
 If your workspace is stored on Google Drive (e.g. via Google Drive File Stream), the Rust `target/` folder will cause **file-locking errors** during compilation.
 
-The project includes `.cargo/config.toml` which redirects build output to `C:/katara-target` (local disk). This is applied automatically — no manual action needed.
+The project includes `.cargo/config.toml` which redirects build output to `C:/distira-target` (local disk). This is applied automatically — no manual action needed.
 
 To change the path, edit `.cargo/config.toml`:
 
 ```toml
 [build]
-target-dir = "C:/katara-target"
+target-dir = "C:/distira-target"
 ```
 
 ---
@@ -725,12 +741,12 @@ target-dir = "C:/katara-target"
 
 | Problem | Solution |
 |---|---|
-| `No config files found — using built-in defaults` | Run KATARA from the repo root: `cargo run -p core` |
+| `No config files found — using built-in defaults` | Run DISTIRA from the repo root: `cargo run -p core` |
 | `Provider returned 404` | Check that the model is pulled in Ollama: `ollama list` |
 | `HTTP error: Connection refused` | Ollama not running. Start with `ollama serve` |
 | `Provider returned 401` | API key missing. Set the env var listed in `api_key_env` |
 | Dashboard shows **Offline** | Backend not running on port 8080, or CORS blocked |
-| npm install fails on Google Drive | Copy to local disk first: `robocopy . $env:TEMP/katara /MIR` |
+| npm install fails on Google Drive | Copy to local disk first: `robocopy . $env:TEMP/distira /MIR` |
 | Rust build fails (MSVC not found) | Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with "Desktop development with C++" |
 
 ---
@@ -749,4 +765,4 @@ target-dir = "C:/katara-target"
 
 ---
 
-*License: AGPL-3.0 + Commons Clause — Copyright 2024-2026 Christophe Freijanes*
+*License: AGPL-3.0 — Free and open-source. Copyright 2024-2026 Christophe Freijanes*

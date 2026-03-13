@@ -1,6 +1,6 @@
-# Testing KATARA
+# Testing DISTIRA
 
-> **KATARA v7.7.1** — This guide walks you through every layer of verification:
+> **DISTIRA v7.7.1** — This guide walks you through every layer of verification:
 > the Rust backend, the HTTP API, the Vue dashboard, and the MCP VS Code agent.
 
 ---
@@ -22,7 +22,7 @@
 
 ## Prerequisites
 
-Before running any test, KATARA must be running.
+Before running any test, DISTIRA must be running.
 
 **One-command start (Windows):**
 
@@ -41,7 +41,7 @@ Confirm the backend is up:
 
 ```powershell
 Invoke-RestMethod http://localhost:8080/healthz
-# Expected: status=ok, service=katara-core, version=7.7.1
+# Expected: status=ok, service=distira-core, version=7.7.1
 ```
 
 **Ollama models (for LLM tests):**
@@ -70,7 +70,7 @@ Invoke-RestMethod http://localhost:8080/healthz
 ```json
 {
   "status": "ok",
-  "service": "katara-core",
+  "service": "distira-core",
   "version": "7.7.1"
 }
 ```
@@ -252,11 +252,11 @@ After running Test 6 (cache hit), check again:
 
 ### Setup check
 
-1. Open VS Code in the `katara/` workspace.
+1. Open VS Code in the `distira/` workspace.
 2. Open Copilot Chat (`Ctrl+Alt+I`).
-3. Type `@katara` — VS Code should auto-complete it and show the agent badge.
+3. Type `@distira` — VS Code should auto-complete it and show the agent badge.
 
-If `@katara` does not appear, check:
+If `@distira` does not appear, check:
 - The backend is running on `:8080`
 - `.vscode/mcp.json` is present with `"cwd": "${workspaceFolder}/mcp"`
 - `mcp/node_modules/@modelcontextprotocol` exists (run `npm install` in `mcp/` if not)
@@ -264,7 +264,7 @@ If `@katara` does not appear, check:
 ### MCP Test 1 — List providers
 
 ```md
-@katara list all configured providers
+@distira list all configured providers
 ```
 
 **Expected in chat:** A JSON list with 5 provider keys.
@@ -274,7 +274,7 @@ If `@katara` does not appear, check:
 ### MCP Test 1b — Set live client context
 
 ```md
-@katara set client context to Claude Sonnet 4.6 on Anthropic
+@distira set client context to Claude Sonnet 4.6 on Anthropic
 ```
 
 **Expected in chat:** JSON response from `/v1/runtime/client-context` showing `upstream_provider="Anthropic"` and `upstream_model="Claude Sonnet 4.6"`.
@@ -284,7 +284,7 @@ If `@katara` does not appear, check:
 ### MCP Test 2 — Compile context
 
 ```md
-@katara compile this context: debug an error in the tokio runtime scheduler
+@distira compile this context: debug an error in the tokio runtime scheduler
 ```
 
 **Expected in chat:** JSON with `intent="debug"`, `provider="ollama-mistral"`, `cache_hit=false`.
@@ -294,7 +294,7 @@ If `@katara` does not appear, check:
 ### MCP Test 3 — Metrics after compile
 
 ```md
-@katara show current metrics
+@distira show current metrics
 ```
 
 **Expected in chat:** JSON with `total_requests ≥ 1`, `local_ratio=100`.
@@ -304,10 +304,10 @@ If `@katara` does not appear, check:
 ### MCP Test 4 — Chat (requires Ollama running with llama3:latest)
 
 ```md
-@katara what is the difference between Arc and Rc in Rust?
+@distira what is the difference between Arc and Rc in Rust?
 ```
 
-**Expected in chat:** A JSON response with an OpenAI-compatible `choices[0].message.content` plus a `katara` section showing `intent`, `provider`, `compiled_tokens`.
+**Expected in chat:** A JSON response with an OpenAI-compatible `choices[0].message.content` plus a `distira` section showing `intent`, `provider`, `compiled_tokens`.
 
 If Ollama is not running, you will see an error. Start it with `ollama serve`.
 
@@ -322,10 +322,10 @@ Verify that the MCP bridge is forwarding upstream client metadata dynamically.
 ```json
 {
   "servers": {
-    "katara": {
+    "distira": {
       "env": {
-        "KATARA_CLIENT_APP": "VS Code Copilot Chat",
-        "KATARA_CLIENT_CONTEXT_CMD": "powershell -File ..\\scripts\\resolve-upstream-context.ps1"
+        "DISTIRA_CLIENT_APP": "VS Code Copilot Chat",
+        "DISTIRA_CLIENT_CONTEXT_CMD": "powershell -File ..\\scripts\\resolve-upstream-context.ps1"
       }
     }
   }
@@ -345,7 +345,7 @@ Verify that the MCP bridge is forwarding upstream client metadata dynamically.
 3. In Copilot Chat, run:
 
 ```md
-@katara explain the difference between Arc and Mutex in Rust
+@distira explain the difference between Arc and Mutex in Rust
 ```
 
 4. Then call:
@@ -361,7 +361,7 @@ Invoke-RestMethod http://localhost:8080/v1/metrics | ConvertTo-Json -Depth 8
 - `last_request.upstream_model = "GPT-5.4"`
 - `last_request.routed_model` may differ, which is the expected behavior
 
-This verifies that KATARA distinguishes the upstream assistant/client model from the routed model.
+This verifies that DISTIRA distinguishes the upstream assistant/client model from the routed model.
 
 5. Change the resolver output to:
 
@@ -373,9 +373,9 @@ This verifies that KATARA distinguishes the upstream assistant/client model from
 }
 ```
 
-6. Run another `@katara` request and re-check `/v1/metrics`.
+6. Run another `@distira` request and re-check `/v1/metrics`.
 
-**Expected:** `last_request.upstream_model = "Claude Sonnet 4.6"` without changing backend code or restarting KATARA.
+**Expected:** `last_request.upstream_model = "Claude Sonnet 4.6"` without changing backend code or restarting DISTIRA.
 
 7. Open the Overview dashboard and confirm the `Last Request` panel now shows:
 
@@ -388,7 +388,7 @@ This verifies that KATARA distinguishes the upstream assistant/client model from
 
 ### HTTP Test — Chat streaming
 
-KATARA now supports `stream=true` on `/v1/chat/completions` and proxies the provider SSE stream.
+DISTIRA now supports `stream=true` on `/v1/chat/completions` and proxies the provider SSE stream.
 
 ```powershell
 $body = @{
@@ -417,7 +417,7 @@ Invoke-WebRequest http://localhost:8080/v1/chat/completions `
 
 ### HTTP Test — Multi-turn compatibility
 
-Verify that KATARA preserves prior chat turns and forwards extra OpenAI-compatible options.
+Verify that DISTIRA preserves prior chat turns and forwards extra OpenAI-compatible options.
 
 ```powershell
 $body = @{
@@ -446,14 +446,14 @@ Invoke-RestMethod http://localhost:8080/v1/chat/completions `
 - routed provider receives the extra `temperature` option
 - the latest user turn is what gets reduced before forwarding, while prior history remains present
 - repeating the exact same payload can produce a cache hit
-- repeated compile/chat requests for the same input can also report `semantic_cache_hit = true` in the `katara` metadata once the compiler result has been reused
+- repeated compile/chat requests for the same input can also report `semantic_cache_hit = true` in the `distira` metadata once the compiler result has been reused
 
 ---
 
 ### MCP Test 5 — Sensitive mode
 
 ```md
-@katara explain what a JWT token is — treat this as sensitive
+@distira explain what a JWT token is — treat this as sensitive
 ```
 
 The agent description says to set `sensitive: true` for sensitive contexts.  
@@ -624,8 +624,8 @@ Results: 7 passed, 0 failed
 |-------|-------|-----|
 | `Connection refused :8080` | Backend not started | Run `cargo run -p core` |
 | `Connection refused :11434` | Ollama not running | Run `ollama serve` |
-| `KATARA 500: model not found` | Ollama model not pulled | `ollama pull llama3:latest` |
-| `@katara not found in Copilot Chat` | MCP not connected | Check `.vscode/mcp.json` + run backend |
+| `DISTIRA 500: model not found` | Ollama model not pulled | `ollama pull llama3:latest` |
+| `@distira not found in Copilot Chat` | MCP not connected | Check `.vscode/mcp.json` + run backend |
 | `Cannot find module '@modelcontextprotocol/sdk'` | MCP deps not installed | `cd mcp && npm install` |
 | `cargo: command not found` | Cargo not in PATH | `$env:PATH = "$env:USERPROFILE\.cargo\bin;" + $env:PATH` |
 | `AddrInUse :8080` | Stale backend process | `.\scripts\start-win.ps1` (kills existing process automatically) |

@@ -1,6 +1,6 @@
 # Context Memory Lensing
 
-KATARA decomposes recurring context into **stable memory blocks**
+DISTIRA decomposes recurring context into **stable memory blocks**
 and sends only deltas when possible, avoiding redundant token spend.
 
 ## How it works

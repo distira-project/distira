@@ -5,7 +5,7 @@ This example demonstrates routing sensitive context to a local Ollama instance.
 ## Prerequisites
 
 - [Ollama](https://ollama.ai) running on `localhost:11434`
-- KATARA core running on `localhost:8080`
+- DISTIRA core running on `localhost:8080`
 
 ## How it works
 

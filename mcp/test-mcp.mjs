@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Quick test: spawn katara-server.mjs and send an MCP initialize handshake.
+ * Quick test: spawn distira-server.mjs and send an MCP initialize handshake.
  * Usage:  node mcp/test-mcp.mjs
  */
 import { spawn } from "node:child_process";
@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const server = spawn("node", [join(dir, "katara-server.mjs")], {
-  env: { ...process.env, KATARA_URL: "http://127.0.0.1:8080" },
+const server = spawn("node", [join(dir, "distira-server.mjs")], {
+  env: { ...process.env, DISTIRA_URL: "http://127.0.0.1:8080" },
   stdio: ["pipe", "pipe", "pipe"],
 });
 

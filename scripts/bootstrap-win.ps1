@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 Write-Host ''
-Write-Host '  KATARA - Sovereign AI Context Operating System' -ForegroundColor Cyan
+Write-Host '  DISTIRA - Sovereign AI Context Operating System' -ForegroundColor Cyan
 Write-Host '  Bootstrap script for Windows' -ForegroundColor Cyan
 Write-Host '  ----------------------------------------------' -ForegroundColor DarkGray
 Write-Host ''
@@ -136,18 +136,18 @@ if (Get-Command ollama -ErrorAction SilentlyContinue) {
 # -- 9. Verify MCP server module syntax -----------------
 Write-Host ''
 Write-Host '==> Verifying MCP server module...' -ForegroundColor Cyan
-$mcpCheck = node --check mcp/katara-server.mjs 2>&1
+$mcpCheck = node --check mcp/distira-server.mjs 2>&1
 if ($LASTEXITCODE -eq 0) {
-    Write-Host '[ok] MCP server (mcp/katara-server.mjs) syntax OK.' -ForegroundColor Green
+    Write-Host '[ok] MCP server (mcp/distira-server.mjs) syntax OK.' -ForegroundColor Green
 } else {
     Write-Host "[!!] MCP server failed to load: $mcpCheck" -ForegroundColor Red
-    $warnings += 'MCP server module failed to load - check mcp/katara-server.mjs.'
+    $warnings += 'MCP server module failed to load - check mcp/distira-server.mjs.'
 }
 
 # -- Summary --------------------------------------------
 Write-Host ''
 Write-Host '  ----------------------------------------------' -ForegroundColor DarkGray
-Write-Host '  KATARA bootstrap complete!' -ForegroundColor Green
+Write-Host '  DISTIRA bootstrap complete!' -ForegroundColor Green
 Write-Host ''
 
 if ($warnings.Count -gt 0) {
@@ -164,5 +164,5 @@ Write-Host '    Or manually:' -ForegroundColor DarkGray
 Write-Host '      1. ollama serve' -ForegroundColor DarkGray
 Write-Host '      2. cargo run -p core' -ForegroundColor DarkGray
 Write-Host '      3. cd dashboard/ui-vue; npm run dev' -ForegroundColor DarkGray
-Write-Host '      4. @katara in Copilot Chat' -ForegroundColor DarkGray
+Write-Host '      4. @distira in Copilot Chat' -ForegroundColor DarkGray
 Write-Host ''

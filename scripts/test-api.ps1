@@ -1,10 +1,10 @@
 # Requires -Version 5.1
 <#
 .SYNOPSIS
-    Quick smoke-test script for the KATARA backend API.
+    Quick smoke-test script for the DISTIRA backend API.
 
 .DESCRIPTION
-    Runs 7 assertions against the KATARA REST API:
+    Runs 7 assertions against the DISTIRA REST API:
       - Health check
       - Providers list
       - Compile with debug intent
@@ -13,7 +13,7 @@
       - Sensitive mode override
       - Metrics snapshot
 
-    Requires the KATARA backend to be running on localhost:8080.
+    Requires the DISTIRA backend to be running on localhost:8080.
     Does NOT require Ollama (all tests use /v1/compile, not /v1/chat/completions).
 
 .EXAMPLE
@@ -63,7 +63,7 @@ function Invoke-Test {
 }
 
 Write-Host ""
-Write-Host "  KATARA API Test Suite" -ForegroundColor Cyan
+Write-Host "  DISTIRA API Test Suite" -ForegroundColor Cyan
 Write-Host "  ─────────────────────────────────" -ForegroundColor DarkGray
 Write-Host "  Target: $base" -ForegroundColor DarkGray
 Write-Host ""

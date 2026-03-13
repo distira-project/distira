@@ -1,5 +1,5 @@
 ---
-# KATARA routing configuration
+# DISTIRA routing configuration
 #
 # Maps detected intents to providers declared in providers.yaml.
 # sensitive_override forces all sensitive requests to a local provider.

@@ -1,15 +1,16 @@
 ---
-# KATARA policy configuration
+# DISTIRA policy configuration
 # Controls data handling, optimization targets, and token limits.
 
-name: katara-policies
+name: distira-policies
 
 terms:
-  - license: "AGPL-3.0 WITH Commons-Clause"
-  - notice: >
-      KATARA is free for personal, educational, and non-commercial use.
-      Commercial redistribution or resale requires explicit written
-      authorization from the original author.
+  - license: "AGPL-3.0"
+  - notice: >-
+      Distira is free and open-source software, licensed under AGPL-3.0.
+      You are free to use, modify, and distribute it. Any modified version
+      distributed or made available over a network must be released under
+      the same AGPL-3.0 license with its source code.
 
 policies:
   sensitive_data: local_only

@@ -1,4 +1,4 @@
-# KATARA Roadmap
+# DISTIRA Roadmap
 
 ## Completed iterations
 
@@ -11,7 +11,7 @@
 | V5 | Predictive AI gateway concepts |
 | V6.1 | Functional gateway baseline |
 | V6.2 | Hybrid routing engine |
-| V6.3 | KATARA rebrand |
+| V6.3 | DISTIRA rebrand |
 | V6.4 | Context Budget Compiler framing |
 | V6.5 | Optimization layer + Vue dashboard direction |
 | V6.6 | AI Flow Visualizer + Context Memory Lensing scaffold |
@@ -38,8 +38,8 @@
 
 **Status:** Delivered.
 
-- **MCP Server** (`mcp/katara-server.mjs`) — stdio-based, 4 tools: compile, chat, providers, metrics
-- **VS Code Agent** (`.github/agents/katara.agent.md`) — `@katara` in Copilot Chat
+- **MCP Server** (`mcp/distira-server.mjs`) — stdio-based, 4 tools: compile, chat, providers, metrics
+- **VS Code Agent** (`.github/agents/distira.agent.md`) — `@distira` in Copilot Chat
 - **Live Benchmarks** — `BenchmarksView.vue` rewritten with real-time SSE data (no more demo data)
 - **Per-intent metrics** — `IntentStats` in `MetricsSnapshot` (requests, raw_tokens, compiled_tokens per intent)
 - **OCR routing** — `ocr` intent routes to `mistral-cloud` via `TaskRouting`
@@ -59,7 +59,7 @@
 **Status:** Delivered.
 
 - Upstream request lineage added to runtime contracts: `client_app`, `upstream_provider`, `upstream_model`
-- Live metrics snapshot now distinguishes upstream client model vs KATARA-routed model
+- Live metrics snapshot now distinguishes upstream client model vs DISTIRA-routed model
 - Overview dashboard clarifies model scope to avoid confusing assistant/client models with routed provider models
 - `/v1/providers` now exposes both provider keys and rich runtime details (type, deployment, base URL, model, description)
 - Foundation laid for per-client and per-tenant LLM observability
@@ -131,7 +131,7 @@
 - Dedicated "Codegen vs Review" slice in the Overview to track how much traffic is pure generation vs review/refactor, with per-intent token reduction stats
 - Per-intent efficiency deltas surfaced via the Intent Distribution panel and the Codegen vs Review card (e.g., how much `codegen` and `review` benefit from compiler and memory reductions)
 - Optimization advisor panel implemented in the Insights view, generating live recommendations from efficiency, cache and sovereignty metrics
-- Agent governance reinforced in `.github/agents/katara.agent.md` with an essentials-first workflow so users no longer need to repeatedly request baseline actions (review/validation/docs/version updates)
+- Agent governance reinforced in `.github/agents/distira.agent.md` with an essentials-first workflow so users no longer need to repeatedly request baseline actions (review/validation/docs/version updates)
 - Runtime Audit now includes automatic retention guardrails (default 7-day TTL + bounded history size) to avoid unnecessary data accumulation
 - Token Trends chart readability improved with hour-based X-axis labels and sparse tick rendering for better 24h visibility
 - Token Trends now supports true hour-by-hour granularity over the last 24h using backend hourly buckets
@@ -158,6 +158,34 @@
 - Runtime Audit now supports temporal filtering (`24h` / `7d` / `custom`) and applies the same scope to CSV exports
 - Runtime Audit filter state is now persisted in browser localStorage (tenant/project/time/custom range) and auto-restored after refresh/restart
 - Version consistency audit completed: runtime, MCP fallback, npm manifests, and operator docs aligned on `7.7.1`
+
+### V7.8 — Transparent Optimization Autopilot (planned)
+
+**Status:** In progress (Wave A started).
+
+- Product principle: users should only send a simple request; DISTIRA handles optimization automatically without requiring prompt engineering education
+- Objective: make `~50%` token/cost gains reachable on repetitive workflows while preserving response quality
+- Automatic canonicalization pipeline before fingerprinting (normalize volatile values, reduce formatting variance) to increase cacheability
+- Intent-native prompt shaping templates applied transparently (`debug`, `review`, `summarize`, `general`, `codegen`) to stabilize request structure
+- Adaptive context budgeting per intent and confidence level, with automatic fallback to safer (less aggressive) reduction when quality risk increases
+- Multi-level semantic cache strategy (exact, canonical, semantic-nearest) to convert near-duplicate user requests into reusable compiled contexts
+- Delta-first forwarding for long conversations (reuse stable blocks, send only meaningful changes)
+- Built-in quality guardrails (sampled dual-path validation and auto-tuning) so optimization remains invisible to end users
+- Excellence KPIs surfaced for operators (cacheability, avoidable tokens, quality drift) without exposing complexity to end users
+
+Implementation waves:
+
+- Wave A (fast ROI): canonicalization + intent templates + operational KPIs
+- Wave B (scale gains): multi-level cache + stronger delta-forwarding
+- Wave C (autonomous quality): adaptive optimizer with automatic aggressiveness tuning
+
+Wave A progress:
+
+- Canonicalization is now applied to semantic and chat cache key construction to reduce misses caused by volatile IDs and noisy formatting without changing user behavior
+- Flow visualizer now displays live semantic fingerprint/cache lineage signals instead of static fingerprint labels, improving operator trust in real-time automation
+- Transparent intent shaping is now active in compiler outputs via token-neutral per-intent markers (`debug`, `review`, `summarize`, `general`, `codegen`, `ocr`) to stabilize downstream behavior without increasing user complexity
+- Memory reuse telemetry now differentiates misses vs reuse correctly (no duplicate-looking compiled/memory values on misses), and Wave A UI labels are aligned to all-English copy
+- Runtime state is now transparently persisted and restored across backend restarts (metrics snapshot, runtime audit history, semantic/chat caches, context-store blocks) via `cache/runtime-state.json`
 
 ## Future iterations
 

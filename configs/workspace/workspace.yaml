@@ -1,5 +1,5 @@
 ---
 workspace:
   tenant_id: "default-tenant"
-  project_id: "katara-platform"
+  project_id: "distira-platform"
   policy_pack: "baseline"

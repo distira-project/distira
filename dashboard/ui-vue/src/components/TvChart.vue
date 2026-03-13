@@ -219,7 +219,7 @@ function exportPng() {
       if (!b) return
       const a = document.createElement('a')
       a.href = URL.createObjectURL(b)
-      a.download = 'katara-chart.png'
+      a.download = 'distira-chart.png'
       a.click()
       URL.revokeObjectURL(a.href)
     }, 'image/png')

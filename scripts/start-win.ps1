@@ -1,11 +1,11 @@
 # Requires -Version 5.1
 <#
 .SYNOPSIS
-    Start all KATARA services (Ollama, backend, dashboard) in one command.
+    Start all DISTIRA services (Ollama, backend, dashboard) in one command.
 
 .DESCRIPTION
     Launches Ollama (if installed), waits for it to be ready,
-    starts the KATARA Rust backend on :8080, and the Vue dashboard on :5173.
+    starts the DISTIRA Rust backend on :8080, and the Vue dashboard on :5173.
     Each service runs in its own background job. Press Ctrl+C to stop everything.
 
 .EXAMPLE
@@ -15,7 +15,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 Write-Host ''
-Write-Host '  KATARA - Starting all services' -ForegroundColor Cyan
+Write-Host '  DISTIRA - Starting all services' -ForegroundColor Cyan
 Write-Host '  --------------------------------' -ForegroundColor DarkGray
 Write-Host ''
 
@@ -44,7 +44,7 @@ $jobs = @()
 
 function Stop-AllJobs {
     Write-Host ''
-    Write-Host '  Stopping all KATARA services...' -ForegroundColor Yellow
+    Write-Host '  Stopping all DISTIRA services...' -ForegroundColor Yellow
     foreach ($j in $jobs) {
         Stop-Job -Job $j -ErrorAction SilentlyContinue
         Remove-Job -Job $j -Force -ErrorAction SilentlyContinue
@@ -93,7 +93,7 @@ if (Get-Command ollama -ErrorAction SilentlyContinue) {
     Write-Host '[--] Ollama not installed - skipping local models.' -ForegroundColor Yellow
 }
 
-# -- 2. Start KATARA backend ----------------------------
+# -- 2. Start DISTIRA backend ----------------------------
 # Kill any previous core.exe to avoid AddrInUse on :8080
 Get-Process -Name 'core' -ErrorAction SilentlyContinue | ForEach-Object {
     Write-Host "[..] Stopping previous core.exe (PID $($_.Id))" -ForegroundColor Yellow
@@ -112,7 +112,7 @@ foreach ($line in $netstatLines) {
 }
 Start-Sleep -Seconds 1
 
-Write-Host '==> Starting KATARA backend...' -ForegroundColor Cyan
+Write-Host '==> Starting DISTIRA backend...' -ForegroundColor Cyan
 $cargoPath = "$env:USERPROFILE\.cargo\bin"
 $backendJob = Start-Job -ScriptBlock {
     param($dir, $cargo)
@@ -149,7 +149,7 @@ for ($i = 0; $i -lt 60; $i++) {
     }
 }
 if ($backendReady) {
-    Write-Host '[ok] KATARA backend running on http://127.0.0.1:8080' -ForegroundColor Green
+    Write-Host '[ok] DISTIRA backend running on http://127.0.0.1:8080' -ForegroundColor Green
 } else {
     if ($backendJob.State -eq 'Running') {
         Write-Host '[..] Backend still starting (compilation may take a moment)...' -ForegroundColor Yellow
@@ -172,15 +172,15 @@ Write-Host '[ok] Dashboard starting on http://localhost:5173' -ForegroundColor G
 # -- Summary ---------------------------------------------
 Write-Host ''
 Write-Host '  ----------------------------------------------' -ForegroundColor DarkGray
-Write-Host '  All KATARA services launched!' -ForegroundColor Green
+Write-Host '  All DISTIRA services launched!' -ForegroundColor Green
 Write-Host ''
 Write-Host '  Services:' -ForegroundColor Cyan
 if ($ollamaRunning) {
     Write-Host '    Ollama        : http://localhost:11434' -ForegroundColor White
 }
-Write-Host '    KATARA API    : http://localhost:8080' -ForegroundColor White
+Write-Host '    DISTIRA API   : http://localhost:8080' -ForegroundColor White
 Write-Host '    Dashboard     : http://localhost:5173' -ForegroundColor White
-Write-Host '    VS Code Agent : @katara in Copilot Chat' -ForegroundColor White
+Write-Host '    VS Code Agent : @distira in Copilot Chat' -ForegroundColor White
 Write-Host ''
 Write-Host '  Press Ctrl+C to stop all services.' -ForegroundColor Yellow
 Write-Host ''

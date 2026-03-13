@@ -1,13 +1,13 @@
 {
   "servers": {
-    "katara": {
+    "distira": {
       "type": "stdio",
       "command": "node",
-      "args": ["katara-server.mjs"],
+      "args": ["distira-server.mjs"],
       "cwd": "${workspaceFolder}/mcp",
       "env": {
-        "KATARA_URL": "http://127.0.0.1:8080",
-        "KATARA_CLIENT_APP": "VS Code Copilot Chat"
+        "DISTIRA_URL": "http://127.0.0.1:8080",
+        "DISTIRA_CLIENT_APP": "VS Code Copilot Chat"
       }
     }
   }
