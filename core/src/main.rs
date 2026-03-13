@@ -470,8 +470,10 @@ impl MetricsCollector {
 
         let raw = std::fs::read_to_string(&self.persistence_path)
             .map_err(|error| format!("Cannot read {}: {error}", self.persistence_path.display()))?;
-        let mut restored: PersistedCollectorState = serde_json::from_str(&raw)
-            .map_err(|error| format!("Cannot parse {}: {error}", self.persistence_path.display()))?;
+        let mut restored: PersistedCollectorState =
+            serde_json::from_str(&raw).map_err(|error| {
+                format!("Cannot parse {}: {error}", self.persistence_path.display())
+            })?;
 
         // Apply retention guardrails on restored audit lineage.
         let now = now_epoch();
@@ -1817,7 +1819,10 @@ mod tests {
         assert_eq!(restored.snapshot.raw_tokens, 120);
         assert_eq!(restored.snapshot.compiled_tokens, 70);
         assert_eq!(restored.snapshot.request_history.len(), 1);
-        assert_eq!(restored.snapshot.request_history[0].semantic_cache_hit, true);
+        assert_eq!(
+            restored.snapshot.request_history[0].semantic_cache_hit,
+            true
+        );
 
         let _ = std::fs::remove_file(state_path);
     }
