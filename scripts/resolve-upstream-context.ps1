@@ -9,9 +9,9 @@ if (Test-Path $runtimeStatePath) {
     }
 }
 
-$clientApp = if ($env:KATARA_RUNTIME_CLIENT_APP) { $env:KATARA_RUNTIME_CLIENT_APP } else { "VS Code Copilot Chat" }
-$upstreamProvider = if ($env:KATARA_RUNTIME_UPSTREAM_PROVIDER) { $env:KATARA_RUNTIME_UPSTREAM_PROVIDER } else { $null }
-$upstreamModel = if ($env:KATARA_RUNTIME_UPSTREAM_MODEL) { $env:KATARA_RUNTIME_UPSTREAM_MODEL } else { $null }
+$clientApp = if ($env:DISTIRA_RUNTIME_CLIENT_APP) { $env:DISTIRA_RUNTIME_CLIENT_APP } else { "VS Code Copilot Chat" }
+$upstreamProvider = if ($env:DISTIRA_RUNTIME_UPSTREAM_PROVIDER) { $env:DISTIRA_RUNTIME_UPSTREAM_PROVIDER } else { $null }
+$upstreamModel = if ($env:DISTIRA_RUNTIME_UPSTREAM_MODEL) { $env:DISTIRA_RUNTIME_UPSTREAM_MODEL } else { $null }
 
 $payload = @{
     client_app = $clientApp

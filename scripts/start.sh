@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Start all KATARA services (Ollama, backend, dashboard) in one command.
+# Start all DISTIRA services (Ollama, backend, dashboard) in one command.
 # Each service runs in the background. Press Ctrl+C to stop everything.
 #
 # Usage: ./scripts/start.sh
@@ -12,7 +12,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo ""
-echo "  KATARA — Starting all services"
+echo "  DISTIRA — Starting all services"
 echo "  ──────────────────────────────"
 echo ""
 
@@ -21,7 +21,7 @@ PIDS=()
 # ── Cleanup on exit ───────────────────────────────────
 cleanup() {
     echo ""
-    echo "  Stopping all KATARA services..."
+    echo "  Stopping all DISTIRA services..."
     for pid in "${PIDS[@]}"; do
         kill "$pid" 2>/dev/null || true
         wait "$pid" 2>/dev/null || true
@@ -71,8 +71,8 @@ else
     echo "[--] Ollama not installed — skipping local models."
 fi
 
-# ── 2. Start KATARA backend ───────────────────────────
-echo "==> Starting KATARA backend..."
+# ── 2. Start DISTIRA backend ───────────────────────────
+echo "==> Starting DISTIRA backend..."
 cargo run -p core &
 PIDS+=($!)
 
@@ -87,7 +87,7 @@ for i in $(seq 1 120); do
 done
 
 if $backend_ready; then
-    echo "[ok] KATARA backend running on http://127.0.0.1:8080"
+    echo "[ok] DISTIRA backend running on http://127.0.0.1:8080"
 else
     echo "[..] Backend still starting (compilation may take a moment)..."
 fi
@@ -102,15 +102,15 @@ echo "[ok] Dashboard starting on http://localhost:5173"
 # ── Summary ───────────────────────────────────────────
 echo ""
 echo "  ──────────────────────────────────────────────"
-echo "  All KATARA services launched!"
+echo "  All DISTIRA services launched!"
 echo ""
 echo "  Services:"
 if $ollama_running; then
     echo "    Ollama        → http://localhost:11434"
 fi
-echo "    KATARA API    → http://localhost:8080"
+echo "    DISTIRA API   → http://localhost:8080"
 echo "    Dashboard     → http://localhost:5173"
-echo "    VS Code Agent → @katara in Copilot Chat"
+echo "    VS Code Agent → @distira in Copilot Chat"
 echo ""
 echo "  Press Ctrl+C to stop all services."
 echo ""
