@@ -3,8 +3,9 @@
 | Attribute | Value |
 | --- | --- |
 | **Product** | DISTIRA |
-| **Tagline** | The Sovereign AI Flow Engine |
-| **Brand Core** | Custom K monogram inspired by `distira-icon.jpg` |
+| **Tagline** | Sovereign AI Context Operating System |
+| **Sub-tagline** | Compile the smallest useful context before every LLM call |
+| **Brand Core** | Compression frame / vice symbol in premium dark blue |
 
 ## Colors
 
@@ -19,20 +20,28 @@
 
 ## Core assets
 
-- `brand/distira_monogram.svg` - K only, transparent
-- `brand/distira_mark.svg` - app icon mark on dark rounded square
-- `brand/distira_mark.png` - lossless mark for GitHub/Markdown rendering
-- `brand/distira_mark.jpg` - JPG export for platforms requiring JPEG
-- `brand/distira_logo.svg` - horizontal primary logo
-- `brand/distira_logo_stacked.svg` - square/stacked logo
-- `brand/favicon.svg` - favicon
+- `brand/distira_symbol.svg` - symbol only, transparent background
+- `brand/distira_symbol_mono.svg` - monochrome symbol variant
+- `brand/distira_symbol_1024.png` - raster symbol (1024px)
+- `brand/distira_symbol_mono_1024.png` - raster monochrome symbol
+- `brand/distira_logo_horizontal_dark.svg` - horizontal logo, dark background
+- `brand/distira_logo_horizontal_light.svg` - horizontal logo, light background
+- `brand/distira_app_icon.svg` - app icon
+- `brand/distira_app_icon_1024.png` - raster app icon (1024px)
+- `brand/favicon.ico` + `brand/favicon-*.png` - favicon set
 
 ## Channel-ready assets
 
-- `brand/distira_banner_linkedin_company.svg` - LinkedIn company cover ratio (1128x191)
-- `brand/distira_banner_linkedin_personal.svg` - LinkedIn personal cover ratio (1584x396)
-- `brand/distira_presentation_cover.svg` - presentation/slide cover (1920x1080)
-- `brand/distira_video_bug.svg` - video corner bug/watermark (640x360 canvas)
+- `brand/distira_banner_1600x900.svg` — primary product banner (1600x900)
+- `brand/distira_banner_1600x900.png` — raster banner for platforms requiring PNG
+- `brand/distira_banner_1600x900.jpg` — JPG export for platforms requiring JPEG
+- `brand/distira_social_banner_1500x500.svg` — social/Twitter cover (1500x500)
+- `brand/distira_social_banner_1500x500.png` — raster social banner PNG
+- `brand/distira_social_banner_1500x500.jpg` — raster social banner JPG
+- `brand/distira_avatar_512.png` — GitHub avatar / profile picture (512px)
+- `brand/distira_brand_preview.jpg` — brand overview preview
+- `brand/distira_concept_board_frame.png` — compression frame concept board
+- `brand/distira_concept_board_vise.png` — compression vice concept board
 
 ## Usage rules
 

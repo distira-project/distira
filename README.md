@@ -2,23 +2,99 @@
 
 ![DISTIRA](brand/distira_banner_1600x900.svg)
 
-> **Distira is a Sovereign AI Context Operating System** that compiles the smallest useful context before every LLM call.
+> **Distira is a Sovereign AI Context Operating System.**
+> It compiles, minimizes, and governs context before every LLM call.
 
 [![CI](https://github.com/distira-project/distira/actions/workflows/ci.yml/badge.svg?branch=wip-chf)](https://github.com/distira-project/distira/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20Commons%20Clause-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-7.7.1-brightgreen.svg)](VERSION)
 
-## What makes DISTIRA different
+> **Distira reduces token waste before the model call — not after it.**
 
-Most AI gateways route requests. DISTIRA goes further:
+---
 
-| Feature | Description |
+## The problem
+
+Every LLM call carries too much context: logs, traces, diffs, histories, noise.
+You pay for tokens that don't contribute to the answer.
+You route blindly between local and cloud models.
+You have no visibility into what is actually sent, why, and at what cost.
+
+Existing tools are proxies, routers, and dashboards.
+None of them touch the context itself.
+
+---
+
+## What Distira does differently
+
+Distira is not a proxy. It is the layer **between your intent and the model call**.
+
+```
+Raw context (12 000 tokens)
+        │
+   [ Context Budget Compiler ]   →  compiled:  2 400 tokens  (−80%)
+        │
+   [ Context Memory Lensing ]    →  reused:    5 000 tokens  (avoided)
+        │
+   [ Hybrid Sovereign Router ]   →  cloud call avoided: yes / no
+        │
+   [ AI Flow Visualizer ]        →  every step visible, every gain measurable
+        │
+Model call (2 400 tokens instead of 17 000)
+```
+
+Every saving is **provable**:
+
+| Signal | Example value |
 | --- | --- |
-| **Context Budget Compiler** | Reduces raw prompts, logs, diffs, and transcripts before model invocation |
-| **Context Memory Lensing** | Reuses stable context blocks and sends only deltas when possible |
-| **AI Flow Visualizer** | Makes every optimization step visible in a live dark dashboard |
-| **Hybrid Sovereign Routing** | Routes intelligently across local, private, and cloud LLMs |
-| **AI Efficiency Score** | Quantifies token savings, cost reduction, and context reuse |
+| Raw context | 12 000 tokens |
+| Compiled context | 2 400 tokens (−80%) |
+| Memory reuse | 5 000 tokens avoided |
+| Cloud call avoided | yes |
+| Cost: raw vs optimized | €0.036 → €0.007 |
+| AI Efficiency Score | 81% |
+
+---
+
+## The 4 differentiating building blocks
+
+### A. Context Budget Compiler
+Reduces logs, stack traces, diffs, conversation histories, and transcripts.
+Extracts signal. Removes noise. Cuts tokens before they reach a model.
+
+### B. Context Memory Lensing
+Builds a structured memory of stable context blocks.
+Sends only what is new, changed, or still relevant.
+This is the core innovation: **delta-first forwarding**.
+
+### C. Hybrid Sovereign Routing
+Chooses the right provider — local, private, or cloud — based on:
+confidentiality, cost, latency, policy, and model capability.
+Sensitive data never leaves local. Always.
+
+### D. AI Flow Visualizer
+Makes every optimization step visible in a live dark dashboard.
+Shows before/after, cloud vs local, reused context, and real efficiency gains.
+Demonstrable. Memorable. Trustworthy.
+
+---
+
+## Not a gateway. Not a proxy.
+
+The market already has proxies, routers, fallback logic, cost dashboards, and guardrails.
+If Distira stopped there, it would be compared to Kong AI, LiteLLM, or PortKey.
+
+Distira's position is **context-first**:
+
+| Capability | Proxy / Gateway | Distira |
+| --- | --- | --- |
+| Multi-provider routing | ✅ | ✅ |
+| Semantic cache | ✅ partial | ✅ |
+| **Context compilation** | ❌ | ✅ |
+| **Memory lensing / delta forwarding** | ❌ | ✅ |
+| **Sovereignty enforcement (local-first)** | ❌ | ✅ |
+| **Per-request proof of savings** | ❌ | ✅ |
+| **AI Flow Visualizer** | ❌ | ✅ |
 
 ## Architecture
 
@@ -80,16 +156,16 @@ Runtime operational data is persisted automatically to `cache/runtime-state.json
 
 | Directory | Purpose |
 | --- | --- |
-| `core/` | Gateway bootstrap and API entry point |
-| `compiler/` | Context Budget Compiler and reducers |
-| `memory/` | Context Memory Lensing and delta engine |
-| `router/` | Provider selection and routing strategies |
-| `adapters/` | Provider-specific HTTP clients |
-| `metrics/` | Efficiency scoring and telemetry |
-| `cache/` | Semantic cache scaffolding |
-| `fingerprint/` | Prompt fingerprint graph |
-| `dashboard/ui-vue/` | Vue 3 + Vite dark dashboard |
-| `configs/` | Provider, routing, and policy configuration |
+| `core/` | Axum HTTP server — API entry point and pipeline orchestration |
+| `compiler/` | Context Budget Compiler — intent detection and context reduction |
+| `memory/` | Context Memory Lensing — stable block store and delta engine |
+| `router/` | Hybrid Sovereign Router — provider selection by policy and intent |
+| `adapters/` | Provider-specific HTTP clients (Ollama, OpenAI, Mistral, OpenRouter) |
+| `metrics/` | AI Efficiency Score computation and telemetry |
+| `cache/` | Semantic cache — fingerprint lookup and compiled context store |
+| `fingerprint/` | Prompt fingerprint graph for deduplication |
+| `dashboard/ui-vue/` | AI Flow Visualizer — Vue 3 + Vite dark dashboard |
+| `configs/` | Provider, routing, policy, and workspace configuration |
 | `deployments/` | Docker, Kubernetes, and Helm manifests |
 | `docs/` | Architecture and implementation notes |
 | `examples/` | Quick integration examples |

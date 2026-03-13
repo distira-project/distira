@@ -1,7 +1,7 @@
 # Distira — Brand Guide
 
 ## Brand idea
-Distira compresses and distills large context into the smallest useful prompt before each LLM call.
+Distira is a **Sovereign AI Context Operating System** — it compiles the smallest useful context before every LLM call.
 The visual system uses a **compression frame / vice** metaphor to make that idea immediately recognizable.
 
 ## Core symbol
@@ -55,9 +55,9 @@ Avoid:
 - playful mascot styles
 
 ## Taglines
+- Distira is a Sovereign AI Context Operating System
 - Compile the smallest useful context before every LLM call
-- The context compiler for AI systems
-- Reduce tokens. Keep intelligence.
+- Reduce tokens. Keep intelligence. Stay sovereign.
 
 ## Note
 SVG assets are clean vector brand assets built from the chosen compression-frame direction.

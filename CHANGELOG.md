@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — Open-source release + Context OS vision (2026-03-13)
+
+- **License changed to pure AGPL-3.0** — Commons Clause removed; Distira is now fully free and open-source
+- `LICENSE` rewritten: no commercial restriction; only copyleft obligation on distribution/network use
+- `configs/policies/policies.yaml` updated to reflect AGPL-3.0 (removed Commons Clause notice)
+- `CONTRIBUTING.md` updated to reflect open-source status
+- `README.md` fully rewritten around the **Sovereign AI Context Operating System** vision:
+  - "Not a proxy. Not a gateway." positioning table vs Kong / LiteLLM / PortKey
+  - Proof-of-value table: raw tokens / compiled / reused / cloud avoided / cost / efficiency score
+  - Three credibility use cases: debug logs, git diff review, IDE agent workflows
+  - Four differentiating building blocks: Compiler, Memory Lensing, Sovereign Router, Flow Visualizer
+  - Monorepo layout aligned on Context OS terminology
+- Badge updated: `AGPL-3.0` (no longer `AGPL-3.0 + Commons Clause`)
+
+- Repositioned DISTIRA consistently across all project files as a **Sovereign AI Context Operating System** (not "AI gateway" or "AI Flow Engine")
+- Updated `docs/branding.md`: new tagline, corrected brand asset references to match actual files in `brand/`
+- Updated `docs/architecture.md`: description promoted to "Sovereign AI Context Operating System"
+- Updated `.github/agents/distira.agent.md`: description and agent persona now reflect Context OS identity
+- Updated `brand/brand_guide.md`: brand idea, positioning, and taglines aligned to Context OS
+- Updated `README.md`: intro section reframed from "AI gateway" to "Context Operating System"
+
 ### Added — Transparent runtime persistence (2026-03-12)
 
 - Core runtime now saves and restores operational state automatically across backend restarts (metrics snapshot, request history, semantic cache, chat cache, and context-store blocks)

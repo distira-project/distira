@@ -1,61 +1,35 @@
-# DISTIRA — Sovereign AI Context OS
+# DISTIRA — Sovereign AI Context Operating System
 
 Copyright (c) 2024–2026 Christophe Freijanes and DISTIRA contributors.
 
-This software is licensed under the GNU Affero General Public License v3.0
-(AGPL-3.0) with the Commons Clause License Condition v1.0 appended below.
+This software is free and open-source, licensed under the GNU Affero General
+Public License v3.0 (AGPL-3.0).
 
 You may obtain a copy of the AGPL-3.0 at:
   https://www.gnu.org/licenses/agpl-3.0.html
-
-────────────────────────────────────────────────────────────
-Commons Clause License Condition v1.0
-────────────────────────────────────────────────────────────
-
-The Software is provided to you by the Licensor under the License, as
-defined below, subject to the following condition:
-
-Without limiting other conditions in the License, the grant of rights under
-the License will not include, and the License does not grant to you, the
-right to Sell the Software.
-
-For purposes of the foregoing, "Sell" means practicing any or all of the
-rights granted to you under the License to provide to third parties, for a
-fee or other consideration (including without limitation fees for hosting or
-consulting/support services related to the Software), a product or service
-whose value derives, entirely or substantially, from the functionality of
-the Software. Any license notice or attribution required by the License
-must also include this Commons Clause License Condition notice.
-
-Licensor:  Christophe Freijanes
-Software:  DISTIRA
 
 ────────────────────────────────────────────────────────────
 Summary of your rights
 ────────────────────────────────────────────────────────────
 
 You ARE free to:
-  - Use DISTIRA for personal, educational, and internal business purposes
+  - Use DISTIRA for any purpose (personal, educational, commercial, internal)
   - Study, modify, and redistribute the source code
   - Deploy DISTIRA within your own infrastructure
-  - Build tools, integrations, or services that interact with DISTIRA
-  - Fork and contribute back to the project
+  - Build tools, integrations, or services on top of DISTIRA
+  - Fork the project and contribute back
 
-You are NOT free to:
-  - Sell DISTIRA or a substantially derived product as a paid service
-  - Rebrand and commercialize DISTIRA without explicit written authorization
-  - Remove or alter this license notice or the original author attribution
-
-For commercial licensing inquiries, contact the Licensor.
+The only condition:
+  - Any modified version you distribute or make available over a network must
+    be released under the same AGPL-3.0 license with its source code.
 
 ────────────────────────────────────────────────────────────
 Attribution
 ────────────────────────────────────────────────────────────
 
 DISTIRA was created by Christophe Freijanes as a sovereign, open, and
-trustworthy AI operating system. The project is driven by progressive values
-of digital sovereignty, transparency, and democratized access to AI
-infrastructure.
+trustworthy AI Context Operating System. The project is driven by values of
+digital sovereignty, transparency, and democratized access to AI infrastructure.
 
 If you use, fork, or derive from this project, attribution to the original
-author and the DISTIRA project is required.
+author and the DISTIRA project is appreciated.

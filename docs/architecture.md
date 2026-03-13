@@ -1,7 +1,7 @@
 # Architecture
 
-DISTIRA is designed as a sovereign AI context operating layer.
-It sits between clients and LLM providers, optimizing every request.
+Distira is a **Sovereign AI Context Operating System**.
+It sits between clients and LLM providers, compiling the smallest useful context before every LLM call.
 
 ## Request lifecycle
 

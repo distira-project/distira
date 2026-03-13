@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to DISTIRA.
+Distira is free and open-source (AGPL-3.0). Contributions of all kinds are welcome.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
