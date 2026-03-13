@@ -2,7 +2,7 @@
 
 ## Our pledge
 
-We as contributors and maintainers pledge to make participation in KATARA
+We as contributors and maintainers pledge to make participation in DISTIRA
 a harassment-free experience for everyone, regardless of age, body size,
 disability, ethnicity, gender identity, level of experience, nationality,
 personal appearance, race, religion, or sexual identity and orientation.
@@ -25,7 +25,7 @@ Examples of unacceptable behavior:
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported through [GitHub Security Advisories](https://github.com/katara-project/katara/security/advisories/new)
+reported through [GitHub Security Advisories](https://github.com/distira-project/distira/security/advisories/new)
 or by contacting the maintainers directly.
 
 All complaints will be reviewed and investigated promptly and fairly.

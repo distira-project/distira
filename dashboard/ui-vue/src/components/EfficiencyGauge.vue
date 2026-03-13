@@ -30,12 +30,12 @@
       </div>
     </div>
     <p class="gauge-helper muted">
-      Between 30% and 50%, Katara is already highly efficient. 100% is a theoretical ceiling.
+      Between 30% and 50%, Distira is already highly efficient. 100% is a theoretical ceiling.
     </p>
     <div v-if="showHelp" class="gauge-help-panel">
       <p><strong>How should you read this score?</strong></p>
       <p>0% means no tokens are avoided compared to sending raw context.</p>
-      <p>Around 30–50%, Katara already reuses and compresses context significantly.</p>
+      <p>Around 30–50%, Distira already reuses and compresses context significantly.</p>
       <p>100% is theoretical. In practice, staying above 30% on heavy workflows is a strong target.</p>
     </div>
   </section>

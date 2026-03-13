@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: katara-core
+  name: distira-core
   labels:
-    app: katara-core
+    app: distira-core
     version: "7.0.0"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: katara-core
+      app: distira-core
   template:
     metadata:
       labels:
-        app: katara-core
+        app: distira-core
     spec:
       containers:
-        - name: katara-core
-          image: katara/core:7.0.0
+        - name: distira-core
+          image: distira/core:7.0.0
           ports:
             - containerPort: 8080
               protocol: TCP

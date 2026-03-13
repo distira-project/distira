@@ -35,7 +35,7 @@ pub fn detect_intent(raw: &str) -> String;
 - `summary`
 - `compiled_context`
 
-In the chat runtime, KATARA uses this `compiled_context` to rewrite the latest user turn before forwarding the request to the routed provider.
+In the chat runtime, DISTIRA uses this `compiled_context` to rewrite the latest user turn before forwarding the request to the routed provider.
 The semantic cache also persists this full compiler output so repeated requests can skip recompilation and reuse the same reduced payload.
 
 ## Crate

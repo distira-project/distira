@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to KATARA.
+Thank you for your interest in contributing to DISTIRA.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 

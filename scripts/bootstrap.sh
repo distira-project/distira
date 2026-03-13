@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo ""
-echo "  KATARA — Sovereign AI Context Operating System"
+echo "  DISTIRA — Sovereign AI Context Operating System"
 echo "  Bootstrap script for Linux / macOS"
 echo "  ──────────────────────────────────────────────"
 echo ""
@@ -107,17 +107,17 @@ fi
 # ── 9. Verify MCP server module syntax ────────────────
 echo ""
 echo "==> Verifying MCP server module..."
-if node --check mcp/katara-server.mjs 2>/dev/null; then
-  echo "[ok] MCP server (mcp/katara-server.mjs) syntax OK."
+if node --check mcp/distira-server.mjs 2>/dev/null; then
+  echo "[ok] MCP server (mcp/distira-server.mjs) syntax OK."
 else
-  echo "[!!] MCP server failed to load — check mcp/katara-server.mjs."
+  echo "[!!] MCP server failed to load — check mcp/distira-server.mjs."
   warnings+=("MCP server module failed to load.")
 fi
 
 # ── Summary ───────────────────────────────────────────
 echo ""
 echo "  ──────────────────────────────────────────────"
-echo "  KATARA bootstrap complete!"
+echo "  DISTIRA bootstrap complete!"
 echo ""
 
 if [ ${#warnings[@]} -gt 0 ]; then
@@ -134,5 +134,5 @@ echo "    Or manually:"
 echo "      1. ollama serve"
 echo "      2. cargo run -p core"
 echo "      3. cd dashboard/ui-vue && npm run dev"
-echo "      4. @katara in Copilot Chat"
+echo "      4. @distira in Copilot Chat"
 echo ""

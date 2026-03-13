@@ -94,7 +94,7 @@ import { computed, ref, watch } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 
 const metrics = useMetricsStore()
-const STORAGE_KEY = 'katara.runtimeAudit.filters.v1'
+const STORAGE_KEY = 'distira.runtimeAudit.filters.v1'
 
 type TimeFilter = '24h' | '7d' | 'custom'
 
@@ -292,7 +292,7 @@ function exportScopedCsv() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `katara-runtime-audit-${timeFilter.value}-${tenantFilter.value}-${projectFilter.value}.csv`
+  a.download = `distira-runtime-audit-${timeFilter.value}-${tenantFilter.value}-${projectFilter.value}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }

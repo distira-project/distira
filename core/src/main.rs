@@ -214,9 +214,9 @@ impl MetricsCollector {
             sem_cache: cache::SemanticCache::new(),
             chat_cache: HashMap::new(),
             context_store: memory::ContextStore::new(),
-            audit_retention_secs: read_u64_env("KATARA_AUDIT_RETENTION_DAYS", 7)
+            audit_retention_secs: read_u64_env("DISTIRA_AUDIT_RETENTION_DAYS", 7)
                 .saturating_mul(24 * 60 * 60),
-            audit_history_limit: read_usize_env("KATARA_AUDIT_HISTORY_LIMIT", 2000),
+            audit_history_limit: read_usize_env("DISTIRA_AUDIT_HISTORY_LIMIT", 2000),
             hour_buckets: HashMap::new(),
             persistence_path,
         };
@@ -611,7 +611,7 @@ fn runtime_client_context_path() -> PathBuf {
 }
 
 fn runtime_state_path() -> PathBuf {
-    if let Ok(custom) = std::env::var("KATARA_RUNTIME_STATE_PATH") {
+    if let Ok(custom) = std::env::var("DISTIRA_RUNTIME_STATE_PATH") {
         let trimmed = custom.trim();
         if !trimmed.is_empty() {
             return PathBuf::from(trimmed);
@@ -1008,11 +1008,11 @@ fn load_config() -> router::RouterConfig {
 // -- Handlers ---------------------------------------------------
 
 async fn health() -> Json<serde_json::Value> {
-    Json(json!({ "status": "ok", "service": "katara-core", "version": runtime_version() }))
+    Json(json!({ "status": "ok", "service": "distira-core", "version": runtime_version() }))
 }
 
 async fn version() -> Json<serde_json::Value> {
-    Json(json!({ "version": runtime_version(), "product": "KATARA" }))
+    Json(json!({ "version": runtime_version(), "product": "DISTIRA" }))
 }
 
 #[derive(Deserialize)]
@@ -1182,7 +1182,7 @@ async fn chat_completions(
     let raw = extract_latest_user_text(&payload.messages);
     let sensitive = payload.sensitive.unwrap_or(false);
 
-    // 1. Full KATARA pipeline
+    // 1. Full DISTIRA pipeline
     let compile_input = if raw.trim().is_empty() {
         extract_conversation_text(&payload.messages)
     } else {
@@ -1280,7 +1280,7 @@ async fn chat_completions(
             }
 
             return Json(json!({
-                "id": format!("katara-{fp}"),
+                "id": format!("distira-{fp}"),
                 "object": "chat.completion",
                 "model": cached.model,
                 "choices": [{
@@ -1295,7 +1295,7 @@ async fn chat_completions(
                     "prompt_tokens": cached.prompt_tokens,
                     "completion_tokens": cached.completion_tokens
                 },
-                "katara": {
+                "distira": {
                     "provider": route.provider,
                     "model": model,
                     "intent": result.intent,
@@ -1437,7 +1437,7 @@ async fn chat_completions(
                 "error": {
                     "message": e,
                     "type": "provider_error",
-                    "katara": {
+                    "distira": {
                         "provider": route.provider,
                         "model": model,
                         "intent": result.intent,
@@ -1494,7 +1494,7 @@ async fn chat_completions(
 
             // Return OpenAI-compatible format
             Json(json!({
-                "id": format!("katara-{fp}"),
+                "id": format!("distira-{fp}"),
                 "object": "chat.completion",
                 "model": fwd.model,
                 "choices": [{
@@ -1509,7 +1509,7 @@ async fn chat_completions(
                     "prompt_tokens": fwd.prompt_tokens,
                     "completion_tokens": fwd.completion_tokens
                 },
-                "katara": {
+                "distira": {
                     "provider": route.provider,
                     "model": model,
                     "intent": result.intent,
@@ -1535,7 +1535,7 @@ async fn chat_completions(
             "error": {
                 "message": e,
                 "type": "provider_error",
-                "katara": {
+                "distira": {
                     "provider": route.provider,
                     "model": model,
                     "intent": result.intent,
@@ -1551,7 +1551,7 @@ async fn chat_completions(
 
 fn stream_cached_response(request_id: &str, model: &str, content: &str) -> Response<Body> {
     let chunk = json!({
-        "id": format!("katara-{request_id}"),
+        "id": format!("distira-{request_id}"),
         "object": "chat.completion.chunk",
         "model": model,
         "choices": [{
@@ -1791,7 +1791,7 @@ mod tests {
     #[test]
     fn collector_persistence_round_trip_restores_runtime_state() {
         let mut state_path = std::env::temp_dir();
-        state_path.push(format!("katara-runtime-state-{}.json", now_epoch()));
+        state_path.push(format!("distira-runtime-state-{}.json", now_epoch()));
 
         let mut collector = MetricsCollector::new();
         collector.persistence_path = state_path.clone();
@@ -1849,7 +1849,7 @@ async fn metrics_stream(
 
 #[tokio::main]
 async fn main() {
-    println!("KATARA v{} — Sovereign AI Context OS", runtime_version());
+    println!("DISTIRA v{} — Sovereign AI Context OS", runtime_version());
     println!("────────────────────────────────────────");
 
     let router_config = load_config();

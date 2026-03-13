@@ -51,7 +51,7 @@
       <div class="scope-clarity-header">
         <div>
           <h3>Model Scope Clarity</h3>
-          <p class="muted">This dashboard tracks the model routed by Katara after compilation and policy routing. It does not assume that the end-user assistant or client is the same model.</p>
+          <p class="muted">This dashboard tracks the model routed by Distira after compilation and policy routing. It does not assume that the end-user assistant or client is the same model.</p>
         </div>
       </div>
       <div class="scope-clarity-grid">
@@ -60,14 +60,14 @@
           <strong>{{ leadUpstream.model }}</strong>
           <span class="tile-subtitle">{{ leadUpstream.provider }} · {{ leadUpstream.clientApp }}</span>
         </div>
-        <div class="scope-card katara-scope">
-          <span class="tile-label">KATARA Routed Model</span>
+        <div class="scope-card distira-scope">
+          <span class="tile-label">DISTIRA Routed Model</span>
           <strong>{{ leadModel.model }}</strong>
           <span class="tile-subtitle">{{ leadModel.provider }} · {{ leadModel.routeLabel }}</span>
         </div>
       </div>
       <p class="scope-note">
-        Katara metrics, sovereignty ratios, and token savings below always refer to the routed model selected by Katara, not the assistant brand or UI model shown upstream.
+        Distira metrics, sovereignty ratios, and token savings below always refer to the routed model selected by Distira, not the assistant brand or UI model shown upstream.
       </p>
       <div v-if="upstreamVisibilityWarning.show" class="upstream-warning-banner">
         <strong>{{ upstreamVisibilityWarning.title }}</strong>
@@ -79,7 +79,7 @@
       <div class="llm-summary-header">
         <div>
           <h3>Active LLM Routing</h3>
-          <p class="muted">Which model Katara is sending traffic to, how much token reduction it gets, and whether routing stays sovereign.</p>
+          <p class="muted">Which model Distira is sending traffic to, how much token reduction it gets, and whether routing stays sovereign.</p>
         </div>
       </div>
       <div class="llm-summary-grid">
@@ -110,7 +110,7 @@
       <div class="section-heading">
         <div>
           <h3>Codegen vs Review</h3>
-          <p class="muted">How much traffic is pure code generation vs review/refactor, and how efficiently Katara trims each intent.</p>
+          <p class="muted">How much traffic is pure code generation vs review/refactor, and how efficiently Distira trims each intent.</p>
         </div>
         <span class="total-badge" v-if="codegenReview.hasData">{{ codegenReview.totalRequests }} req</span>
       </div>
@@ -135,7 +135,7 @@
       <div class="request-lineage-header">
         <div>
           <h3>Last Request</h3>
-          <p class="muted">Live lineage for the most recent request seen by Katara, including upstream client identity, routed target, cache behavior, and sensitivity override.</p>
+          <p class="muted">Live lineage for the most recent request seen by Distira, including upstream client identity, routed target, cache behavior, and sensitivity override.</p>
         </div>
         <span class="request-time">{{ lastRequestCard.seenAt }}</span>
       </div>
@@ -171,7 +171,7 @@
       <div class="section-heading">
         <div>
           <h3>Upstream Client Models</h3>
-          <p class="muted">What the calling client reports upstream, such as GPT-5.4 in VS Code Copilot. This is separate from Katara's routed target.</p>
+          <p class="muted">What the calling client reports upstream, such as GPT-5.4 in VS Code Copilot. This is separate from Distira's routed target.</p>
         </div>
       </div>
       <div class="model-table-wrap">
@@ -194,7 +194,7 @@
               <td>{{ entry.lastSeen }}</td>
             </tr>
             <tr v-if="!upstreamTableRows.length">
-              <td colspan="5" class="muted">No upstream client model reported yet. Katara can only show GPT-5.4 here if VS Code/Copilot exposes it or if runtime client context is updated live.</td>
+              <td colspan="5" class="muted">No upstream client model reported yet. Distira can only show GPT-5.4 here if VS Code/Copilot exposes it or if runtime client context is updated live.</td>
             </tr>
           </tbody>
         </table>
@@ -203,7 +203,7 @@
 
     <section class="card model-efficiency-section">
       <h3>Live AI Efficiency by Routed Model</h3>
-      <p class="muted">Per-routed-model efficiency score with Sovereign Routing visibility. This table shows what Katara actually sent downstream, not the model selected in the upstream client UI.</p>
+      <p class="muted">Per-routed-model efficiency score with Sovereign Routing visibility. This table shows what Distira actually sent downstream, not the model selected in the upstream client UI.</p>
       <div class="model-table-wrap">
         <table class="model-table">
           <thead>
@@ -245,7 +245,7 @@
       <div class="section-heading">
         <div>
           <h3>Intent Distribution</h3>
-          <p class="muted">How Katara classified incoming requests. Each intent maps to a different routing target and context reduction strategy.</p>
+          <p class="muted">How Distira classified incoming requests. Each intent maps to a different routing target and context reduction strategy.</p>
         </div>
         <span class="total-badge">{{ metrics.totalRequests }} total</span>
       </div>
@@ -461,7 +461,7 @@ const upstreamVisibilityWarning = computed(() => {
     show: true,
     title: 'Upstream model not reported by client',
     message:
-      'Katara can only show the real Copilot model, such as GPT-5.4, when VS Code or the MCP client exposes it in request metadata or runtime client context. The routed-model tables below remain valid, but the upstream client model is currently unknown.',
+      'Distira can only show the real Copilot model, such as GPT-5.4, when VS Code or the MCP client exposes it in request metadata or runtime client context. The routed-model tables below remain valid, but the upstream client model is currently unknown.',
   }
 })
 
@@ -642,7 +642,7 @@ const intentRows = computed(() => {
   background: linear-gradient(135deg, rgba(255, 173, 64, 0.16), rgba(255, 104, 104, 0.1));
 }
 
-.katara-scope {
+.distira-scope {
   background: linear-gradient(135deg, rgba(0, 214, 143, 0.16), rgba(40, 120, 255, 0.12));
 }
 

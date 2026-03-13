@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: katara-core
+  name: distira-core
   labels:
-    app: katara-core
+    app: distira-core
 spec:
   type: ClusterIP
   selector:
-    app: katara-core
+    app: distira-core
   ports:
     - port: 8080
       targetPort: 8080

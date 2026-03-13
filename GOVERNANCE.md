@@ -2,7 +2,7 @@
 
 ## Model
 
-KATARA follows a **maintainer-led** governance model.
+DISTIRA follows a **maintainer-led** governance model.
 Decisions are made transparently and documented in the repository.
 
 ## Roles

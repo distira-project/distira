@@ -1,9 +1,9 @@
 ---
-# KATARA provider configuration
+# DISTIRA provider configuration
 #
 # Each provider defines a connection to an LLM endpoint.
 # For Ollama, declare one entry per model you want to use.
-# KATARA routes to the right model based on intent + policy.
+# DISTIRA routes to the right model based on intent + policy.
 #
 # Supported types: openai-compatible, mistral, google (future)
 # The base_url must point to the OpenAI-compatible root (ending in /v1).

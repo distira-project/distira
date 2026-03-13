@@ -1,16 +1,16 @@
-# KATARA
+# DISTIRA
 
-![KATARA](brand/katara_banner_linkedin_personal.svg)
+![DISTIRA](brand/distira_banner_linkedin_personal.svg)
 
 > **The Sovereign AI Flow Engine** — compile the smallest useful context before every LLM call.
 
-[![CI](https://github.com/katara-project/katara/actions/workflows/ci.yml/badge.svg?branch=wip-chf)](https://github.com/katara-project/katara/actions/workflows/ci.yml)
+[![CI](https://github.com/distira-project/distira/actions/workflows/ci.yml/badge.svg?branch=wip-chf)](https://github.com/distira-project/distira/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20Commons%20Clause-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-7.7.1-brightgreen.svg)](VERSION)
 
-## What makes KATARA different
+## What makes DISTIRA different
 
-Most AI gateways route requests. KATARA goes further:
+Most AI gateways route requests. DISTIRA goes further:
 
 | Feature | Description |
 | --- | --- |
@@ -27,7 +27,7 @@ Clients / IDE / Agents
         │
   OpenAI-compatible API
         │
-      KATARA
+      DISTIRA
         │
   ┌─────┴─────┐
   │  Intent   │
@@ -59,7 +59,7 @@ Clients / IDE / Agents
 
 ```text
 ┌─────────────────────┐         POST /v1/compile            ┌──────────────────────────┐
-│   Client (curl,     │ ──────────────────────────────────► │   KATARA Rust Backend    │
+│   Client (curl,     │ ──────────────────────────────────► │   DISTIRA Rust Backend    │
 │   VS Code ext,      │                                     │                          │
 │   any AI tool)      │ ◄────── JSON response ───────────── │  compile() → fingerprint │
 └─────────────────────┘                                     │   → cache → compiler     │
@@ -128,7 +128,7 @@ cargo run -p core
 cd dashboard/ui-vue && npm install && npm run dev
 
 # MCP server (managed automatically by VS Code via mcp.json)
-# If testing manually: cd mcp && node katara-server.mjs
+# If testing manually: cd mcp && node distira-server.mjs
 ```
 
 ### Secrets management
@@ -145,20 +145,20 @@ See `.env.example` for the expected variables.
 
 ## VS Code Agent Integration
 
-KATARA ships with a built-in MCP (Model Context Protocol) server.
-Once configured, type `@katara` in VS Code Copilot Chat to invoke KATARA tools directly.
+DISTIRA ships with a built-in MCP (Model Context Protocol) server.
+Once configured, type `@distira` in VS Code Copilot Chat to invoke DISTIRA tools directly.
 
 ```text
-Copilot Chat  →  @katara  →  MCP stdio  →  katara-server.mjs  →  localhost:8080
+Copilot Chat  →  @distira  →  MCP stdio  →  distira-server.mjs  →  localhost:8080
 ```
 
 | Tool | Description |
 | --- | --- |
-| `katara_compile` | Compile raw context through the full pipeline |
-| `katara_chat` | Compile + forward to routed LLM |
-| `katara_set_client_context` | Update the live upstream client model/provider context |
-| `katara_providers` | List configured providers |
-| `katara_metrics` | Fetch live metrics snapshot |
+| `distira_compile` | Compile raw context through the full pipeline |
+| `distira_chat` | Compile + forward to routed LLM |
+| `distira_set_client_context` | Update the live upstream client model/provider context |
+| `distira_providers` | List configured providers |
+| `distira_metrics` | Fetch live metrics snapshot |
 
 The chat endpoint also supports `stream=true` and proxies OpenAI-compatible SSE responses from the routed provider.
 It preserves full message history (`system`, `assistant`, `user`) and forwards extra OpenAI-compatible request options like `temperature` to the routed provider.
@@ -167,15 +167,15 @@ The semantic cache now stores the full compiler result, so repeated prompts can 
 The MCP server uses `@modelcontextprotocol/sdk` v1.27.1 with stdio transport.
 Dependencies are installed in `mcp/node_modules/` — run `npm install` inside `mcp/` if pulling fresh.
 
-The MCP layer now forwards client lineage metadata automatically to KATARA:
+The MCP layer now forwards client lineage metadata automatically to DISTIRA:
 
 - `client_app`: defaults to `VS Code Copilot Chat`
 - `upstream_model`: resolved per request from the tool's `model`, MCP `_meta`, or an optional runtime resolver command
 - `upstream_provider`: resolved per request from MCP `_meta`, a runtime resolver command, or inferred from the upstream model family
 
-This is what lets the dashboard distinguish the user-facing assistant/client model from the model actually routed by KATARA.
+This is what lets the dashboard distinguish the user-facing assistant/client model from the model actually routed by DISTIRA.
 
-KATARA now also performs a best-effort scan of MCP request metadata for generic model/provider fields when clients expose them without the custom `katara/*` keys. This improves automatic detection of Copilot-selected models such as `GPT-5.4` when that information is actually present.
+DISTIRA now also performs a best-effort scan of MCP request metadata for generic model/provider fields when clients expose them without the custom `distira/*` keys. This improves automatic detection of Copilot-selected models such as `GPT-5.4` when that information is actually present.
 
 The Overview now also exposes a live `Last Request` panel showing:
 
@@ -195,33 +195,33 @@ When the upstream client cannot send its selected model directly, update the liv
 .\scripts\set-upstream-context.ps1 -UpstreamProvider Anthropic -UpstreamModel "Claude Sonnet 4.6"
 ```
 
-or through the MCP tool `katara_set_client_context`.
+or through the MCP tool `distira_set_client_context`.
 
 See [INSTALL.md](INSTALL.md#vs-code-agent-mcp) for setup instructions and [TESTING.md](TESTING.md#mcp-agent-tests-vs-code) for validation steps.
 
-## Workflow Schema (MCP -> Katara Agent -> Katara App)
+## Workflow Schema (MCP -> Distira Agent -> Distira App)
 
 ```text
 ┌──────────────────────────────┐
 │ VS Code Copilot Chat         │
-│ (user prompt: @katara ...)   │
+│ (user prompt: @distira ...)   │
 └──────────────┬───────────────┘
                │
                │ MCP stdio (JSON-RPC 2.0)
                ▼
 ┌──────────────────────────────┐
-│ Katara MCP Server            │
-│ mcp/katara-server.mjs        │
-│ - katara_compile             │
-│ - katara_chat                │
-│ - katara_metrics             │
-│ - katara_providers           │
+│ Distira MCP Server            │
+│ mcp/distira-server.mjs        │
+│ - distira_compile             │
+│ - distira_chat                │
+│ - distira_metrics             │
+│ - distira_providers           │
 └──────────────┬───────────────┘
                │
                │ HTTP (localhost:8080)
                ▼
 ┌──────────────────────────────┐
-│ Katara App (Rust backend)    │
+│ Distira App (Rust backend)    │
 │ core + compiler + memory     │
 │ cache + router + metrics     │
 │ /v1/compile                  │
@@ -258,6 +258,6 @@ It is not yet a fully production-complete gateway across every provider.
 
 ## License
 
-[AGPL-3.0 + Commons Clause](LICENSE) — Copyright 2024–2026 Christophe Freijanes and KATARA contributors.
+[AGPL-3.0 + Commons Clause](LICENSE) — Copyright 2024–2026 Christophe Freijanes and DISTIRA contributors.
 
 Free for personal, educational, and non-commercial use. Commercial redistribution or resale requires explicit written authorization from the original author.

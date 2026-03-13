@@ -1,9 +1,9 @@
 {
-  "name": "katara-mcp",
+  "name": "distira-mcp",
   "version": "7.7.1",
   "type": "module",
-  "description": "KATARA MCP Server for VS Code Copilot Chat",
-  "main": "katara-server.mjs",
+  "description": "DISTIRA MCP Server for VS Code Copilot Chat",
+  "main": "distira-server.mjs",
   "scripts": {
     "test": "node test-mcp.mjs"
   },

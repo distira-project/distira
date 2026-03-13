@@ -6,7 +6,7 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "chat.mcp.serverSampling": {
-    "katara/.vscode/mcp.json: katara": {
+    "distira/.vscode/mcp.json: distira": {
       "allowedModels": [
         "copilotcli/claude-sonnet-4.6",
         "copilot/gpt-5.3-codex",

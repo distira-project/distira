@@ -6,14 +6,14 @@
         <span /><span /><span />
       </button>
       <div class="brand-icon">K</div>
-      <span class="mobile-title">KATARA</span>
+      <span class="mobile-title">DISTIRA</span>
     </header>
     <div v-if="menuOpen" class="overlay" @click="menuOpen = false" />
     <aside class="sidebar" :class="{ open: menuOpen }">
       <div class="brand-wrap">
         <div class="brand-icon">K</div>
         <div>
-          <h1>KATARA</h1>
+          <h1>DISTIRA</h1>
           <p class="brand-sub">Sovereign AI Context OS</p>
         </div>
       </div>

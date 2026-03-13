@@ -10,7 +10,7 @@
 ## Reporting a vulnerability
 
 Please report security issues **privately** through
-[GitHub Security Advisories](https://github.com/katara-project/katara/security/advisories/new).
+[GitHub Security Advisories](https://github.com/distira-project/distira/security/advisories/new).
 
 Do **not** open a public issue for security vulnerabilities.
 

@@ -2,9 +2,9 @@
 
 | Attribute | Value |
 | --- | --- |
-| **Product** | KATARA |
+| **Product** | DISTIRA |
 | **Tagline** | The Sovereign AI Flow Engine |
-| **Brand Core** | Custom K monogram inspired by `katara-icon.jpg` |
+| **Brand Core** | Custom K monogram inspired by `distira-icon.jpg` |
 
 ## Colors
 
@@ -19,20 +19,20 @@
 
 ## Core assets
 
-- `brand/katara_monogram.svg` - K only, transparent
-- `brand/katara_mark.svg` - app icon mark on dark rounded square
-- `brand/katara_mark.png` - lossless mark for GitHub/Markdown rendering
-- `brand/katara_mark.jpg` - JPG export for platforms requiring JPEG
-- `brand/katara_logo.svg` - horizontal primary logo
-- `brand/katara_logo_stacked.svg` - square/stacked logo
+- `brand/distira_monogram.svg` - K only, transparent
+- `brand/distira_mark.svg` - app icon mark on dark rounded square
+- `brand/distira_mark.png` - lossless mark for GitHub/Markdown rendering
+- `brand/distira_mark.jpg` - JPG export for platforms requiring JPEG
+- `brand/distira_logo.svg` - horizontal primary logo
+- `brand/distira_logo_stacked.svg` - square/stacked logo
 - `brand/favicon.svg` - favicon
 
 ## Channel-ready assets
 
-- `brand/katara_banner_linkedin_company.svg` - LinkedIn company cover ratio (1128x191)
-- `brand/katara_banner_linkedin_personal.svg` - LinkedIn personal cover ratio (1584x396)
-- `brand/katara_presentation_cover.svg` - presentation/slide cover (1920x1080)
-- `brand/katara_video_bug.svg` - video corner bug/watermark (640x360 canvas)
+- `brand/distira_banner_linkedin_company.svg` - LinkedIn company cover ratio (1128x191)
+- `brand/distira_banner_linkedin_personal.svg` - LinkedIn personal cover ratio (1584x396)
+- `brand/distira_presentation_cover.svg` - presentation/slide cover (1920x1080)
+- `brand/distira_video_bug.svg` - video corner bug/watermark (640x360 canvas)
 
 ## Usage rules
 
@@ -41,11 +41,11 @@
 - Do not replace the custom K with a font letter.
 - Keep the K gradient direction top-left to bottom-right.
 - On light backgrounds, place logo files on a dark panel or export a dark-text variant first.
-- For GitHub README and Markdown previews, prefer `brand/katara_mark.png` to avoid JPG compression artifacts.
+- For GitHub README and Markdown previews, prefer `brand/distira_mark.png` to avoid JPG compression artifacts.
 
 ## Dashboard alignment
 
 Dashboard favicon and mark are synced with the same K geometry:
 
 - `dashboard/ui-vue/public/favicon.svg`
-- `dashboard/ui-vue/src/assets/katara-mark.svg`
+- `dashboard/ui-vue/src/assets/distira-mark.svg`

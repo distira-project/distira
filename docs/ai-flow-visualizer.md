@@ -1,6 +1,6 @@
 # AI Flow Visualizer
 
-The visualizer is a **product-facing explanation layer** for KATARA.
+The visualizer is a **product-facing explanation layer** for DISTIRA.
 It makes optimization visible for every request in a live dark dashboard.
 
 ## Displayed stages
