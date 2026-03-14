@@ -155,6 +155,10 @@ struct MetricsCollector {
     audit_retention_secs: u64,
     audit_history_limit: usize,
     hour_buckets: HashMap<u64, (usize, usize, usize)>,
+    /// Per-provider request counts for the current UTC day.
+    daily_provider_counts: HashMap<String, u64>,
+    /// UTC midnight epoch for the current day window.
+    daily_reset_epoch: u64,
     persistence_path: PathBuf,
 }
 
@@ -247,6 +251,8 @@ impl MetricsCollector {
                 .saturating_mul(24 * 60 * 60),
             audit_history_limit: read_usize_env("DISTIRA_AUDIT_HISTORY_LIMIT", 2000),
             hour_buckets: HashMap::new(),
+            daily_provider_counts: HashMap::new(),
+            daily_reset_epoch: now_epoch() / 86400 * 86400,
             persistence_path,
         };
 
@@ -274,6 +280,18 @@ impl MetricsCollector {
             scope,
             cost_usd,
         } = e;
+
+        // V9.11 — Daily budget tracking: reset counts at UTC midnight.
+        let today_epoch = now_epoch() / 86400 * 86400;
+        if today_epoch > self.daily_reset_epoch {
+            self.daily_provider_counts.clear();
+            self.daily_reset_epoch = today_epoch;
+        }
+        *self
+            .daily_provider_counts
+            .entry(provider.clone())
+            .or_insert(0) += 1;
+
         let s = &mut self.snapshot;
         let ts = now_epoch();
         s.total_requests += 1;
@@ -1207,9 +1225,11 @@ async fn compile(
         &runtime_context,
         &state.workspace_context,
     );
-    let route = state
-        .router_config
-        .choose_provider(&result.intent, sensitive);
+    let route = state.router_config.choose_provider_with_budget(
+        &result.intent,
+        sensitive,
+        &collector.daily_provider_counts,
+    );
     let upstream = upstream_identity(
         payload
             .client_app
@@ -1377,9 +1397,15 @@ async fn chat_completions(
     let forwarded_messages = compress_conversation_history(&compiled_messages);
 
     // Determine route early so compiled_total uses model-aware token counting.
-    let route = state
-        .router_config
-        .choose_provider(&result.intent, sensitive);
+    // V9.11: snapshot daily counts before locking for the cache check.
+    let daily_counts = {
+        let c = state.collector.lock().unwrap_or_else(|e| e.into_inner());
+        c.daily_provider_counts.clone()
+    };
+    let route =
+        state
+            .router_config
+            .choose_provider_with_budget(&result.intent, sensitive, &daily_counts);
     let model = payload.model.clone().unwrap_or_else(|| route.model.clone());
 
     // ── 4. Measure COMPILED = actual forwarded token count ────────────────────
@@ -2045,6 +2071,47 @@ mod tests {
     }
 }
 
+fn budget_alerts(
+    daily_counts: &HashMap<String, u64>,
+    router: &router::RouterConfig,
+) -> Vec<serde_json::Value> {
+    router
+        .list_provider_summaries()
+        .into_iter()
+        .filter_map(|ps| {
+            let budget = ps.max_requests_per_day;
+            if budget == 0 {
+                return None;
+            }
+            let used = daily_counts.get(&ps.key).copied().unwrap_or(0);
+            if used >= budget {
+                Some(serde_json::json!({
+                    "type": "budget_exhausted",
+                    "provider": ps.key,
+                    "message": format!(
+                        "Provider {} has reached its daily budget ({}/{} requests).",
+                        ps.key, used, budget
+                    )
+                }))
+            } else if used * 10 >= budget * 8 {
+                Some(serde_json::json!({
+                    "type": "budget_warning",
+                    "provider": ps.key,
+                    "message": format!(
+                        "Provider {} is at {}% of daily budget ({}/{} requests).",
+                        ps.key,
+                        used * 100 / budget,
+                        used,
+                        budget
+                    )
+                }))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 async fn metrics_snapshot(State(state): State<SharedState>) -> Json<serde_json::Value> {
     let collector = state.collector.lock().unwrap();
     Json(serde_json::to_value(collector.snapshot()).unwrap_or_default())
@@ -2062,7 +2129,12 @@ async fn metrics_stream(
     let interval = tokio::time::interval(std::time::Duration::from_secs(2));
     let stream = tokio_stream::StreamExt::map(IntervalStream::new(interval), move |_| {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
-        let data = serde_json::to_string(collector.snapshot()).unwrap_or_default();
+        let mut snapshot_val = serde_json::to_value(collector.snapshot()).unwrap_or_default();
+        let alerts = budget_alerts(&collector.daily_provider_counts, &state.router_config);
+        if !alerts.is_empty() {
+            snapshot_val["alerts"] = serde_json::Value::Array(alerts);
+        }
+        let data = serde_json::to_string(&snapshot_val).unwrap_or_default();
         Ok(Event::default().event("metrics").data(data))
     });
     Sse::new(stream).keep_alive(KeepAlive::default())

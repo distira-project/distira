@@ -156,6 +156,7 @@ impl RouterConfig {
                 api_key_env: None,
                 cost_per_1k_input_tokens: 0.0,
                 cost_per_1k_output_tokens: 0.0,
+                max_requests_per_day: 0,
             },
         );
         providers.insert(
@@ -169,6 +170,7 @@ impl RouterConfig {
                 api_key_env: Some("OPENAI_API_KEY".into()),
                 cost_per_1k_input_tokens: 0.15,
                 cost_per_1k_output_tokens: 0.60,
+                max_requests_per_day: 0,
             },
         );
 

@@ -101,10 +101,10 @@ pub fn compile_context(raw: &str) -> CompileResult {
     let optimized_tokens = token_count(&optimized);
     let optimizer_savings = raw_tokens_estimate.saturating_sub(optimized_tokens);
 
-    // Compile the already-optimized text (double savings: optimizer + semantics).
-    // Target = optimized/3, minimum 16 tokens, capped at optimized.
+    // V9.12 — Per-intent distillation ratio: aggressive for summarize,
+    // conservative for debug/review where structure must be preserved.
     let target_tokens = optimized_tokens
-        .saturating_div(3)
+        .saturating_div(distillation_divisor(&intent))
         .max(16)
         .min(optimized_tokens);
     // Reserve budget for the intent marker that shape_by_intent prepends so the
@@ -134,6 +134,23 @@ fn intent_marker(intent: &str) -> &'static str {
         "translate" => "[k:translate]|",
         "ocr" => "[k:ocr]|",
         _ => "[k:general]|",
+    }
+}
+
+/// Per-intent distillation divisor (V9.12).
+/// Returns the denominator used to compute `target_tokens = optimized / divisor`.
+/// - 1 = keep 100% (OCR, translate: content must be fully preserved)
+/// - 2 = keep  50% (debug, review: preserve structure / stack traces)
+/// - 3 = keep  33% (codegen: compress boilerplate, keep logic)
+/// - 4 = keep  25% (general: balanced reduction)
+/// - 5 = keep  20% (summarize: aggressive distillation)
+fn distillation_divisor(intent: &str) -> usize {
+    match intent {
+        "ocr" | "translate" => 1,
+        "debug" | "review" => 2,
+        "codegen" => 3,
+        "summarize" => 5,
+        _ => 4, // general
     }
 }
 
@@ -476,13 +493,82 @@ fn reduce_review_context(raw: &str) -> String {
 }
 
 fn reduce_summarize_context(raw: &str) -> String {
-    let lines = normalize_lines(raw);
-    join_lines(&keep_head_tail(&lines, 6, 8))
+    const KW: &[&str] = &[
+        "key",
+        "main",
+        "conclusion",
+        "result",
+        "summary",
+        "finding",
+        "decision",
+        "recommended",
+        "therefore",
+        "finally",
+        "overall",
+    ];
+    reduce_by_salience(raw, KW)
 }
 
 fn reduce_general_context(raw: &str) -> String {
+    const KW: &[&str] = &[
+        "important",
+        "key",
+        "note",
+        "result",
+        "warning",
+        "error",
+        "required",
+        "must",
+        "should",
+        "because",
+        "therefore",
+        "summary",
+    ];
+    reduce_by_salience(raw, KW)
+}
+
+/// Score a single line by signal density relative to intent keywords (V9.12 BM25-inspired).
+/// Higher = more salient. Empty lines score 0.
+fn salience_score(line: &str, keywords: &[&str]) -> usize {
+    if line.trim().is_empty() {
+        return 0;
+    }
+    let lower = line.to_lowercase();
+    let word_count = line.split_whitespace().count().min(20);
+    let kw_hits: usize = keywords.iter().filter(|kw| lower.contains(**kw)).count();
+    // Structured line bonus: lines with `:`, `=`, `->`, `-`, `*` carry more info
+    let structure_bonus: usize = if line.contains(':')
+        || line.contains('=')
+        || line.contains("->")
+        || line.trim_start().starts_with('-')
+        || line.trim_start().starts_with('*')
+    {
+        3
+    } else {
+        0
+    };
+    word_count + kw_hits * 5 + structure_bonus
+}
+
+/// Select the most salient lines (BM25-inspired) while preserving original order.
+/// Falls back to head/tail for very short inputs.
+fn reduce_by_salience(raw: &str, keywords: &[&str]) -> String {
     let lines = normalize_lines(raw);
-    join_lines(&keep_head_tail(&lines, 8, 8))
+    if lines.len() <= 16 {
+        return join_lines(&lines);
+    }
+    // Score every line, keep top 2/3 by salience, restore original order.
+    let keep = (lines.len() * 2 / 3).max(8);
+    let mut scored: Vec<(usize, usize)> = lines
+        .iter()
+        .enumerate()
+        .map(|(i, l)| (salience_score(l, keywords), i))
+        .collect();
+    scored.sort_by(|a, b| b.0.cmp(&a.0));
+    let mut keep_indices: Vec<usize> = scored.iter().take(keep).map(|(_, i)| *i).collect();
+    keep_indices.sort_unstable();
+    let selected: Vec<String> = keep_indices.iter().map(|&i| lines[i].clone()).collect();
+    join_lines(&selected)
 }
 
 fn truncate_to_token_budget(text: &str, budget: usize) -> String {

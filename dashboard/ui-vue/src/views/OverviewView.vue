@@ -9,6 +9,17 @@
         {{ resetting ? 'Resetting…' : 'Reset metrics' }}
       </button>
     </header>
+    <div v-if="metrics.alerts && metrics.alerts.length" class="alert-banner">
+      <div
+        v-for="(alert, idx) in metrics.alerts"
+        :key="idx"
+        class="alert-item"
+        :class="alert.type"
+      >
+        <span class="alert-icon">&#9888;</span>
+        <span>{{ alert.message }}</span>
+      </div>
+    </div>
     <div class="metrics-grid">
       <MetricCard label="Raw Tokens" :value="metrics.rawTokens.toLocaleString()" hint="Estimated before compilation" accent="warn">
         <SparklineChart :data="rawHistory" color="#ffa940" :height="40" />
@@ -578,6 +589,36 @@ const intentRows = computed(() => {
 .reset-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.alert-banner {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  border: 1px solid;
+}
+.alert-item.budget_exhausted {
+  background: rgba(255, 80, 80, 0.10);
+  border-color: rgba(255, 80, 80, 0.30);
+  color: #ff6b6b;
+}
+.alert-item.budget_warning {
+  background: rgba(255, 169, 64, 0.10);
+  border-color: rgba(255, 169, 64, 0.30);
+  color: #ffa940;
+}
+.alert-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .chart-section {

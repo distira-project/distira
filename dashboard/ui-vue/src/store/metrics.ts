@@ -79,6 +79,7 @@ export interface MetricsSnapshot {
   request_history: RequestLineage[]
   session_cost_usd?: number
   last_request_cost_usd?: number
+  alerts?: Array<{ type: string; provider?: string; message: string }>
 }
 
 const SSE_URL     = '/v1/metrics/stream'
@@ -117,6 +118,7 @@ export const useMetricsStore = defineStore('metrics', () => {
   const requestHistory = ref<RequestLineage[]>([])
   const sessionCostUsd = ref(0)
   const lastRequestCostUsd = ref(0)
+  const alerts = ref<Array<{ type: string; provider?: string; message: string }>>([])
 
   const cacheHitRatio = computed(() => {
     const total = cacheHits.value + cacheMisses.value
@@ -186,6 +188,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     requestHistory.value = s.request_history ?? []
     sessionCostUsd.value = s.session_cost_usd ?? 0
     lastRequestCostUsd.value = s.last_request_cost_usd ?? 0
+    alerts.value = s.alerts ?? []
     lastTs.value = s.ts
   }
 
@@ -314,6 +317,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     requestHistory,
     sessionCostUsd,
     lastRequestCostUsd,
+    alerts,
     connect,
     disconnect,
   }

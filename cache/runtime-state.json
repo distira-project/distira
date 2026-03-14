@@ -1,18 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773519193,
-    "total_requests": 40,
-    "raw_tokens": 1416,
-    "compiled_tokens": 962,
+    "ts": 1773519472,
+    "total_requests": 42,
+    "raw_tokens": 1505,
+    "compiled_tokens": 1015,
     "memory_reused_tokens": 17,
-    "efficiency_score": 62.062145,
-    "local_ratio": 27.5,
+    "efficiency_score": 62.55814,
+    "local_ratio": 28.57143,
     "cache_hits": 3,
-    "cache_misses": 37,
+    "cache_misses": 39,
     "cache_saved_tokens": 0,
     "history_raw": [
-      435,
-      474,
       501,
       535,
       589,
@@ -34,11 +32,11 @@
       1306,
       1353,
       1381,
-      1416
+      1416,
+      1458,
+      1505
     ],
     "history_compiled": [
-      332,
-      354,
       377,
       397,
       430,
@@ -60,7 +58,9 @@
       886,
       909,
       933,
-      962
+      962,
+      984,
+      1015
     ],
     "history_reused": [
       17,
@@ -138,7 +138,7 @@
       0,
       0,
       199,
-      153
+      242
     ],
     "history_hour_compiled": [
       0,
@@ -164,7 +164,7 @@
       0,
       0,
       133,
-      110
+      163
     ],
     "history_hour_reused": [
       0,
@@ -192,19 +192,19 @@
       0,
       0
     ],
-    "routes_local": 11,
-    "routes_cloud": 28,
+    "routes_local": 12,
+    "routes_cloud": 29,
     "routes_midtier": 1,
     "intent_stats": {
       "general": {
-        "requests": 28,
-        "raw_tokens": 975,
-        "compiled_tokens": 658
+        "requests": 29,
+        "raw_tokens": 1017,
+        "compiled_tokens": 680
       },
       "debug": {
-        "requests": 10,
-        "raw_tokens": 407,
-        "compiled_tokens": 262
+        "requests": 11,
+        "raw_tokens": 454,
+        "compiled_tokens": 293
       },
       "codegen": {
         "requests": 1,
@@ -245,24 +245,24 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 28,
-        "raw_tokens": 975,
-        "compiled_tokens": 658,
+        "requests": 29,
+        "raw_tokens": 1017,
+        "compiled_tokens": 680,
         "memory_reused_tokens": 0,
-        "efficiency_score": 62.51282,
+        "efficiency_score": 63.136677,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 28,
+        "non_sovereign_requests": 29,
         "sovereign_ratio": 0.0
       },
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
         "model": "mistral:7b-instruct",
         "provider": "ollama-mistral-7b-instruct",
-        "requests": 10,
-        "raw_tokens": 407,
-        "compiled_tokens": 262,
+        "requests": 11,
+        "raw_tokens": 454,
+        "compiled_tokens": 293,
         "memory_reused_tokens": 17,
-        "efficiency_score": 65.62654,
-        "sovereign_requests": 10,
+        "efficiency_score": 65.462555,
+        "sovereign_requests": 11,
         "non_sovereign_requests": 0,
         "sovereign_ratio": 100.0
       }
@@ -279,8 +279,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "GitHub Copilot",
         "upstream_model": "Claude Sonnet 4.6",
-        "requests": 8,
-        "last_seen_ts": 1773519193
+        "requests": 10,
+        "last_seen_ts": 1773519472
       }
     },
     "last_request": {
@@ -294,10 +294,10 @@
       "routed_model": "mistral:7b-instruct",
       "intent": "debug",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "15346885113162753947",
+      "semantic_fingerprint": "4107398640131594682",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773519193,
+      "ts": 1773519472,
       "cost_usd": 0.0
     },
     "request_history": [
@@ -980,12 +980,55 @@
         "sensitive": false,
         "ts": 1773519193,
         "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "9051423584075268846",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773519363,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "ollama-mistral-7b-instruct",
+        "routed_model": "mistral:7b-instruct",
+        "intent": "debug",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "4107398640131594682",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773519472,
+        "cost_usd": 0.0
       }
     ],
     "session_cost_usd": 0.0,
     "last_request_cost_usd": 0.0
   },
   "sem_cache_entries": [
+    {
+      "fingerprint": 4107398640131594682,
+      "intent": "debug",
+      "raw_tokens_estimate": 47,
+      "compiled_tokens_estimate": 31,
+      "summary": "Intent: debug. Reduced estimated context from 47 to 31 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Fix missing field max_requests_per_day in ProviderConfig initializer at router/src/lib.rs ...",
+      "created_at": 1773519472
+    },
     {
       "fingerprint": 3190483154157174394,
       "intent": "codegen",
@@ -1066,6 +1109,15 @@
       "summary": "Intent: debug. Reduced estimated context from 35 to 29 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
       "compiled_context": "[k:debug]|Fix cargo fmt formatting error in compiler/src/optimizer.rs line 305 ...",
       "created_at": 1773519193
+    },
+    {
+      "fingerprint": 9051423584075268846,
+      "intent": "general",
+      "raw_tokens_estimate": 42,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 42 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Quels sont les optimisations possibles pour DISTIRA selon ...",
+      "created_at": 1773519363
     },
     {
       "fingerprint": 571823978330740633,
@@ -1450,9 +1502,19 @@
       "content": "[k:general]|User stuck at 30% efficiency score. Need to ..."
     },
     {
+      "id": "9051423584075268846",
+      "stability": 1.0,
+      "content": "[k:general]|Quels sont les optimisations possibles pour DISTIRA selon ..."
+    },
+    {
       "id": "5988368974772434557",
       "stability": 1.0,
       "content": "[k:debug]|@distira agent still not showing in VS Code Copilot ..."
+    },
+    {
+      "id": "4107398640131594682",
+      "stability": 1.0,
+      "content": "[k:debug]|Fix missing field max_requests_per_day in ProviderConfig initializer at router/src/lib.rs ..."
     },
     {
       "id": "12779810459712034369",
@@ -1562,8 +1624,8 @@
       0
     ],
     "1773518400": [
-      153,
-      110,
+      242,
+      163,
       0
     ],
     "1773450000": [
