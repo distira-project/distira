@@ -52,10 +52,13 @@ pub enum ModelFamily {
     /// Best-effort universal estimate — accurate to ±7 % across all families.
     /// Default for unknown providers.
     Universal,
-    /// GPT-4 / GPT-4o / o1 / o3 (cl100k_base, o200k_base vocabulary).
-    /// ~3.3 characters per token on average; slightly more aggressive compression
-    /// than Llama-style tokenizers.
+    /// GPT-4 / GPT-3.5-turbo (cl100k_base vocabulary, 100k tokens).
+    /// ~3.3 characters per token on average.
     Gpt4,
+    /// GPT-4o / o1 / o3 / o4 / **GPT-5** (o200k_base vocabulary, 200k tokens).
+    /// Larger vocabulary → slightly fewer tokens than cl100k_base for the same text.
+    /// ~3.4 characters per token; more efficient on code and multilingual content.
+    Gpt4o,
     /// LLaMA-3, Mistral, Gemma, DeepSeek-R1, Qwen (SentencePiece / tiktoken-like).
     /// ~3.5 characters per token; digit-per-digit tokenization.
     Llama3,
@@ -92,10 +95,18 @@ pub fn count_for(text: &str, family: ModelFamily) -> usize {
     match family {
         // Universal / Llama3 / Qwen: no correction needed (calibration baseline).
         ModelFamily::Universal | ModelFamily::Llama3 | ModelFamily::Qwen => raw,
-        // GPT-4 (cl100k_base) merges subwords slightly more aggressively.
-        // Empirical ratio vs Llama3 on a mixed English+code corpus: 0.95.
-        // Integer-safe: raw * 19 / 20 (rounds down, conservative).
+        // GPT-4 (cl100k_base): ~5% fewer tokens than Llama3 heuristic.
+        // When the "exact-gpt4" feature is enabled, cl100k_base BPE is used instead.
+        #[cfg(not(feature = "exact-gpt4"))]
         ModelFamily::Gpt4 => (raw * 19) / 20,
+        #[cfg(feature = "exact-gpt4")]
+        ModelFamily::Gpt4 => exact_gpt4::count_cl100k(text),
+        // GPT-4o / o1 / o3 / o4 / GPT-5 (o200k_base): larger vocab, ~3% fewer tokens than cl100k.
+        // When the "exact-gpt4" feature is enabled, o200k_base BPE is used instead.
+        #[cfg(not(feature = "exact-gpt4"))]
+        ModelFamily::Gpt4o => (raw * 18) / 20,
+        #[cfg(feature = "exact-gpt4")]
+        ModelFamily::Gpt4o => exact_gpt4::count_o200k(text),
     }
 }
 
@@ -104,24 +115,68 @@ pub fn count_for(text: &str, family: ModelFamily) -> usize {
 ///
 /// | Provider fragment       | Family    |
 /// |-------------------------|-----------|
-/// | `gpt`, `openai`, `o1`, `o3` | [`ModelFamily::Gpt4`]   |
+/// | `gpt-4o`, `o1`, `o3`, `o4`, `gpt-5` | [`ModelFamily::Gpt4o`] |
+/// | `gpt`, `openai`         | [`ModelFamily::Gpt4`]   |
 /// | `qwen`                  | [`ModelFamily::Qwen`]   |
 /// | everything else (ollama, llama, mistral, deepseek, gemma, local) | [`ModelFamily::Llama3`] |
 pub fn family_for_provider(provider: &str) -> ModelFamily {
     let lower = provider.to_ascii_lowercase();
-    if lower.contains("gpt")
-        || lower.contains("openai")
+    // o200k_base family: GPT-4o, o1, o3, o4, GPT-5 — check before generic "gpt" match.
+    if lower.contains("gpt-4o")
+        || lower.contains("gpt-5")
+        || lower.contains("gpt5")
         || lower.contains("-o1")
         || lower.contains("-o3")
+        || lower.contains("-o4")
         || lower.starts_with("o1")
         || lower.starts_with("o3")
+        || lower.starts_with("o4")
     {
+        ModelFamily::Gpt4o
+    } else if lower.contains("gpt") || lower.contains("openai") {
         ModelFamily::Gpt4
     } else if lower.contains("qwen") {
         ModelFamily::Qwen
     } else {
         // llama, mistral, deepseek, gemma, ollama, local, …
         ModelFamily::Llama3
+    }
+}
+
+// ── Exact tokenizer (feature = "exact-gpt4") ────────────────────────────────
+
+/// Exact GPT-4 / GPT-4o token counting using embedded BPE vocabularies.
+///
+/// Gated behind the `exact-gpt4` cargo feature (enabled by default in `core`).
+/// When the feature is absent every call falls back to the calibrated heuristic.
+#[cfg(feature = "exact-gpt4")]
+mod exact_gpt4 {
+    use std::sync::OnceLock;
+    static CL100K_BPE: OnceLock<tiktoken_rs::CoreBPE> = OnceLock::new();
+    static O200K_BPE: OnceLock<tiktoken_rs::CoreBPE> = OnceLock::new();
+
+    fn cl100k_encoder() -> &'static tiktoken_rs::CoreBPE {
+        CL100K_BPE.get_or_init(|| {
+            tiktoken_rs::cl100k_base()
+                .expect("tiktoken-rs cl100k_base vocab is embedded in the binary")
+        })
+    }
+
+    fn o200k_encoder() -> &'static tiktoken_rs::CoreBPE {
+        O200K_BPE.get_or_init(|| {
+            tiktoken_rs::o200k_base()
+                .expect("tiktoken-rs o200k_base vocab is embedded in the binary")
+        })
+    }
+
+    /// Exact GPT-4 / GPT-3.5-turbo token count (cl100k_base).
+    pub fn count_cl100k(text: &str) -> usize {
+        cl100k_encoder().encode_with_special_tokens(text).len()
+    }
+
+    /// Exact GPT-4o / o1 / o3 / o4 / GPT-5 token count (o200k_base).
+    pub fn count_o200k(text: &str) -> usize {
+        o200k_encoder().encode_with_special_tokens(text).len()
     }
 }
 
@@ -735,9 +790,27 @@ mod tests {
 
     #[test]
     fn family_for_openai_is_gpt4() {
-        assert_eq!(family_for_provider("openai-gpt4o-mini"), ModelFamily::Gpt4);
+        assert_eq!(family_for_provider("openai-gpt-4-turbo"), ModelFamily::Gpt4);
     }
 
+    #[test]
+    fn family_for_gpt4o_is_gpt4o() {
+        assert_eq!(family_for_provider("openai-gpt-4o"), ModelFamily::Gpt4o);
+    }
+
+    #[test]
+    fn family_for_gpt5_is_gpt4o() {
+        assert_eq!(family_for_provider("openai-gpt-5"), ModelFamily::Gpt4o);
+    }
+
+    #[test]
+    fn family_for_o1_is_gpt4o() {
+        assert_eq!(family_for_provider("openai-o1"), ModelFamily::Gpt4o);
+    }
+
+    // Heuristic-only: this property holds because raw * 19/20 ≤ raw. When exact
+    // counting is enabled the test is replaced by the exact equivalents below.
+    #[cfg(not(feature = "exact-gpt4"))]
     #[test]
     fn gpt4_count_is_slightly_lower_than_llama3() {
         // GPT-4's more aggressive merging means fewer tokens for the same text.
@@ -745,6 +818,66 @@ mod tests {
         let llama = count_for(text, ModelFamily::Llama3);
         let gpt4 = count_for(text, ModelFamily::Gpt4);
         assert!(gpt4 <= llama, "gpt4={gpt4} should be <= llama3={llama}");
+    }
+
+    // ── Exact GPT-4 tests (feature = "exact-gpt4") ───────────────────────────
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4_empty_returns_zero() {
+        assert_eq!(count_for("", ModelFamily::Gpt4), 0);
+    }
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4_hello_world_is_two_tokens() {
+        // cl100k_base: "Hello" → 1 token, " world" → 1 token = 2 total.
+        assert_eq!(count_for("Hello world", ModelFamily::Gpt4), 2);
+    }
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4_lower_than_llama3_heuristic_for_code() {
+        // Exact GPT-4 should be ≤ the Llama-3 heuristic for typical Rust code.
+        let text = "fn compile_context(raw: &str) -> CompileResult";
+        let llama3_est = count_for(text, ModelFamily::Llama3);
+        let gpt4_exact = count_for(text, ModelFamily::Gpt4);
+        assert!(
+            gpt4_exact <= llama3_est,
+            "exact gpt4={gpt4_exact} should be <= llama3 heuristic={llama3_est}"
+        );
+    }
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4_single_digit_is_one_token() {
+        // Each ASCII digit is its own token in cl100k_base.
+        assert_eq!(count_for("5", ModelFamily::Gpt4), 1);
+    }
+
+    // ── Exact GPT-4o / o200k_base tests (feature = "exact-gpt4") ─────────────
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4o_empty_returns_zero() {
+        assert_eq!(count_for("", ModelFamily::Gpt4o), 0);
+    }
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4o_hello_world_is_two_tokens() {
+        // o200k_base: "Hello" → 1 token, " world" → 1 token = 2 total.
+        assert_eq!(count_for("Hello world", ModelFamily::Gpt4o), 2);
+    }
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_gpt4o_not_more_than_gpt4_for_english() {
+        // o200k has a larger vocabulary so should use ≤ tokens vs. cl100k.
+        let text = "fn compile_context(raw: &str) -> CompileResult";
+        let gpt4 = count_for(text, ModelFamily::Gpt4);
+        let gpt4o = count_for(text, ModelFamily::Gpt4o);
+        assert!(gpt4o <= gpt4, "o200k={gpt4o} should be <= cl100k={gpt4}");
     }
 
     // ── Accuracy vs. chars / 4 ────────────────────────────────────────────────

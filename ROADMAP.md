@@ -291,6 +291,17 @@ Wave A progress:
 - `core/chat_completions` applies `tokenizer::decode_for(content, token_family)` on all non-streaming provider responses and on accumulated streaming content before cache insertion.
 - Test suite: 131 tests, 0 failures (+33 encode/decode unit tests).
 
+### V9.6 — Exact GPT-4 Token Counting via tiktoken-rs + GPT-5 / o200k_base support
+
+**Status:** Delivered.
+
+- Optional Cargo feature `exact-gpt4` in `tokenizer/` crate: replaces the GPT-4 heuristic with exact cl100k_base BPE counting using [`tiktoken-rs`](https://crates.io/crates/tiktoken-rs). Vocabulary is embedded in the binary — no external files required.
+- Feature propagated to `core/` and enabled by default (`default = ["exact-gpt4"]`), so `cargo build` yields exact GPT-4 token counts out of the box.
+- **`ModelFamily::Gpt4o`** variant added for GPT-4o, o1, o3, o4, and **GPT-5**: routes to `o200k_base` (200k-vocabulary BPE). `family_for_provider()` correctly dispatches all `gpt-4o*`, `gpt-5*`, `o1*`, `o3*`, `o4*` model keys.
+- All other families (Llama3, Mistral, Qwen, Universal) keep the optimised heuristic (zero extra dependencies when `exact-gpt4` is disabled).
+- Match arms in `count_for()` gated with `#[cfg(feature)]` — clean compilation in both modes, no dead-code warnings.
+- Test suite: 142 tests, 0 failures (+6 Gpt4o tests, +4 exact GPT-4 tests).
+
 ### V10 — Adaptive AI Optimization Network
 
 - Learning routing loop (feedback from response quality)

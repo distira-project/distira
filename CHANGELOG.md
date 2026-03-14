@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — V9.6.1 GPT-5 / o200k_base tokenizer support (2026-03-13)
+
+- **`ModelFamily::Gpt4o` variant** — New enum variant covering GPT-4o, o1, o3, o4, and **GPT-5**. Routes to `o200k_base` (200k-vocabulary BPE) via `exact_gpt4::count_o200k()` when `exact-gpt4` feature is active, or a calibrated heuristic (`raw * 18/20`) otherwise.
+- **`family_for_provider()`** — Updated to route `gpt-4o`, `gpt-5`, `gpt5`, `-o1`, `-o3`, `-o4`, `o1*`, `o3*`, `o4*` models to `Gpt4o`; generic `gpt`/`openai` prefixes continue to use `Gpt4` (cl100k_base).
+- **`mod exact_gpt4`** — Added `O200K_BPE: OnceLock<CoreBPE>`, `o200k_encoder()`, and `count_o200k()`. Both encoders (cl100k + o200k) are embedded — no external vocabulary files required.
+- **Test suite: 142 tests, 0 failures** (+6: `family_for_gpt4o_is_gpt4o`, `family_for_gpt5_is_gpt4o`, `family_for_o1_is_gpt4o`, `exact_gpt4o_empty_returns_zero`, `exact_gpt4o_hello_world_is_two_tokens`, `exact_gpt4o_not_more_than_gpt4_for_english`; fixed `family_for_openai_is_gpt4` model key to `gpt-4-turbo`).
+
+### Added — V9.6 Exact GPT-4 Token Counting (2026-03-13)
+
+- **`tokenizer` crate — feature `exact-gpt4`** — Optional Cargo feature that replaces the GPT-4 heuristic (`raw * 19/20`) with exact BPE counting via [`tiktoken-rs`](https://crates.io/crates/tiktoken-rs). Uses the embedded **cl100k_base** vocabulary (OpenAI GPT-4 / GPT-3.5-turbo tokenizer) — no external vocabulary files required. The encoder is initialised once via `OnceLock` (lock-free on subsequent calls). All other model families (Llama3, Mistral, Qwen) keep the optimised heuristic unchanged.
+- **`core` crate — feature `exact-gpt4` (default)** — Propagates `tokenizer/exact-gpt4` to the workspace binary. Enabled in `default` features so `cargo build` gives exact GPT-4 counting out of the box.
+- **`tokenizer/Cargo.toml`** — Added `tiktoken-rs = { version = "0.6", optional = true }` guarded by the `exact-gpt4` feature flag. The crate remains zero-dependency when the feature is absent.
+- **`count_for(text, ModelFamily::Gpt4)`** — Dispatches to `exact_gpt4::count_gpt4()` when compiled with `exact-gpt4`, falls back to calibrated heuristic otherwise. Match arms gated with `#[cfg(feature)]` / `#[cfg(not(feature))]` — no dead code.
+- **Test suite: 136 tests, 0 failures** (+4 exact tests: `exact_gpt4_empty_returns_zero`, `exact_gpt4_hello_world_is_two_tokens`, `exact_gpt4_lower_than_llama3_heuristic_for_code`, `exact_gpt4_single_digit_is_one_token`; heuristic gpt4 test gated with `#[cfg(not(feature = "exact-gpt4"))]`).
+
 ### Fixed — V9.5.2 MCP Agent & Policy Config (2026-03-13)
 
 - **`.github/agents/distira.agent.md`** — Added explicit tools list in frontmatter.
