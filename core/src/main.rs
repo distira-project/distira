@@ -153,6 +153,12 @@ struct MetricsSnapshot {
     /// Cost of the most recent request in USD.
     #[serde(default)]
     last_request_cost_usd: f64,
+    /// V10 — Number of stable context blocks currently held in the ContextStore.
+    #[serde(default)]
+    stable_blocks: usize,
+    /// V10 — Session-level context reuse ratio in percent (memory_reused / raw * 100).
+    #[serde(default)]
+    context_reuse_ratio_pct: f32,
 }
 
 #[derive(Debug)]
@@ -170,6 +176,10 @@ struct MetricsCollector {
     daily_reset_epoch: u64,
     /// Per-provider rolling latency: (sum_ms, count). Used for latency-aware routing.
     provider_latency: HashMap<String, (f64, u64)>,
+    /// V10 — Session-level error count per provider (never reset).
+    provider_errors: HashMap<String, u64>,
+    /// V10 — Session-level total forward requests per provider (success + error).
+    provider_total: HashMap<String, u64>,
     persistence_path: PathBuf,
 }
 
@@ -257,6 +267,8 @@ impl MetricsCollector {
                 request_history: Vec::with_capacity(200),
                 session_cost_usd: 0.0,
                 last_request_cost_usd: 0.0,
+                stable_blocks: 0,
+                context_reuse_ratio_pct: 0.0,
             },
             sem_cache: cache::SemanticCache::new(),
             chat_cache: HashMap::new(),
@@ -268,6 +280,8 @@ impl MetricsCollector {
             daily_provider_counts: HashMap::new(),
             daily_reset_epoch: now_epoch() / 86400 * 86400,
             provider_latency: HashMap::new(),
+            provider_errors: HashMap::new(),
+            provider_total: HashMap::new(),
             persistence_path,
         };
 
@@ -317,6 +331,9 @@ impl MetricsCollector {
             entry.0 += latency_ms as f64;
             entry.1 += 1;
         }
+
+        // V10 — Track total requests per provider for error rate computation.
+        *self.provider_total.entry(provider.clone()).or_insert(0) += 1;
 
         let s = &mut self.snapshot;
         let ts = now_epoch();
@@ -493,6 +510,14 @@ impl MetricsCollector {
         s.session_cost_usd += cost_usd;
         s.last_request_cost_usd = cost_usd;
 
+        // V10 — Live context memory stats from ContextStore.
+        s.stable_blocks = self.context_store.len();
+        s.context_reuse_ratio_pct = if s.raw_tokens > 0 {
+            (s.memory_reused_tokens as f32 / s.raw_tokens as f32 * 100.0).min(100.0)
+        } else {
+            0.0
+        };
+
         let lineage = RequestLineage {
             client_app: upstream.client_app,
             upstream_provider: upstream.provider,
@@ -545,6 +570,29 @@ impl MetricsCollector {
             .collect()
     }
 
+    /// V10 — Record a failed forward attempt for a provider.
+    fn record_error(&mut self, provider: &str) {
+        *self
+            .provider_errors
+            .entry(provider.to_string())
+            .or_insert(0) += 1;
+        *self.provider_total.entry(provider.to_string()).or_insert(0) += 1;
+    }
+
+    /// V10 — Compute per-provider error rate from session totals.
+    fn error_rate_by_provider(&self) -> HashMap<String, f64> {
+        self.provider_errors
+            .iter()
+            .filter_map(|(k, &errors)| {
+                let total = self.provider_total.get(k).copied().unwrap_or(0);
+                if total == 0 {
+                    return None;
+                }
+                Some((k.clone(), errors as f64 / total as f64))
+            })
+            .collect()
+    }
+
     fn reset(&mut self) {
         self.snapshot = MetricsSnapshot {
             ts: now_epoch(),
@@ -574,6 +622,8 @@ impl MetricsCollector {
             request_history: Vec::with_capacity(200),
             session_cost_usd: 0.0,
             last_request_cost_usd: 0.0,
+            stable_blocks: 0,
+            context_reuse_ratio_pct: 0.0,
         };
         self.hour_buckets.clear();
     }
@@ -1078,8 +1128,8 @@ fn compress_conversation_history(messages: &[Value]) -> Vec<Value> {
             // Strip the intent marker prefix ([k:intent]|) before embedding in summary.
             let compressed_text = compiled
                 .compiled_context
-                .splitn(2, '|')
-                .nth(1)
+                .split_once('|')
+                .map(|x| x.1)
                 .unwrap_or(&compiled.compiled_context)
                 .trim()
                 .to_string();
@@ -1246,9 +1296,12 @@ async fn set_runtime_client_context(
 }
 
 async fn list_providers(State(state): State<SharedState>) -> Json<serde_json::Value> {
-    let latency_map = {
+    let (latency_map, error_map) = {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
-        collector.avg_latency_by_provider()
+        (
+            collector.avg_latency_by_provider(),
+            collector.error_rate_by_provider(),
+        )
     };
     let mut summaries: Vec<serde_json::Value> = state
         .router_config
@@ -1256,9 +1309,11 @@ async fn list_providers(State(state): State<SharedState>) -> Json<serde_json::Va
         .into_iter()
         .map(|s| {
             let avg_ms = latency_map.get(&s.key).copied().unwrap_or(0.0);
+            let error_rate = error_map.get(&s.key).copied().unwrap_or(0.0);
             let mut v = serde_json::to_value(&s).unwrap_or_default();
             if let Some(obj) = v.as_object_mut() {
                 obj.insert("avg_latency_ms".into(), serde_json::json!(avg_ms));
+                obj.insert("error_rate".into(), serde_json::json!(error_rate));
             }
             v
         })
@@ -1333,11 +1388,12 @@ async fn compile(
         &runtime_context,
         &state.workspace_context,
     );
-    let route = state.router_config.choose_provider_latency_aware(
+    let route = state.router_config.choose_provider_adaptive(
         &result.intent,
         sensitive,
         &collector.daily_provider_counts,
         &collector.avg_latency_by_provider(),
+        &collector.error_rate_by_provider(),
     );
     let upstream = upstream_identity(
         payload
@@ -1514,15 +1570,20 @@ async fn chat_completions(
 
     // Determine route early so compiled_total uses model-aware token counting.
     // V9.16: snapshot daily counts + latency map before locking for the cache check.
-    let (daily_counts, latency_map) = {
+    let (daily_counts, latency_map, error_map) = {
         let c = state.collector.lock().unwrap_or_else(|e| e.into_inner());
-        (c.daily_provider_counts.clone(), c.avg_latency_by_provider())
+        (
+            c.daily_provider_counts.clone(),
+            c.avg_latency_by_provider(),
+            c.error_rate_by_provider(),
+        )
     };
-    let route = state.router_config.choose_provider_latency_aware(
+    let route = state.router_config.choose_provider_adaptive(
         &result.intent,
         sensitive,
         &daily_counts,
         &latency_map,
+        &error_map,
     );
     let model = payload.model.clone().unwrap_or_else(|| route.model.clone());
 
@@ -1788,24 +1849,30 @@ async fn chat_completions(
                     .body(Body::from_stream(stream))
                     .unwrap()
             }
-            Err(e) => Json(json!({
-                "error": {
-                    "message": e,
-                    "type": "provider_error",
-                    "distira": {
-                        "provider": route.provider,
-                        "model": model,
-                        "intent": result.intent,
-                        "compiled_tokens": compiled_total,
-                        "client_app": upstream.client_app,
-                        "upstream_provider": upstream.provider,
-                        "upstream_model": upstream.model,
-                        "semantic_cache_hit": semantic_cache_hit,
-                        "semantic_fingerprint": semantic_fp.to_string()
-                    }
+            Err(e) => {
+                {
+                    let mut c = state.collector.lock().unwrap_or_else(|e| e.into_inner());
+                    c.record_error(&route.provider);
                 }
-            }))
-            .into_response(),
+                Json(json!({
+                    "error": {
+                        "message": e,
+                        "type": "provider_error",
+                        "distira": {
+                            "provider": route.provider,
+                            "model": model,
+                            "intent": result.intent,
+                            "compiled_tokens": compiled_total,
+                            "client_app": upstream.client_app,
+                            "upstream_provider": upstream.provider,
+                            "upstream_model": upstream.model,
+                            "semantic_cache_hit": semantic_cache_hit,
+                            "semantic_fingerprint": semantic_fp.to_string()
+                        }
+                    }
+                }))
+                .into_response()
+            }
         };
     }
 
@@ -1897,22 +1964,90 @@ async fn chat_completions(
             }))
             .into_response()
         }
-        Err(e) => Json(json!({
-            "error": {
-                "message": e,
-                "type": "provider_error",
-                "distira": {
-                    "provider": route.provider,
-                    "model": model,
-                    "intent": result.intent,
-                    "compiled_tokens": compiled_total,
-                    "semantic_cache_hit": semantic_cache_hit,
-                    "semantic_fingerprint": semantic_fp.to_string()
-                }
+        Err(e) => {
+            {
+                let mut c = state.collector.lock().unwrap_or_else(|e| e.into_inner());
+                c.record_error(&route.provider);
             }
-        }))
-        .into_response(),
+            Json(json!({
+                "error": {
+                    "message": e,
+                    "type": "provider_error",
+                    "distira": {
+                        "provider": route.provider,
+                        "model": model,
+                        "intent": result.intent,
+                        "compiled_tokens": compiled_total,
+                        "semantic_cache_hit": semantic_cache_hit,
+                        "semantic_fingerprint": semantic_fp.to_string()
+                    }
+                }
+            }))
+            .into_response()
+        }
     }
+}
+
+/// V10 — Return adaptive optimization suggestions based on real-time provider
+/// error rates and latency measurements.
+async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::Value> {
+    let (latency_map, error_map) = {
+        let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
+        (
+            collector.avg_latency_by_provider(),
+            collector.error_rate_by_provider(),
+        )
+    };
+
+    let mut suggestions: Vec<serde_json::Value> = Vec::new();
+
+    // High error rate: >= 5% is noteworthy.
+    for (provider, error_rate) in &error_map {
+        if *error_rate >= 0.05 {
+            suggestions.push(json!({
+                "severity": "warning",
+                "code": "high_error_rate",
+                "provider": provider,
+                "metric": "error_rate",
+                "value": (*error_rate * 10000.0).round() / 10000.0,
+                "message": format!(
+                    "Provider {} has {:.0}% error rate. Check connectivity or add a fallback in providers.yaml.",
+                    provider, error_rate * 100.0
+                )
+            }));
+        }
+    }
+
+    // High latency: >= 3 000 ms.
+    for (provider, avg_ms) in &latency_map {
+        if *avg_ms >= 3000.0 {
+            let severity = if *avg_ms >= 6000.0 { "warning" } else { "info" };
+            suggestions.push(json!({
+                "severity": severity,
+                "code": "high_latency",
+                "provider": provider,
+                "metric": "avg_latency_ms",
+                "value": avg_ms.round(),
+                "message": format!(
+                    "Provider {} avg latency is {:.0}ms. Consider routing this intent to a faster on-prem provider.",
+                    provider, avg_ms
+                )
+            }));
+        }
+    }
+
+    // Sort: warnings first, then by value descending.
+    suggestions.sort_by(|a, b| {
+        let sa = a.get("severity").and_then(|v| v.as_str()).unwrap_or("info");
+        let sb = b.get("severity").and_then(|v| v.as_str()).unwrap_or("info");
+        sb.cmp(sa)
+    });
+
+    Json(json!({
+        "generated_at": now_epoch(),
+        "count": suggestions.len(),
+        "suggestions": suggestions
+    }))
 }
 
 fn stream_cached_response(request_id: &str, model: &str, content: &str) -> Response<Body> {
@@ -2262,6 +2397,22 @@ async fn metrics_stream(
         if !alerts.is_empty() {
             snapshot_val["alerts"] = serde_json::Value::Array(alerts);
         }
+        // V10 — Inject live context block summaries (no raw content exposed).
+        let blocks_summary: Vec<serde_json::Value> = collector
+            .context_store
+            .blocks()
+            .into_iter()
+            .map(|b| {
+                let short_id = if b.id.len() > 8 { b.id[..8].to_string() } else { b.id.clone() };
+                json!({
+                    "id": short_id,
+                    "stability": (b.stability * 100.0).round() / 100.0,
+                    "token_count": b.content.split_whitespace().count(),
+                    "intent": b.intent
+                })
+            })
+            .collect();
+        snapshot_val["context_blocks_summary"] = serde_json::Value::Array(blocks_summary);
         let data = serde_json::to_string(&snapshot_val).unwrap_or_default();
         Ok(Event::default().event("metrics").data(data))
     });
@@ -2340,6 +2491,7 @@ async fn main() {
         .route("/v1/metrics", get(metrics_snapshot))
         .route("/v1/metrics/reset", delete(metrics_reset))
         .route("/v1/metrics/stream", get(metrics_stream))
+        .route("/v1/suggestions", get(get_suggestions))
         .layer(middleware::from_fn(require_api_key))
         .with_state(state.clone());
 
@@ -2369,6 +2521,7 @@ async fn main() {
     println!("  GET    /v1/metrics            — JSON snapshot");
     println!("  DELETE /v1/metrics/reset     — reset all counters");
     println!("  GET    /v1/metrics/stream    — SSE live stream");
+    println!("  GET    /v1/suggestions       — V10 adaptive optimization suggestions");
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

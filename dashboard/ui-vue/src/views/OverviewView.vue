@@ -282,11 +282,37 @@
       </div>
       <p v-else class="muted">No intent data yet. Send a few requests to see the distribution.</p>
     </section>
+
+    <!-- V10 — Adaptive Optimization Suggestions -->
+    <section class="card suggestions-section">
+      <div class="section-heading">
+        <div>
+          <h3>Optimization Suggestions</h3>
+          <p class="muted">V10 adaptive engine analyzes provider error rates and latency to surface actionable improvements.</p>
+        </div>
+        <button class="refresh-btn" @click="fetchSuggestions">Refresh</button>
+      </div>
+      <div v-if="suggestions.length" class="suggestions-list">
+        <div
+          v-for="(s, idx) in suggestions"
+          :key="idx"
+          class="suggestion-item"
+          :class="s.severity"
+        >
+          <span class="suggestion-icon">{{ s.severity === 'warning' ? '\u26A0' : '\u2139' }}</span>
+          <div class="suggestion-body">
+            <span class="suggestion-message">{{ s.message }}</span>
+            <span class="suggestion-meta">{{ s.provider }} · {{ s.metric }}: {{ s.value }}</span>
+          </div>
+        </div>
+      </div>
+      <p v-else class="muted">No suggestions yet. Suggestions appear after providers accumulate error or latency data.</p>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 import { classifyRoute, friendlyProvider, qualityTier } from '../utils/providers'
 import MetricCard from '../components/MetricCard.vue'
@@ -307,6 +333,29 @@ async function resetMetrics() {
     resetting.value = false
   }
 }
+
+// V10 — Adaptive optimization suggestions
+interface Suggestion {
+  severity: 'warning' | 'info'
+  code: string
+  provider: string
+  metric: string
+  value: number
+  message: string
+}
+const suggestions = ref<Suggestion[]>([])
+async function fetchSuggestions() {
+  try {
+    const res = await fetch('/v1/suggestions')
+    if (res.ok) {
+      const data = await res.json()
+      suggestions.value = data.suggestions ?? []
+    }
+  } catch {
+    // Server not yet available — silently ignore
+  }
+}
+onMounted(fetchSuggestions)
 const configuredAssistantModelLabel = import.meta.env.VITE_ASSISTANT_MODEL_LABEL || 'External assistant or client model'
 
 // Sparklines: direct SSE history arrays (reactive)
@@ -1142,5 +1191,76 @@ const intentRows = computed(() => {
   .cvr-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── V10 Optimization Suggestions ─────────────────────── */
+.suggestions-section .section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.refresh-btn {
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-size: 0.87rem;
+}
+.suggestion-item.warning {
+  background: rgba(255, 169, 64, 0.08);
+  border-color: rgba(255, 169, 64, 0.28);
+}
+.suggestion-item.info {
+  background: rgba(40, 120, 255, 0.07);
+  border-color: rgba(40, 120, 255, 0.22);
+}
+
+.suggestion-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.suggestion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.suggestion-message {
+  color: var(--foreground);
+  line-height: 1.4;
+}
+
+.suggestion-meta {
+  font-size: 0.77rem;
+  color: var(--muted);
+  font-family: monospace;
 }
 </style>

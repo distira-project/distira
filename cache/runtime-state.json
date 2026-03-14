@@ -1,20 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773522001,
-    "total_requests": 46,
-    "raw_tokens": 1716,
-    "compiled_tokens": 1137,
+    "ts": 1773523353,
+    "total_requests": 50,
+    "raw_tokens": 1862,
+    "compiled_tokens": 1249,
     "memory_reused_tokens": 17,
-    "efficiency_score": 63.74126,
-    "local_ratio": 26.086956,
+    "efficiency_score": 62.92159,
+    "local_ratio": 26.0,
     "cache_hits": 3,
-    "cache_misses": 43,
+    "cache_misses": 47,
     "cache_saved_tokens": 0,
     "history_raw": [
-      692,
-      727,
-      775,
-      799,
       822,
       863,
       913,
@@ -34,13 +30,13 @@
       1549,
       1607,
       1665,
-      1716
+      1716,
+      1784,
+      1821,
+      1846,
+      1862
     ],
     "history_compiled": [
-      484,
-      507,
-      529,
-      552,
       577,
       609,
       630,
@@ -60,7 +56,11 @@
       1041,
       1075,
       1110,
-      1137
+      1137,
+      1186,
+      1208,
+      1227,
+      1249
     ],
     "history_reused": [
       17,
@@ -138,7 +138,7 @@
       0,
       199,
       402,
-      51
+      197
     ],
     "history_hour_compiled": [
       0,
@@ -164,7 +164,7 @@
       0,
       133,
       258,
-      27
+      139
     ],
     "history_hour_reused": [
       0,
@@ -192,19 +192,19 @@
       0,
       0
     ],
-    "routes_local": 12,
-    "routes_cloud": 33,
+    "routes_local": 13,
+    "routes_cloud": 36,
     "routes_midtier": 1,
     "intent_stats": {
       "general": {
-        "requests": 33,
-        "raw_tokens": 1228,
-        "compiled_tokens": 802
+        "requests": 36,
+        "raw_tokens": 1306,
+        "compiled_tokens": 865
       },
       "debug": {
-        "requests": 11,
-        "raw_tokens": 454,
-        "compiled_tokens": 293
+        "requests": 12,
+        "raw_tokens": 522,
+        "compiled_tokens": 342
       },
       "codegen": {
         "requests": 1,
@@ -245,24 +245,24 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 33,
-        "raw_tokens": 1228,
-        "compiled_tokens": 802,
+        "requests": 36,
+        "raw_tokens": 1306,
+        "compiled_tokens": 865,
         "memory_reused_tokens": 0,
-        "efficiency_score": 64.69055,
+        "efficiency_score": 63.76723,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 33,
+        "non_sovereign_requests": 36,
         "sovereign_ratio": 0.0
       },
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
         "model": "mistral:7b-instruct",
         "provider": "ollama-mistral-7b-instruct",
-        "requests": 11,
-        "raw_tokens": 454,
-        "compiled_tokens": 293,
+        "requests": 12,
+        "raw_tokens": 522,
+        "compiled_tokens": 342,
         "memory_reused_tokens": 17,
-        "efficiency_score": 65.462555,
-        "sovereign_requests": 11,
+        "efficiency_score": 64.48276,
+        "sovereign_requests": 12,
         "non_sovereign_requests": 0,
         "sovereign_ratio": 100.0
       }
@@ -279,8 +279,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "GitHub Copilot",
         "upstream_model": "Claude Sonnet 4.6",
-        "requests": 14,
-        "last_seen_ts": 1773522001
+        "requests": 18,
+        "last_seen_ts": 1773523353
       }
     },
     "last_request": {
@@ -294,10 +294,10 @@
       "routed_model": "stepfun/step-3.5-flash:free",
       "intent": "general",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "4877531500058267576",
+      "semantic_fingerprint": "3514485783912649129",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773522001,
+      "ts": 1773523353,
       "cost_usd": 0.0
     },
     "request_history": [
@@ -1082,6 +1082,74 @@
         "sensitive": false,
         "ts": 1773522001,
         "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "ollama-mistral-7b-instruct",
+        "routed_model": "mistral:7b-instruct",
+        "intent": "debug",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "14240787143837098978",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773522140,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "15793213290072416126",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773522892,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "12991895568732174329",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773523258,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "3514485783912649129",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773523353,
+        "cost_usd": 0.0
       }
     ],
     "session_cost_usd": 0.0,
@@ -1105,6 +1173,15 @@
       "summary": "Intent: general. Reduced estimated context from 58 to 35 tokens and trimmed low-signal context while preserving the main request.",
       "compiled_context": "[k:general]|Continue DISTIRA iterations: V9.16 Latency-Aware Routing - track rolling average response ...",
       "created_at": 1773521385
+    },
+    {
+      "fingerprint": 14240787143837098978,
+      "intent": "debug",
+      "raw_tokens_estimate": 68,
+      "compiled_tokens_estimate": 49,
+      "summary": "Intent: debug. Reduced estimated context from 68 to 49 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ...",
+      "created_at": 1773522140
     },
     {
       "fingerprint": 3190483154157174394,
@@ -1233,6 +1310,15 @@
       "created_at": 1773518276
     },
     {
+      "fingerprint": 3514485783912649129,
+      "intent": "general",
+      "raw_tokens_estimate": 16,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 16 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Est-ce que c'est normal que Reused Tokens soit ...",
+      "created_at": 1773523353
+    },
+    {
       "fingerprint": 6353571244721902484,
       "intent": "general",
       "raw_tokens_estimate": 52,
@@ -1332,6 +1418,15 @@
       "created_at": 1773459340
     },
     {
+      "fingerprint": 12991895568732174329,
+      "intent": "general",
+      "raw_tokens_estimate": 25,
+      "compiled_tokens_estimate": 19,
+      "summary": "Intent: general. Reduced estimated context from 25 to 19 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Is it normal that Reused Tokens shows 17 ...",
+      "created_at": 1773523258
+    },
+    {
       "fingerprint": 1371050076928744382,
       "intent": "general",
       "raw_tokens_estimate": 48,
@@ -1411,6 +1506,15 @@
       "summary": "Intent: general. Reduced estimated context from 41 to 32 tokens and trimmed low-signal context while preserving the main request.",
       "compiled_context": "[k:general]|Preparing for next iteration V9.10 tomorrow: DELETE /v1/metrics/reset, ...",
       "created_at": 1773461356
+    },
+    {
+      "fingerprint": 15793213290072416126,
+      "intent": "general",
+      "raw_tokens_estimate": 37,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 37 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Why are Context Memory metrics (Reused Tokens, Reuse ...",
+      "created_at": 1773522892
     },
     {
       "fingerprint": 7294020892820348209,
@@ -1524,6 +1628,11 @@
       "id": "954453020827799537",
       "stability": 1.0,
       "content": "[k:debug]|Fix TvChart sparkline: curves clipped at top, yMax needs ..."
+    },
+    {
+      "id": "15793213290072416126",
+      "stability": 1.0,
+      "content": "[k:general]|Why are Context Memory metrics (Reused Tokens, Reuse ..."
     },
     {
       "id": "1785656827680731086",
@@ -1656,6 +1765,16 @@
       "content": "[k:general]|Continue iterations V9.15 quality-tier routing + fallback chains, then implement response ..."
     },
     {
+      "id": "14240787143837098978",
+      "stability": 1.0,
+      "content": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ..."
+    },
+    {
+      "id": "12991895568732174329",
+      "stability": 1.0,
+      "content": "[k:general]|Is it normal that Reused Tokens shows 17 ..."
+    },
+    {
       "id": "1611955546985147079",
       "stability": 1.0,
       "content": "[k:general]|Set minimum AI efficiency score floor to 30% ..."
@@ -1706,6 +1825,11 @@
       "content": "[k:general]|You are a helpful assistant. What is 2+2? 4. And 3+3?"
     },
     {
+      "id": "3514485783912649129",
+      "stability": 1.0,
+      "content": "[k:general]|Est-ce que c'est normal que Reused Tokens soit ..."
+    },
+    {
       "id": "3963497400335545383",
       "stability": 1.0,
       "content": "[k:general]|Pourquoi j'ai pas @distria ? The user cannot ..."
@@ -1738,8 +1862,8 @@
   ],
   "hour_buckets": {
     "1773522000": [
-      51,
-      27,
+      197,
+      139,
       0
     ],
     "1773518400": [

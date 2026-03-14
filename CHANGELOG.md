@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Context Memory live metrics (2026-03-14)
+
+- **`MetricsSnapshot`** — added `stable_blocks: usize` and `context_reuse_ratio_pct: f32` fields (serde default = 0); updated in `record()` from `context_store.len()` and `memory_reused_tokens / raw_tokens`.
+- **`metrics_stream`** — SSE stream now injects `context_blocks_summary` array per event: `[{ id, stability, token_count, intent }]` — no raw content exposed.
+- **`store/metrics.ts`** — `stableBlocks`, `contextRatioPct`, `contextBlocksSummary` refs added; `applySnapshot` binds them from the SSE payload.
+- **`MemoryView.vue`** — Reuse Ratio and Stable Blocks cards now bound to live store values (were hardcoded `48.6%` / `14`); Context Block Status grid now renders real fingerprinted blocks from the SSE stream with per-block stability classification (`stable` ≥ 70% / `delta` ≥ 30% / `evicted` < 30%).
+
+### Added — V10.0 Adaptive AI Optimization Network (2026-03-14)
+
+- **`router/choose_provider_adaptive()`** — composite score routing: `latency × (1.0 + error_rate × 5.0)` per provider; unmeasured providers get `f64::MAX` and fall back to priority order; sensitive override bypasses scores entirely. Replaces `choose_provider_latency_aware()` as the default routing function in all chat and compile paths.
+- **`core/MetricsCollector`** — `provider_errors: HashMap<String, u64>` + `provider_total: HashMap<String, u64>` (session-level, never reset); `record_error(provider)` method increments both on forward failure; `error_rate_by_provider() -> HashMap<String, f64>` accessor.
+- **`core/chat_completions`** — both streaming `Err` branch and non-streaming `Err` branch now call `record_error()` so provider reliability is tracked.
+- **`core/list_providers`** — `/v1/providers` response enriched with `error_rate` per provider.
+- **`core/get_suggestions`** — new `GET /v1/suggestions` endpoint: computes actionable optimization suggestions from live error rates (≥5%) and latency (≥3000ms); returns `{ generated_at, count, suggestions: [{severity, code, provider, metric, value, message}] }`.
+- **`dashboard/OverviewView.vue`** — Optimization Suggestions panel: fetches `/v1/suggestions` on mount + manual Refresh button; color-coded warning/info cards; provider · metric · value meta line.
+- **`router` tests** — 3 new: `adaptive_returns_valid_decision`, `adaptive_penalizes_high_error_rate`, `adaptive_sensitive_ignores_scores`. Router suite: 11 → 14 tests.
+- **Clippy** — fixed `manual_split_once` lint in `core/compress_conversation_history()` (`.splitn(2,’|’).nth(1)` → `.split_once(’|’).map(|x| x.1)`).
+
 ### Added — V9.16 Latency-Aware Routing (2026-03-14)
 
 - **`router/choose_provider_latency_aware()`** — collects all within-budget candidates for an intent, ranks by rolling average latency, picks the fastest; providers with no measurement get `f64::MAX` and fall back to priority order; sensitive override bypasses latency logic entirely.

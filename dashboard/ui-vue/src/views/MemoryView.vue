@@ -9,22 +9,26 @@
 
     <div class="memory-stats">
       <MetricCard label="Reused Tokens" :value="metrics.memoryReusedTokens.toLocaleString()" hint="From stable blocks" accent="secondary" />
-      <MetricCard label="Reuse Ratio" value="48.6%" hint="Context reuse efficiency" accent="accent" />
-      <MetricCard label="Stable Blocks" value="14" hint="Identified as reusable" accent="primary" />
+      <MetricCard label="Reuse Ratio" :value="reuseRatioPct + '%'" hint="Context reuse efficiency" accent="accent" />
+      <MetricCard label="Stable Blocks" :value="metrics.stableBlocks.toString()" hint="Identified as reusable" accent="primary" />
     </div>
 
     <section class="card memory-blocks">
       <h3>Context Block Status</h3>
-      <div class="block-grid">
-        <div v-for="block in blocks" :key="block.id" class="mem-block" :class="block.status">
+      <div v-if="liveBlocks.length" class="block-grid">
+        <div v-for="block in liveBlocks" :key="block.id" class="mem-block" :class="block.status">
           <div class="block-header">
             <span class="block-id">#{{ block.id }}</span>
             <span class="block-badge">{{ block.status }}</span>
           </div>
           <div class="block-tokens">{{ block.tokens }} tokens</div>
-          <div class="block-desc">{{ block.label }}</div>
+          <div class="block-desc">
+            <span v-if="block.intent" class="block-intent">{{ block.intent }}</span>
+            <span class="block-stability">stability {{ (block.stabilityRaw * 100).toFixed(0) }}%</span>
+          </div>
         </div>
       </div>
+      <p v-else class="muted">No context blocks yet. Blocks appear after the first compiled request is processed.</p>
     </section>
 
     <section class="card">
@@ -43,19 +47,29 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 import MetricCard from '../components/MetricCard.vue'
 
 const metrics = useMetricsStore()
 
-const blocks = [
-  { id: 1, label: 'System prompt', tokens: 820, status: 'stable' },
-  { id: 2, label: 'User context (session)', tokens: 1240, status: 'stable' },
-  { id: 3, label: 'Previous assistant response', tokens: 640, status: 'stable' },
-  { id: 4, label: 'Current query', tokens: 180, status: 'delta' },
-  { id: 5, label: 'Tool outputs (last turn)', tokens: 350, status: 'delta' },
-  { id: 6, label: 'Deprecated context', tokens: 420, status: 'evicted' },
-]
+// Live reuse ratio: derived from cumulative session totals
+const reuseRatioPct = computed(() => {
+  return metrics.rawTokens > 0
+    ? Math.round((metrics.memoryReusedTokens / metrics.rawTokens) * 100)
+    : 0
+})
+
+// Map live context blocks from SSE stream
+const liveBlocks = computed(() => {
+  return metrics.contextBlocksSummary.map((b) => ({
+    id: b.id,
+    tokens: b.token_count,
+    stabilityRaw: b.stability,
+    intent: b.intent || '',
+    status: b.stability >= 0.7 ? 'stable' : b.stability >= 0.3 ? 'delta' : 'evicted',
+  }))
+})
 
 const steps = [
   { title: 'Fingerprint each block', desc: 'Every context segment is hashed to detect duplicates across turns.' },
@@ -94,7 +108,9 @@ const steps = [
 .mem-block.delta .block-badge { background: rgba(57, 211, 255, 0.15); color: var(--primary); }
 .mem-block.evicted .block-badge { background: rgba(255, 100, 100, 0.15); color: #ff6464; }
 .block-tokens { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
-.block-desc { font-size: 0.82rem; color: var(--muted); }
+.block-desc { font-size: 0.82rem; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+.block-intent { color: var(--primary); font-style: italic; }
+.block-stability { color: var(--muted); }
 .lens-steps { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
 .lens-step { display: flex; gap: 16px; align-items: flex-start; }
 .step-num {
