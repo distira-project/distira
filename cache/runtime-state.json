@@ -1,17 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773461508,
-    "total_requests": 29,
-    "raw_tokens": 913,
-    "compiled_tokens": 630,
+    "ts": 1773461739,
+    "total_requests": 30,
+    "raw_tokens": 956,
+    "compiled_tokens": 653,
     "memory_reused_tokens": 17,
-    "efficiency_score": 60.99671,
-    "local_ratio": 27.586206,
+    "efficiency_score": 61.69456,
+    "local_ratio": 30.000002,
     "cache_hits": 3,
-    "cache_misses": 26,
+    "cache_misses": 27,
     "cache_saved_tokens": 0,
     "history_raw": [
-      229,
       241,
       297,
       298,
@@ -34,10 +33,10 @@
       799,
       822,
       863,
-      913
+      913,
+      956
     ],
     "history_compiled": [
-      147,
       161,
       190,
       191,
@@ -60,7 +59,8 @@
       552,
       577,
       609,
-      630
+      630,
+      653
     ],
     "history_reused": [
       17,
@@ -138,7 +138,7 @@
       68,
       0,
       395,
-      221
+      264
     ],
     "history_hour_compiled": [
       0,
@@ -164,7 +164,7 @@
       43,
       0,
       294,
-      146
+      169
     ],
     "history_hour_reused": [
       0,
@@ -192,14 +192,14 @@
       0,
       0
     ],
-    "routes_local": 8,
+    "routes_local": 9,
     "routes_cloud": 20,
     "routes_midtier": 1,
     "intent_stats": {
       "debug": {
-        "requests": 7,
-        "raw_tokens": 305,
-        "compiled_tokens": 187
+        "requests": 8,
+        "raw_tokens": 348,
+        "compiled_tokens": 210
       },
       "codegen": {
         "requests": 1,
@@ -233,12 +233,12 @@
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
         "model": "mistral:7b-instruct",
         "provider": "ollama-mistral-7b-instruct",
-        "requests": 7,
-        "raw_tokens": 305,
-        "compiled_tokens": 187,
+        "requests": 8,
+        "raw_tokens": 348,
+        "compiled_tokens": 210,
         "memory_reused_tokens": 17,
-        "efficiency_score": 68.68852,
-        "sovereign_requests": 7,
+        "efficiency_score": 69.655174,
+        "sovereign_requests": 8,
         "non_sovereign_requests": 0,
         "sovereign_ratio": 100.0
       },
@@ -272,8 +272,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "unknown-provider",
         "upstream_model": "unknown-model",
-        "requests": 22,
-        "last_seen_ts": 1773461508
+        "requests": 23,
+        "last_seen_ts": 1773461739
       }
     },
     "last_request": {
@@ -287,10 +287,10 @@
       "routed_model": "mistral:7b-instruct",
       "intent": "debug",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "16355688510647601632",
+      "semantic_fingerprint": "12779810459712034369",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773461508,
+      "ts": 1773461739,
       "cost_usd": 0.0
     },
     "request_history": [
@@ -786,6 +786,23 @@
         "sensitive": false,
         "ts": 1773461508,
         "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": null,
+        "upstream_model": null,
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "ollama-mistral-7b-instruct",
+        "routed_model": "mistral:7b-instruct",
+        "intent": "debug",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "12779810459712034369",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773461739,
+        "cost_usd": 0.0
       }
     ],
     "session_cost_usd": 0.0,
@@ -845,6 +862,15 @@
       "summary": "Intent: general. Reduced estimated context from 11 to 15 tokens and trimmed low-signal context while preserving the main request.",
       "compiled_context": "[k:general]|test distira dashboard ...",
       "created_at": 1773459264
+    },
+    {
+      "fingerprint": 12779810459712034369,
+      "intent": "debug",
+      "raw_tokens_estimate": 43,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: debug. Reduced estimated context from 43 to 23 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|User observation: real usage = copy/paste stack traces, error ...",
+      "created_at": 1773461739
     },
     {
       "fingerprint": 17185478699218872338,
@@ -1147,6 +1173,11 @@
       "content": "[k:debug]|You are a senior Rust engineer helping diagnose production crashes. Our service panics in production. Logs: ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil pointer dereference goroutine 1 main.(*DBPool).Acquire pool.go:87 Root cause: nil ..."
     },
     {
+      "id": "12779810459712034369",
+      "stability": 1.0,
+      "content": "[k:debug]|User observation: real usage = copy/paste stack traces, error ..."
+    },
+    {
       "id": "3963497400335545383",
       "stability": 1.0,
       "content": "[k:general]|Pourquoi j'ai pas @distria ? The user cannot ..."
@@ -1219,8 +1250,8 @@
       17
     ],
     "1773460800": [
-      221,
-      146,
+      264,
+      169,
       0
     ],
     "1773442800": [
