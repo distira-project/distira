@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — V9.5.2 MCP Agent & Policy Config (2026-03-13)
+
+- **`.github/agents/distira.agent.md`** — Added explicit tools list in frontmatter.
+- **`configs/policies/policies.yaml`** — Fixed fallback_provider: ollama-local to ollama-llama3.
+- **`mcp/package.json`** — Added zod as explicit dependency.
+- **`scripts/bootstrap-win.ps1`** — Added npm install for mcp/ folder during bootstrap.
+
+### Fixed — V9.5.1 Dashboard SSE Real-time & Tokenizer Idempotency (2026-03-13)
+
+- **`dashboard/ui-vue/src/store/metrics.ts`** — Fixed SSE reconnect logic. Previous `connect()` guard (`if (es) return`) permanently blocked reconnection when the EventSource entered `CLOSED` state (e.g., after a server restart). Fix: check `es.readyState !== EventSource.CLOSED` before short-circuiting; close and null the stale instance; schedule a 3-second auto-retry when `onerror` fires in CLOSED state. Added `es.onopen` handler so `connected` is set immediately on connection establishment rather than waiting up to 2 seconds for the first `metrics` event.
+- **`tokenizer/src/lib.rs` (`collapse_inline_ws`)** — Fixed trailing-newline idempotency bug. The previous implementation pushed `\n` after every split segment produced by `split('\n')`, then tried to remove it only when the input didn't end with `\n`. Inputs ending with `\n` produced an extra `\n` (e.g., `"foo\n"` → `"foo\n\n"`), breaking `encode(encode(x)) == encode(x)` for any message ending with a newline (ubiquitous in LLM chat messages). Fix: push `\n` *between* segments only (`idx < last_idx`); the trailing-empty segment from `split('\n')` naturally accounts for the final newline.
+- **`core/src/main.rs` (`metrics_stream`)** — Replaced `lock().unwrap()` with `lock().unwrap_or_else(|e| e.into_inner())` so a poisoned mutex (caused by a panic under lock elsewhere) does not permanently kill the SSE stream.
+- **Test suite: 133 tests, 0 failures** (+2 tests: `encode_is_idempotent_with_trailing_newline` for single-line and multi-line inputs with trailing `\n`).
+
 ### Added — V9.5 Encoding & Decoding Optimization (2026-03-16)
 
 - **`tokenizer::encode(text)`** — New public function that normalizes LLM input for optimal BPE tokenization without any semantic loss. Applied automatically in `compiler::compile_context()` before measuring token count. Transformations (in order):
@@ -17,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`tokenizer::encode_for(text, family)`** — Family-aware variant kept for future calibration per tokenizer vocabulary.
 - **`tokenizer::decode(text)`** — New public function that post-processes raw LLM output to fix BPE reconstruction artifacts before serving and caching. Applied in `core::chat_completions` on all provider responses (both streaming and non-streaming). Fixes:
   1. **CRLF normalization** — `\r\n` and lone `\r` → `\n` (Windows line endings from some HTTP clients).
-  2. **Stray space before punctuation** — ` ,` ` .` ` !` ` ?` ` :` ` ;` → compact form (SentencePiece leading-`▁` convention artefact common in Llama-3/Mistral output).
+  2. **Stray space before punctuation** — `,` `.` `!` `?` `:` `;` → compact form (SentencePiece leading-`▁` convention artefact common in Llama-3/Mistral output).
   3. **Double-space collapsing** — consecutive spaces within a line → single space.
   4. **CJK inter-character space removal** — `你 好` → `你好`; BPE decoding inserts a space between every pair of tokens, which is wrong for CJK where words are not space-separated.
 - **`tokenizer::decode_for(text, family)`** — Family-aware variant reserved for per-model tuning.

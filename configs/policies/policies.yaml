@@ -20,6 +20,6 @@ policies:
   sensitive_data: local_only
   optimize_for: cost
   max_tokens_per_request: 4000
-  fallback_provider: ollama-local
+  fallback_provider: ollama-llama3
   log_level: info
   data_residency: on-prem

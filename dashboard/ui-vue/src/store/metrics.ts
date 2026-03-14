@@ -169,7 +169,11 @@ export const useMetricsStore = defineStore('metrics', () => {
   }
 
   function connect() {
-    if (es) return
+    // If we already have a live (CONNECTING or OPEN) EventSource, do nothing.
+    if (es && es.readyState !== EventSource.CLOSED) return
+    // Clean up a stale CLOSED instance before creating a new one.
+    if (es) { es.close(); es = null }
+
     es = new EventSource(SSE_URL)
     void fetchVersion()
     if (versionPollHandle === null) {
@@ -177,6 +181,8 @@ export const useMetricsStore = defineStore('metrics', () => {
         void fetchVersion()
       }, 30000)
     }
+
+    es.onopen = () => { connected.value = true }
 
     es.addEventListener('metrics', (ev) => {
       try {
@@ -190,6 +196,11 @@ export const useMetricsStore = defineStore('metrics', () => {
 
     es.onerror = () => {
       connected.value = false
+      // When the browser gives up retrying (CLOSED state), schedule a manual reconnect.
+      if (es?.readyState === EventSource.CLOSED) {
+        es = null
+        window.setTimeout(connect, 3000)
+      }
     }
   }
 

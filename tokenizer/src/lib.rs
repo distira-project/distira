@@ -447,7 +447,9 @@ fn collapse_blank_lines_enc(s: &str) -> String {
 /// on a line are collapsed.
 fn collapse_inline_ws(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
-    for line in s.split('\n') {
+    let lines: Vec<&str> = s.split('\n').collect();
+    let last_idx = lines.len().saturating_sub(1);
+    for (idx, line) in lines.iter().enumerate() {
         // Trim trailing spaces/tabs first so we don't emit them.
         let trimmed = line.trim_end_matches(|c: char| c == ' ' || c == '\t');
         let mut in_leading = true;
@@ -472,11 +474,12 @@ fn collapse_inline_ws(s: &str) -> String {
                 out.push(ch);
             }
         }
-        out.push('\n');
-    }
-    // Remove the trailing newline added for the last line if the input did not end with one.
-    if !s.ends_with('\n') && out.ends_with('\n') {
-        out.pop();
+        // Push '\n' between segments only.  The trailing-empty segment produced by
+        // split('\n') on a string ending with '\n' means the last '\n' is naturally
+        // restored without any extra check.
+        if idx < last_idx {
+            out.push('\n');
+        }
     }
     out
 }
@@ -885,6 +888,15 @@ mod tests {
     fn encode_is_idempotent() {
         let s = "  hello   world \n\n\n\u{201C}foo\u{201D}";
         assert_eq!(encode(&encode(s)), encode(s));
+    }
+
+    #[test]
+    fn encode_is_idempotent_with_trailing_newline() {
+        // Inputs ending with '\n' must not accumulate extra newlines on re-encode.
+        let s = "hello world\n";
+        assert_eq!(encode(&encode(s)), encode(s));
+        let multiline = "  foo   bar \nline two\n";
+        assert_eq!(encode(&encode(multiline)), encode(multiline));
     }
 
     #[test]

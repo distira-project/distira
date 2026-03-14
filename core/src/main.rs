@@ -2019,7 +2019,7 @@ async fn metrics_stream(
 ) -> Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>> {
     let interval = tokio::time::interval(std::time::Duration::from_secs(2));
     let stream = tokio_stream::StreamExt::map(IntervalStream::new(interval), move |_| {
-        let collector = state.collector.lock().unwrap();
+        let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
         let data = serde_json::to_string(collector.snapshot()).unwrap_or_default();
         Ok(Event::default().event("metrics").data(data))
     });
