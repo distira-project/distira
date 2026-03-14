@@ -121,6 +121,7 @@ fn intent_marker(intent: &str) -> &'static str {
         "review"    => "[k:review]|",
         "summarize" => "[k:summarize]|",
         "codegen"   => "[k:codegen]|",
+        "translate" => "[k:translate]|",
         "ocr"       => "[k:ocr]|",
         _           => "[k:general]|",
     }
@@ -135,6 +136,7 @@ fn build_compiled_context(raw: &str, intent: &str, target_tokens: usize) -> Stri
         "debug" => reduce_debug_context(raw),
         "review" => reduce_review_context(raw),
         "codegen" => reduce_general_context(raw),
+        "translate" => reduce_general_context(raw),
         "summarize" => reduce_summarize_context(raw),
         "ocr" => reduce_ocr_context(raw),
         _ => reduce_general_context(raw),
@@ -532,18 +534,43 @@ pub fn detect_intent(raw: &str) -> String {
         || lower.contains("write function")
         || lower.contains("write a rust function")
         || lower.contains("write a python function")
+        || lower.contains("write a typescript")
+        || lower.contains("write a javascript")
+        || lower.contains("write a go function")
+        || lower.contains("write a kotlin")
+        || lower.contains("write a swift")
+        || lower.contains("write code")
+        || lower.contains("write me a")
         || lower.contains("implement this in")
         || lower.contains("implement in rust")
         || lower.contains("implement in python")
+        || lower.contains("implement in typescript")
+        || lower.contains("implement in javascript")
+        || lower.contains("implement in go")
         || lower.contains("generate code")
         || lower.contains("generate a function")
+        || lower.contains("create a function")
+        || lower.contains("create a class")
+        || lower.contains("create a script")
         || lower.contains("code example in")
         || lower.contains("code snippet in")
         || lower.contains("snippet in rust")
         || lower.contains("snippet in python")
+        || lower.contains("snippet in typescript")
+        || lower.contains("snippet in javascript")
+        || lower.contains("codex")
+        || lower.contains("help me code")
+        || lower.contains("complete this code")
+        || lower.contains("complete the code")
+        || lower.contains("complete this function")
+        // French
         || lower.contains("écris du code")
         || lower.contains("écris une fonction")
         || lower.contains("implémente en")
+        || lower.contains("crée une fonction")
+        || lower.contains("génère du code")
+        || lower.contains("génère une fonction")
+        || lower.contains("écris un script")
     {
         "codegen".into()
     } else if lower.contains(" ocr")
@@ -554,6 +581,22 @@ pub fn detect_intent(raw: &str) -> String {
         || lower.contains("read this image")
     {
         "ocr".into()
+    } else if lower.contains("translat")
+        || lower.contains("traduire")
+        || lower.contains("traduis")
+        || lower.contains("traduction")
+        || lower.contains("übersetze")
+        || lower.contains("traducir")
+        || lower.contains("traduci")
+        || lower.contains("翻译")
+        || lower.contains("in english")
+        || lower.contains("in french")
+        || lower.contains("in german")
+        || lower.contains("in spanish")
+        || lower.contains("in japanese")
+        || lower.contains("in chinese")
+    {
+        "translate".into()
     } else if lower.contains("summar")
         || lower.contains("explain")
         || lower.contains("tldr")
@@ -673,6 +716,36 @@ mod tests {
             detect_intent("Écris du code en Rust pour inverser une liste"),
             "codegen"
         );
+    }
+
+    #[test]
+    fn detect_codegen_typescript() {
+        assert_eq!(detect_intent("write a typescript function to debounce events"), "codegen");
+    }
+
+    #[test]
+    fn detect_codegen_complete() {
+        assert_eq!(detect_intent("complete this function: fn add(a: i32, b: i32)"), "codegen");
+    }
+
+    #[test]
+    fn detect_codegen_create_class() {
+        assert_eq!(detect_intent("create a class User with fields name and email"), "codegen");
+    }
+
+    #[test]
+    fn detect_translate_english() {
+        assert_eq!(detect_intent("translate this paragraph into French"), "translate");
+    }
+
+    #[test]
+    fn detect_translate_french_keyword() {
+        assert_eq!(detect_intent("traduis ce texte en anglais"), "translate");
+    }
+
+    #[test]
+    fn detect_translate_in_language() {
+        assert_eq!(detect_intent("rewrite this in German"), "translate");
     }
 
     #[test]

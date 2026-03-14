@@ -31,6 +31,8 @@ struct TaskRouting {
     debug: Option<String>,
     summarize: Option<String>,
     review: Option<String>,
+    codegen: Option<String>,   // was missing — caused codegen to fall through to default
+    translate: Option<String>,
     general: Option<String>,
     ocr: Option<String>,
 }
@@ -110,6 +112,12 @@ impl RouterConfig {
             }
             if let Some(v) = &tr.review {
                 task_map.insert("review".into(), v.clone());
+            }
+            if let Some(v) = &tr.codegen {
+                task_map.insert("codegen".into(), v.clone());
+            }
+            if let Some(v) = &tr.translate {
+                task_map.insert("translate".into(), v.clone());
             }
             if let Some(v) = &tr.general {
                 task_map.insert("general".into(), v.clone());

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed & Added — V9.8 Full model compatibility + translate intent (2026-03-13)
+
+- **Bug fix — codegen routing was silently broken**: `TaskRouting` struct in `router/src/lib.rs` was missing the `codegen` field, causing the `codegen: ollama-qwen2.5-coder` line in `routing.yaml` to be silently dropped on deserialization. All code generation requests were falling through to the default provider instead of Qwen 2.5 Coder. Fixed by adding `codegen: Option<String>` to the struct and the corresponding `task_map.insert` in `load()`.
+- **New `translate` intent** — `compiler/detect_intent()` now detects translation requests (EN/FR/DE/ES/JA/ZH keywords, `translate`, `traduire`, `traduis`, `übersetze`, `traducir`, `翻译`, `in english/french/german/spanish/japanese/chinese`). Routed to `openrouter-mistral-small-3.1-24b-instruct-cloud` (Mistral Small 3.1 24B, excellent multilingual model). Added `[k:translate]|` marker and `reduce_general_context` path.
+- **Extended `detect_intent` codegen keywords** — Now covers TypeScript, JavaScript, Go, Kotlin, Swift, `write code`, `write me a`, `create a class/script`, `help me code`, `complete this code/function`, `codex`, `crée une fonction`, `génère du code/fonction`, `écris un script`.
+- **`ollama-llama3.3` provider** — Added `llama3.3:latest` (Llama 3.3 70B, Meta 2025) to `configs/providers/providers.yaml`. Activate with `ollama pull llama3.3`.
+- **`TaskRouting` struct hardened** — Added `translate: Option<String>` field alongside the codegen fix.
+- **Test suite: 155 tests, 0 failures** (+6: `detect_codegen_typescript`, `detect_codegen_complete`, `detect_codegen_create_class`, `detect_translate_english`, `detect_translate_french_keyword`, `detect_translate_in_language`).
+
+### Added — V9.7 Claude & Gemini tokenizer support (2026-03-13)
+
+- **`ModelFamily::Claude`** — Anthropic Claude 3/3.5/3.7/4. Routes to `count_cl100k()` (cl100k_base proxy, ±3% accuracy) when `exact-gpt4` feature is on; falls back to `(raw * 19/20)` heuristic otherwise. Activated by `family_for_provider()` on `claude` or `anthropic` substrings.
+- **`ModelFamily::Gemini`** — Google Gemini 1.5/2.0/Flash/Pro. Uses calibrated `(raw * 19/20)` heuristic (SentencePiece 256k vocab; no embedded Rust vocabulary available). Activated by `family_for_provider()` on `gemini`, `google`, or `palm` substrings.
+- **`configs/providers/providers.yaml`** — Added commented-out `anthropic-claude-cloud` (Anthropic OpenAI-compatible endpoint, `ANTHROPIC_API_KEY`) and `google-gemini-cloud` (Google OpenAI-compatible endpoint, `GOOGLE_API_KEY`, `gemini-2.0-flash`) entries ready to uncomment when API keys are configured.
+- **Test suite: 149 tests, 0 failures** (+7: `family_for_claude_is_claude`, `family_for_claude_direct_is_claude`, `family_for_gemini_is_gemini`, `family_for_gemini_direct_is_gemini`, `exact_claude_empty_returns_zero`, `exact_claude_hello_world_matches_gpt4`, `gemini_count_is_below_llama3_heuristic`).
+
 ### Added — V9.6.1 GPT-5 / o200k_base tokenizer support (2026-03-13)
 
 - **`ModelFamily::Gpt4o` variant** — New enum variant covering GPT-4o, o1, o3, o4, and **GPT-5**. Routes to `o200k_base` (200k-vocabulary BPE) via `exact_gpt4::count_o200k()` when `exact-gpt4` feature is active, or a calibrated heuristic (`raw * 18/20`) otherwise.

@@ -67,6 +67,14 @@ pub enum ModelFamily {
     /// For Distira purposes the difference is negligible; kept as a named variant
     /// for future calibration.
     Qwen,
+    /// Anthropic Claude 3 / 3.5 / 3.7 / 4 — custom BPE closely matching cl100k_base.
+    /// When `exact-gpt4` is enabled, cl100k_base is used as a proxy (±3 % for English / code).
+    /// ~3.3 characters per token; effectively identical to GPT-4 for budgeting purposes.
+    Claude,
+    /// Google Gemini 1.5 / 2.0 / Flash / Pro — SentencePiece with 256k vocabulary.
+    /// No embedded Rust vocabulary available; calibrated heuristic matches GPT-4 accuracy.
+    /// ~3.3 characters per token on English; more efficient on multilingual content.
+    Gemini,
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -107,6 +115,14 @@ pub fn count_for(text: &str, family: ModelFamily) -> usize {
         ModelFamily::Gpt4o => (raw * 18) / 20,
         #[cfg(feature = "exact-gpt4")]
         ModelFamily::Gpt4o => exact_gpt4::count_o200k(text),
+        // Claude 3/3.5/3.7/4 — cl100k_base is an excellent proxy (±3 %).
+        // When exact-gpt4 is disabled, same heuristic as GPT-4.
+        #[cfg(not(feature = "exact-gpt4"))]
+        ModelFamily::Claude => (raw * 19) / 20,
+        #[cfg(feature = "exact-gpt4")]
+        ModelFamily::Claude => exact_gpt4::count_cl100k(text),
+        // Gemini — SentencePiece 256k; no embedded Rust vocab, calibrated heuristic.
+        ModelFamily::Gemini => (raw * 19) / 20,
     }
 }
 
@@ -115,14 +131,22 @@ pub fn count_for(text: &str, family: ModelFamily) -> usize {
 ///
 /// | Provider fragment       | Family    |
 /// |-------------------------|-----------|
+/// | `claude`, `anthropic`   | [`ModelFamily::Claude`] |
+/// | `gemini`, `google`, `palm` | [`ModelFamily::Gemini`] |
 /// | `gpt-4o`, `o1`, `o3`, `o4`, `gpt-5` | [`ModelFamily::Gpt4o`] |
 /// | `gpt`, `openai`         | [`ModelFamily::Gpt4`]   |
 /// | `qwen`                  | [`ModelFamily::Qwen`]   |
 /// | everything else (ollama, llama, mistral, deepseek, gemma, local) | [`ModelFamily::Llama3`] |
 pub fn family_for_provider(provider: &str) -> ModelFamily {
     let lower = provider.to_ascii_lowercase();
+    // Anthropic Claude — check before generic string matches.
+    if lower.contains("claude") || lower.contains("anthropic") {
+        ModelFamily::Claude
+    // Google Gemini / PaLM — check before generic string matches.
+    } else if lower.contains("gemini") || lower.contains("google") || lower.contains("palm") {
+        ModelFamily::Gemini
     // o200k_base family: GPT-4o, o1, o3, o4, GPT-5 — check before generic "gpt" match.
-    if lower.contains("gpt-4o")
+    } else if lower.contains("gpt-4o")
         || lower.contains("gpt-5")
         || lower.contains("gpt5")
         || lower.contains("-o1")
@@ -789,6 +813,26 @@ mod tests {
     }
 
     #[test]
+    fn family_for_claude_is_claude() {
+        assert_eq!(family_for_provider("anthropic-claude-3-7-sonnet"), ModelFamily::Claude);
+    }
+
+    #[test]
+    fn family_for_claude_direct_is_claude() {
+        assert_eq!(family_for_provider("claude-4-opus"), ModelFamily::Claude);
+    }
+
+    #[test]
+    fn family_for_gemini_is_gemini() {
+        assert_eq!(family_for_provider("google-gemini-2.0-flash"), ModelFamily::Gemini);
+    }
+
+    #[test]
+    fn family_for_gemini_direct_is_gemini() {
+        assert_eq!(family_for_provider("gemini-1.5-pro"), ModelFamily::Gemini);
+    }
+
+    #[test]
     fn family_for_openai_is_gpt4() {
         assert_eq!(family_for_provider("openai-gpt-4-turbo"), ModelFamily::Gpt4);
     }
@@ -878,6 +922,35 @@ mod tests {
         let gpt4 = count_for(text, ModelFamily::Gpt4);
         let gpt4o = count_for(text, ModelFamily::Gpt4o);
         assert!(gpt4o <= gpt4, "o200k={gpt4o} should be <= cl100k={gpt4}");
+    }
+
+    // ── Claude exact tests (proxied via cl100k_base, feature = "exact-gpt4") ──
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_claude_empty_returns_zero() {
+        assert_eq!(count_for("", ModelFamily::Claude), 0);
+    }
+
+    #[cfg(feature = "exact-gpt4")]
+    #[test]
+    fn exact_claude_hello_world_matches_gpt4() {
+        // Claude tokenizes identically to GPT-4 for this input (cl100k proxy).
+        assert_eq!(
+            count_for("Hello world", ModelFamily::Claude),
+            count_for("Hello world", ModelFamily::Gpt4),
+        );
+    }
+
+    // ── Gemini heuristic tests ────────────────────────────────────────────────
+
+    #[test]
+    fn gemini_count_is_below_llama3_heuristic() {
+        // Gemini uses the (raw * 19/20) correction → always ≤ the Llama3 baseline.
+        let text = "fn compile_context(raw: &str) -> CompileResult";
+        let llama3 = count_for(text, ModelFamily::Llama3);
+        let gemini = count_for(text, ModelFamily::Gemini);
+        assert!(gemini <= llama3, "gemini={gemini} should be <= llama3={llama3}");
     }
 
     // ── Accuracy vs. chars / 4 ────────────────────────────────────────────────

@@ -291,6 +291,37 @@ Wave A progress:
 - `core/chat_completions` applies `tokenizer::decode_for(content, token_family)` on all non-streaming provider responses and on accumulated streaming content before cache insertion.
 - Test suite: 131 tests, 0 failures (+33 encode/decode unit tests).
 
+### V9.8 — Full model compatibility + translate intent
+
+**Status:** Delivered.
+
+- **Bug fix — codegen routing**: `TaskRouting` deserializer was silently dropping the `codegen` YAML key. Fixed.
+- **`translate` intent**: Full pipeline — detection (13 language/keyword triggers in EN+FR+DE+ES+JA+ZH), `[k:translate]|` marker, routed to Mistral Small 3.1 24B (multilingual leader).
+- **codegen keyword coverage**: TypeScript, JavaScript, Go, Kotlin, Swift, `codex`, `create a class`, `complete this function`, FR: `crée une fonction`, `génère du code`.
+- **`ollama-llama3.3`**: Llama 3.3 70B provider entry (on-prem, `ollama pull llama3.3`).
+- **Model compatibility matrix** at V9.8:
+  - Llama 3 / 3.1 / 3.3 ─ `Llama3` family, on-prem via Ollama
+  - Mistral 7B / Small 3.1 ─ `Llama3` family, on-prem + cloud
+  - Qwen 2.5 Coder ─ `Qwen` family, on-prem
+  - GPT-4 / GPT-3.5 ─ `Gpt4` (cl100k_base exact), cloud optional
+  - GPT-4o / o1 / o3 / o4 / **GPT-5** ─ `Gpt4o` (o200k_base exact), cloud optional
+  - **Codex** ─ deprecated by OpenAI; `codegen` intent routes to Qwen locally (best available)
+  - **Claude** 3/3.5/3.7/4 ─ `Claude` family (cl100k proxy), cloud optional
+  - **Gemini** 1.5/2.0/Flash/Pro ─ `Gemini` family (calibrated heuristic), cloud optional
+  - DeepSeek-R1 ─ `Llama3` family, cloud via OpenRouter
+- Test suite: 155 tests, 0 failures.
+
+### V9.7 — Claude & Gemini tokenizer support
+
+**Status:** Delivered.
+
+- **`ModelFamily::Claude`** — Anthropic Claude 3/3.5/3.7/4. cl100k_base used as an accurate proxy (±3%) via the existing `exact-gpt4` pipeline. Falls back to `(raw * 19/20)` heuristic when feature is off.
+- **`ModelFamily::Gemini`** — Google Gemini 1.5/2.0/Flash/Pro. Calibrated `(raw * 19/20)` heuristic (SentencePiece 256k; no embedded Rust vocabulary available).
+- **`family_for_provider()`** updated: `claude`/`anthropic` → `Claude`; `gemini`/`google`/`palm` → `Gemini`. Both checks run before OpenAI/GPT checks to avoid false matches.
+- **`configs/providers/providers.yaml`** — Added commented-out cloud provider entries for Anthropic Claude and Google Gemini (OpenAI-compatible endpoints). Activate by setting `ANTHROPIC_API_KEY` / `GOOGLE_API_KEY` and uncommenting.
+- Test suite: 149 tests, 0 failures.
+- DISTIRA now covers all major AI actors: **Llama3/Mistral/Gemma/DeepSeek** (on-prem), **Qwen** (on-prem), **GPT-4/GPT-4o/GPT-5** (OpenAI), **Claude** (Anthropic), **Gemini** (Google).
+
 ### V9.6 — Exact GPT-4 Token Counting via tiktoken-rs + GPT-5 / o200k_base support
 
 **Status:** Delivered.

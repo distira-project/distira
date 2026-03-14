@@ -20,7 +20,16 @@ providers:
     base_url: http://localhost:11434/v1
     model: llama3:latest
     deployment: on-prem
-    description: Llama 3 — general tasks, summarization
+    description: Llama 3 8B — general tasks, summarization
+    cost_per_1k_input_tokens: 0.0
+    cost_per_1k_output_tokens: 0.0
+
+  ollama-llama3.3:
+    type: openai-compatible
+    base_url: http://localhost:11434/v1
+    model: llama3.3:latest
+    deployment: on-prem
+    description: Llama 3.3 70B — best open-source general model (Meta, 2025). Run with: ollama pull llama3.3
     cost_per_1k_input_tokens: 0.0
     cost_per_1k_output_tokens: 0.0
 
@@ -91,3 +100,29 @@ providers:
   #  description: OpenAI GPT-4o-mini cloud
   #  cost_per_1k_input_tokens: 0.15
   #  cost_per_1k_output_tokens: 0.60
+
+  # ── Anthropic Claude (cloud) ─────────────────────────
+  # Anthropic exposes an OpenAI-compatible /v1/messages + /v1/chat/completions.
+  # Set ANTHROPIC_API_KEY in your environment to activate.
+  #anthropic-claude-cloud:
+  #  type: openai-compatible
+  #  base_url: https://api.anthropic.com/v1
+  #  model: claude-3-7-sonnet-20250219
+  #  deployment: cloud
+  #  api_key_env: ANTHROPIC_API_KEY
+  #  description: Anthropic Claude 3.7 Sonnet — advanced reasoning, code
+  #  cost_per_1k_input_tokens: 3.0
+  #  cost_per_1k_output_tokens: 15.0
+
+  # ── Google Gemini (cloud) ────────────────────────────
+  # Google exposes an OpenAI-compatible endpoint for Gemini models.
+  # Set GOOGLE_API_KEY in your environment to activate.
+  #google-gemini-cloud:
+  #  type: openai-compatible
+  #  base_url: https://generativelanguage.googleapis.com/v1beta/openai
+  #  model: gemini-2.0-flash
+  #  deployment: cloud
+  #  api_key_env: GOOGLE_API_KEY
+  #  description: Google Gemini 2.0 Flash — fast, multimodal, 1M context
+  #  cost_per_1k_input_tokens: 0.075
+  #  cost_per_1k_output_tokens: 0.30
