@@ -347,7 +347,7 @@ fn tokens_for_identifier(len: usize) -> usize {
         7..=12 => 2,
         13..=16 => 3,
         17..=20 => 4,
-        n => (n + 3) / 4,
+        n => n.div_ceil(4),
     }
 }
 
@@ -540,7 +540,7 @@ fn collapse_inline_ws(s: &str) -> String {
     let last_idx = lines.len().saturating_sub(1);
     for (idx, line) in lines.iter().enumerate() {
         // Trim trailing spaces/tabs first so we don't emit them.
-        let trimmed = line.trim_end_matches(|c: char| c == ' ' || c == '\t');
+        let trimmed = line.trim_end_matches([' ', '\t']);
         let mut in_leading = true;
         let mut prev_ws = false;
         for ch in trimmed.chars() {

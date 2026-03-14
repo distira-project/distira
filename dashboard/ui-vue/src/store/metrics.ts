@@ -81,8 +81,9 @@ export interface MetricsSnapshot {
   last_request_cost_usd?: number
 }
 
-const SSE_URL = 'http://localhost:8080/v1/metrics/stream'
-const VERSION_URL = 'http://localhost:8080/version'
+const SSE_URL     = '/v1/metrics/stream'
+const VERSION_URL = '/version'
+const REST_URL    = '/v1/metrics'
 
 export const useMetricsStore = defineStore('metrics', () => {
   // ── reactive state ─────────────────────────────────
@@ -130,6 +131,20 @@ export const useMetricsStore = defineStore('metrics', () => {
 
   const WATCHDOG_INTERVAL_MS = 5_000   // check every 5 s
   const WATCHDOG_STALE_MS    = 10_000  // force reconnect if no event for 10 s
+
+  // ── REST polling fallback ──────────────────────────────────────────────────
+  // When the SSE stream is stale, pull a fresh snapshot from the REST endpoint
+  // so the dashboard never shows frozen data while the watchdog reconnects.
+  async function pollRest() {
+    try {
+      const res = await fetch(REST_URL)
+      if (!res.ok) return
+      const snapshot: MetricsSnapshot = await res.json()
+      applySnapshot(snapshot)
+    } catch {
+      // ignore — backend may be momentarily unreachable
+    }
+  }
 
   async function fetchVersion() {
     try {
@@ -181,6 +196,7 @@ export const useMetricsStore = defineStore('metrics', () => {
 
     lastEventAt = Date.now()   // reset so watchdog doesn't fire immediately
     es = new EventSource(SSE_URL)
+    void pollRest()             // populate UI immediately; don't wait for first SSE event
     void fetchVersion()
     if (versionPollHandle === null) {
       versionPollHandle = window.setInterval(() => {
@@ -197,6 +213,7 @@ export const useMetricsStore = defineStore('metrics', () => {
         const stale = Date.now() - lastEventAt > WATCHDOG_STALE_MS
         if (stale) {
           connected.value = false
+          void pollRest()   // pull fresh data via REST while SSE reconnects
           if (es) { es.close(); es = null }
           connect()
         }
