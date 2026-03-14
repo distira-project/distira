@@ -305,7 +305,10 @@ mod tests {
     #[test]
     fn compact_numeric_separators_removes_thousands_commas() {
         assert_eq!(compact_numeric_separators("1,000,000"), "1000000");
-        assert_eq!(compact_numeric_separators("value: 1,234.56"), "value: 1234.56");
+        assert_eq!(
+            compact_numeric_separators("value: 1,234.56"),
+            "value: 1234.56"
+        );
     }
 
     #[test]

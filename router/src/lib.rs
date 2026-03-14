@@ -19,6 +19,11 @@ pub struct ProviderConfig {
     /// Cost in USD per 1 000 output tokens (0.0 for on-prem).
     #[serde(default)]
     pub cost_per_1k_output_tokens: f64,
+    /// Optional daily request budget.  When set, DISTIRA automatically falls
+    /// back to the next available provider once the budget is exhausted.
+    /// 0 or absent = unlimited.
+    #[serde(default)]
+    pub max_requests_per_day: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -72,6 +77,7 @@ pub struct ProviderSummary {
     pub api_key_env: Option<String>,
     pub cost_per_1k_input_tokens: f64,
     pub cost_per_1k_output_tokens: f64,
+    pub max_requests_per_day: u64,
 }
 
 /// Holds the loaded config. Created once at startup, then shared.
@@ -179,33 +185,81 @@ impl RouterConfig {
         }
     }
 
-    /// Route a request based on intent and sensitivity.
+    /// Route a request based on intent, sensitivity, and per-provider daily budget.
+    /// Delegates to `choose_provider_with_budget` with empty counters (unlimited).
     pub fn choose_provider(&self, intent: &str, sensitive: bool) -> RouteDecision {
-        // 1. Sensitive → forced local override
-        let provider_name = if sensitive {
-            self.sensitive_override.clone()
-        } else if let Some(name) = self.task_routing.get(intent) {
+        self.choose_provider_with_budget(intent, sensitive, &HashMap::new())
+    }
+
+    /// Budget-aware routing.  `daily_counts` maps provider key → requests used today.
+    /// When a preferred provider's budget is exhausted, falls back through:
+    /// task_routing → default → fallback → any available provider.
+    pub fn choose_provider_with_budget(
+        &self,
+        intent: &str,
+        sensitive: bool,
+        daily_counts: &HashMap<String, u64>,
+    ) -> RouteDecision {
+        // Sensitive → forced local override (budget limits never apply)
+        if sensitive {
+            let (name, config) = self.resolve_provider(&self.sensitive_override);
+            return RouteDecision {
+                provider: name.clone(),
+                model: config.model.clone().unwrap_or_default(),
+                base_url: config.base_url.clone(),
+                reason: format!("Sensitive context → forced to {name} (local)."),
+                api_key_env: config.api_key_env.clone(),
+            };
+        }
+
+        // Build ordered candidate list: task-specific → default → fallback
+        let preferred = if let Some(name) = self.task_routing.get(intent) {
             name.clone()
         } else {
             self.default_provider.clone()
         };
+        let candidates = [
+            preferred.as_str(),
+            self.default_provider.as_str(),
+            self.fallback_provider.as_str(),
+        ];
 
-        // 2. Resolve provider config (fallback if missing)
-        let (name, config) = self.resolve_provider(&provider_name);
+        let mut seen = std::collections::HashSet::new();
+        for candidate in candidates {
+            if !seen.insert(candidate) {
+                continue; // skip duplicates
+            }
+            if let Some(cfg) = self.providers.get(candidate) {
+                let budget = cfg.max_requests_per_day;
+                let used = daily_counts.get(candidate).copied().unwrap_or(0);
+                if budget == 0 || used < budget {
+                    let reason = if candidate == preferred && self.task_routing.contains_key(intent)
+                    {
+                        format!("Intent [{intent}] → routed to {candidate}.")
+                    } else if budget > 0 && used >= budget {
+                        format!("Budget exhausted → fallback to {candidate}.")
+                    } else {
+                        format!("Default route → {candidate}.")
+                    };
+                    return RouteDecision {
+                        provider: candidate.to_string(),
+                        model: cfg.model.clone().unwrap_or_default(),
+                        base_url: cfg.base_url.clone(),
+                        reason,
+                        api_key_env: cfg.api_key_env.clone(),
+                    };
+                }
+                // budget exhausted — try next candidate
+            }
+        }
 
-        let reason = if sensitive {
-            format!("Sensitive context → forced to {name} (local).")
-        } else if self.task_routing.contains_key(intent) {
-            format!("Intent [{intent}] → routed to {name}.")
-        } else {
-            format!("Default route → {name}.")
-        };
-
+        // All named candidates exhausted — resolve fallback unconditionally
+        let (name, config) = self.resolve_provider(&self.fallback_provider);
         RouteDecision {
-            provider: name,
+            provider: name.clone(),
             model: config.model.clone().unwrap_or_default(),
             base_url: config.base_url.clone(),
-            reason,
+            reason: format!("All budgets exhausted → fallback to {name}."),
             api_key_env: config.api_key_env.clone(),
         }
     }
@@ -250,6 +304,7 @@ impl RouterConfig {
                 api_key_env: config.api_key_env.clone(),
                 cost_per_1k_input_tokens: config.cost_per_1k_input_tokens,
                 cost_per_1k_output_tokens: config.cost_per_1k_output_tokens,
+                max_requests_per_day: config.max_requests_per_day,
             })
             .collect();
         summaries.sort_by(|left, right| left.key.cmp(&right.key));
