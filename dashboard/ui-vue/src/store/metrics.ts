@@ -127,6 +127,7 @@ export const useMetricsStore = defineStore('metrics', () => {
   let es: EventSource | null = null
   let versionPollHandle: number | null = null
   let watchdogHandle: number | null = null
+  let restPollHandle: number | null = null   // guaranteed REST poll (always-on)
   let lastEventAt = 0   // wall-clock ms of last successfully parsed SSE event
 
   const WATCHDOG_INTERVAL_MS = 5_000   // check every 5 s
@@ -198,6 +199,13 @@ export const useMetricsStore = defineStore('metrics', () => {
     es = new EventSource(SSE_URL)
     void pollRest()             // populate UI immediately; don't wait for first SSE event
     void fetchVersion()
+
+    // ── Guaranteed REST poll (always-on) ────────────────────────────────────
+    // Runs every 5 s regardless of SSE state — ensures the dashboard always
+    // shows live data even when EventSource is silently stuck.
+    if (restPollHandle === null) {
+      restPollHandle = window.setInterval(() => { void pollRest() }, 5_000)
+    }
     if (versionPollHandle === null) {
       versionPollHandle = window.setInterval(() => {
         void fetchVersion()
@@ -225,7 +233,10 @@ export const useMetricsStore = defineStore('metrics', () => {
       lastEventAt = Date.now()
     }
 
-    es.addEventListener('metrics', (ev) => {
+    // Named event emitted by Axum's Sse::new().  Some proxies strip the
+    // `event:` line and deliver a generic `message` event instead — we listen
+    // for both so the dashboard works transparently behind any proxy.
+    function handleSseEvent(ev: MessageEvent) {
       try {
         const snapshot: MetricsSnapshot = JSON.parse(ev.data)
         applySnapshot(snapshot)
@@ -234,7 +245,9 @@ export const useMetricsStore = defineStore('metrics', () => {
       } catch {
         // ignore malformed events
       }
-    })
+    }
+    es.addEventListener('metrics', handleSseEvent)
+    es.addEventListener('message', handleSseEvent)
 
     es.onerror = () => {
       connected.value = false
@@ -259,6 +272,10 @@ export const useMetricsStore = defineStore('metrics', () => {
     if (watchdogHandle !== null) {
       window.clearInterval(watchdogHandle)
       watchdogHandle = null
+    }
+    if (restPollHandle !== null) {
+      window.clearInterval(restPollHandle)
+      restPollHandle = null
     }
   }
 

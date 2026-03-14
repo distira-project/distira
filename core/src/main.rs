@@ -745,7 +745,6 @@ fn load_policies() -> PolicyConfig {
     PolicyConfig::default()
 }
 
-
 fn resolve_workspace_scope(
     tenant_id: Option<&str>,
     project_id: Option<&str>,
@@ -1371,7 +1370,9 @@ async fn chat_completions(
             .compute_reuse(semantic_fp, result.raw_tokens_estimate)
     } else if payload.messages.len() > 1 && !latest_user.trim().is_empty() {
         let latest_user_tokens = compiler::estimate_tokens(&latest_user);
-        let prior_tokens = result.raw_tokens_estimate.saturating_sub(latest_user_tokens);
+        let prior_tokens = result
+            .raw_tokens_estimate
+            .saturating_sub(latest_user_tokens);
         memory::compute_delta(prior_tokens, latest_user_tokens)
     } else {
         memory::MemorySummary {
@@ -2110,7 +2111,10 @@ async fn main() {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     println!("────────────────────────────────────────");
     println!("Listening on {addr}");
-    if std::env::var("DISTIRA_API_KEY").map(|k| !k.trim().is_empty()).unwrap_or(false) {
+    if std::env::var("DISTIRA_API_KEY")
+        .map(|k| !k.trim().is_empty())
+        .unwrap_or(false)
+    {
         println!("  Auth: Bearer token enabled (DISTIRA_API_KEY is set)");
     } else {
         println!("  Auth: open (set DISTIRA_API_KEY to enable Bearer auth)");

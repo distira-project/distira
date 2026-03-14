@@ -156,6 +156,27 @@ Every `POST /v1/compile` runs the full pipeline (fingerprint → cache → compi
 
 Runtime operational data is persisted automatically to `cache/runtime-state.json` and restored on backend startup. This keeps metrics/audit/cache history transparent across backend restarts.
 
+## Compatibility
+
+DISTIRA connects to any **OpenAI-compatible** endpoint — no code changes required, only a `providers.yaml` entry.
+
+| Runtime / Frontend | Default port | Type in providers.yaml | Notes |
+|---|---|---|---|
+| **Ollama** | `:11434/v1` | `openai-compatible` | `ollama pull <model>` |
+| **vLLM** | `:8000/v1` | `openai-compatible` | `python -m vllm.entrypoints.openai.api_server` |
+| **LM Studio** | `:1234/v1` | `openai-compatible` | Enable local server in the UI |
+| **OpenWebUI** | `:3000/api` | `openai-compatible` | Proxies Ollama or any backend |
+| **OpenAI** | `api.openai.com/v1` | `openai-compatible` | Requires `OPENAI_API_KEY` |
+| **Anthropic Claude** | `api.anthropic.com/v1` | `openai-compatible` | Requires `ANTHROPIC_API_KEY` |
+| **Google Gemini** | `generativelanguage.googleapis.com/v1beta/openai` | `openai-compatible` | Requires `GOOGLE_API_KEY` |
+| **Mistral AI** | `api.mistral.ai/v1` | `mistral` | Requires `MISTRAL_API_KEY` |
+| **OpenRouter** | `openrouter.ai/api/v1` | `openai-compatible` | Requires `OPENROUTER_API_KEY` |
+| **ZhipuAI GLM** | `open.bigmodel.cn/api/paas/v4` | `openai-compatible` | Requires `ZHIPU_API_KEY` |
+| **DashScope (Qwen)** | `dashscope.aliyuncs.com/compatible-mode/v1` | `openai-compatible` | Requires `DASHSCOPE_API_KEY` |
+
+All providers support **streaming** (`stream: true`). Sensitive requests are **always** forced to on-prem regardless of routing config.  
+Ready-to-use commented entries for every provider above are in [`configs/providers/providers.yaml`](configs/providers/providers.yaml).
+
 ## Monorepo layout
 
 | Directory | Purpose |

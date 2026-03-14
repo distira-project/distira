@@ -117,13 +117,13 @@ pub fn compile_context(raw: &str) -> CompileResult {
 /// Returns the intent marker prefix used by [`shape_by_intent`].
 fn intent_marker(intent: &str) -> &'static str {
     match intent {
-        "debug"     => "[k:debug]|",
-        "review"    => "[k:review]|",
+        "debug" => "[k:debug]|",
+        "review" => "[k:review]|",
         "summarize" => "[k:summarize]|",
-        "codegen"   => "[k:codegen]|",
+        "codegen" => "[k:codegen]|",
         "translate" => "[k:translate]|",
-        "ocr"       => "[k:ocr]|",
-        _           => "[k:general]|",
+        "ocr" => "[k:ocr]|",
+        _ => "[k:general]|",
     }
 }
 
@@ -268,7 +268,9 @@ pub fn mask_pii(raw: &str) -> String {
 
 fn is_email(s: &str) -> bool {
     // Must contain exactly one @, with non-empty local and domain parts containing a dot.
-    let s = s.trim_matches(|c: char| !c.is_alphanumeric() && c != '@' && c != '.' && c != '-' && c != '_');
+    let s = s.trim_matches(|c: char| {
+        !c.is_alphanumeric() && c != '@' && c != '.' && c != '-' && c != '_'
+    });
     let at = s.find('@');
     if let Some(at_pos) = at {
         let local = &s[..at_pos];
@@ -295,7 +297,9 @@ fn is_jwt(s: &str) -> bool {
 fn is_api_key(s: &str) -> bool {
     // Common patterns: sk-..., pk-..., api_..., key_... with length >= 20.
     let lower = s.to_ascii_lowercase();
-    let known_prefixes = ["sk-", "pk-", "api-", "api_", "key-", "key_", "secret-", "token-"];
+    let known_prefixes = [
+        "sk-", "pk-", "api-", "api_", "key-", "key_", "secret-", "token-",
+    ];
     known_prefixes.iter().any(|pfx| lower.starts_with(pfx)) && s.len() >= 20
 }
 
@@ -311,18 +315,16 @@ fn is_credit_card(s: &str) -> bool {
 
 fn is_phone(s: &str) -> bool {
     // Strip +, dashes, spaces, parens — check for 10-15 digit string.
-    let digits: String = s
-        .chars()
-        .filter(|c| c.is_ascii_digit())
-        .collect();
+    let digits: String = s.chars().filter(|c| c.is_ascii_digit()).collect();
     let stripped: String = s
         .chars()
-        .filter(|c| c.is_ascii_digit() || *c == '+' || *c == '-' || *c == ' ' || *c == '(' || *c == ')')
+        .filter(|c| {
+            c.is_ascii_digit() || *c == '+' || *c == '-' || *c == ' ' || *c == '(' || *c == ')'
+        })
         .collect();
     // Must be mostly phone chars (no other chars present).
     stripped.len() == s.len() && digits.len() >= 10 && digits.len() <= 15
 }
-
 
 fn normalize_lines(raw: &str) -> Vec<String> {
     let mut normalized = Vec::new();
@@ -655,7 +657,9 @@ mod tests {
         // Compiled must be at least the 32-token floor
         assert!(result.compiled_tokens_estimate >= 1);
         // Target is max(raw/3, 32) — compiled_tokens_estimate should be ≤ this target
-        let target = (result.raw_tokens_estimate / 3).max(32).min(result.raw_tokens_estimate);
+        let target = (result.raw_tokens_estimate / 3)
+            .max(32)
+            .min(result.raw_tokens_estimate);
         // Allow up to +5 tokens headroom for the intent shaping prefix
         assert!(result.compiled_tokens_estimate <= target + 5);
     }
@@ -720,22 +724,34 @@ mod tests {
 
     #[test]
     fn detect_codegen_typescript() {
-        assert_eq!(detect_intent("write a typescript function to debounce events"), "codegen");
+        assert_eq!(
+            detect_intent("write a typescript function to debounce events"),
+            "codegen"
+        );
     }
 
     #[test]
     fn detect_codegen_complete() {
-        assert_eq!(detect_intent("complete this function: fn add(a: i32, b: i32)"), "codegen");
+        assert_eq!(
+            detect_intent("complete this function: fn add(a: i32, b: i32)"),
+            "codegen"
+        );
     }
 
     #[test]
     fn detect_codegen_create_class() {
-        assert_eq!(detect_intent("create a class User with fields name and email"), "codegen");
+        assert_eq!(
+            detect_intent("create a class User with fields name and email"),
+            "codegen"
+        );
     }
 
     #[test]
     fn detect_translate_english() {
-        assert_eq!(detect_intent("translate this paragraph into French"), "translate");
+        assert_eq!(
+            detect_intent("translate this paragraph into French"),
+            "translate"
+        );
     }
 
     #[test]

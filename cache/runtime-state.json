@@ -1,13 +1,13 @@
 {
   "snapshot": {
-    "ts": 1773457377,
-    "total_requests": 9,
-    "raw_tokens": 298,
-    "compiled_tokens": 191,
+    "ts": 1773458158,
+    "total_requests": 10,
+    "raw_tokens": 299,
+    "compiled_tokens": 192,
     "memory_reused_tokens": 17,
-    "efficiency_score": 35.90604,
-    "local_ratio": 44.444447,
-    "cache_hits": 2,
+    "efficiency_score": 35.785954,
+    "local_ratio": 40.0,
+    "cache_hits": 3,
     "cache_misses": 7,
     "cache_saved_tokens": 0,
     "history_raw": [
@@ -19,7 +19,8 @@
       229,
       241,
       297,
-      298
+      298,
+      299
     ],
     "history_compiled": [
       42,
@@ -30,13 +31,15 @@
       147,
       161,
       190,
-      191
+      191,
+      192
     ],
     "history_reused": [
       0,
       0,
       0,
       0,
+      17,
       17,
       17,
       17,
@@ -93,7 +96,7 @@
       162,
       68,
       0,
-      1
+      2
     ],
     "history_hour_compiled": [
       0,
@@ -119,7 +122,7 @@
       105,
       43,
       0,
-      1
+      2
     ],
     "history_hour_reused": [
       0,
@@ -148,13 +151,13 @@
       0
     ],
     "routes_local": 4,
-    "routes_cloud": 5,
+    "routes_cloud": 6,
     "routes_midtier": 0,
     "intent_stats": {
       "general": {
-        "requests": 5,
-        "raw_tokens": 116,
-        "compiled_tokens": 71
+        "requests": 6,
+        "raw_tokens": 117,
+        "compiled_tokens": 72
       },
       "debug": {
         "requests": 4,
@@ -166,13 +169,13 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 5,
-        "raw_tokens": 116,
-        "compiled_tokens": 71,
+        "requests": 6,
+        "raw_tokens": 117,
+        "compiled_tokens": 72,
         "memory_reused_tokens": 0,
-        "efficiency_score": 38.793106,
+        "efficiency_score": 38.46154,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 5,
+        "non_sovereign_requests": 6,
         "sovereign_ratio": 0.0
       },
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
@@ -211,7 +214,7 @@
       "semantic_fingerprint": "12638352127299873646",
       "cache_hit": true,
       "sensitive": false,
-      "ts": 1773457377,
+      "ts": 1773458158,
       "cost_usd": 0.0
     },
     "request_history": [
@@ -366,6 +369,23 @@
         "cache_hit": true,
         "sensitive": false,
         "ts": 1773457377,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": null,
+        "upstream_provider": null,
+        "upstream_model": null,
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": true,
+        "semantic_fingerprint": "12638352127299873646",
+        "cache_hit": true,
+        "sensitive": false,
+        "ts": 1773458158,
         "cost_usd": 0.0
       }
     ],
@@ -529,8 +549,8 @@
       17
     ],
     "1773457200": [
-      1,
-      1,
+      2,
+      2,
       0
     ],
     "1773450000": [

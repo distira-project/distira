@@ -31,7 +31,7 @@ struct TaskRouting {
     debug: Option<String>,
     summarize: Option<String>,
     review: Option<String>,
-    codegen: Option<String>,   // was missing — caused codegen to fall through to default
+    codegen: Option<String>, // was missing — caused codegen to fall through to default
     translate: Option<String>,
     general: Option<String>,
     ocr: Option<String>,

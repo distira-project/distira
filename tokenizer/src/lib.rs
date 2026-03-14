@@ -802,7 +802,10 @@ mod tests {
         let new_estimate = count(cjk);
         let old_estimate = (cjk.chars().count() / 4).max(1);
         // Real count ≈ 11 tokens (one per char). New estimate should be much closer.
-        assert!(new_estimate > old_estimate * 2, "new={new_estimate} should be much bigger than chars/4={old_estimate}");
+        assert!(
+            new_estimate > old_estimate * 2,
+            "new={new_estimate} should be much bigger than chars/4={old_estimate}"
+        );
     }
 
     // ── Model family ──────────────────────────────────────────────────────────
@@ -819,12 +822,18 @@ mod tests {
 
     #[test]
     fn family_for_qwen_is_qwen() {
-        assert_eq!(family_for_provider("ollama-qwen2.5-coder"), ModelFamily::Qwen);
+        assert_eq!(
+            family_for_provider("ollama-qwen2.5-coder"),
+            ModelFamily::Qwen
+        );
     }
 
     #[test]
     fn family_for_claude_is_claude() {
-        assert_eq!(family_for_provider("anthropic-claude-3-7-sonnet"), ModelFamily::Claude);
+        assert_eq!(
+            family_for_provider("anthropic-claude-3-7-sonnet"),
+            ModelFamily::Claude
+        );
     }
 
     #[test]
@@ -834,7 +843,10 @@ mod tests {
 
     #[test]
     fn family_for_gemini_is_gemini() {
-        assert_eq!(family_for_provider("google-gemini-2.0-flash"), ModelFamily::Gemini);
+        assert_eq!(
+            family_for_provider("google-gemini-2.0-flash"),
+            ModelFamily::Gemini
+        );
     }
 
     #[test]
@@ -844,7 +856,10 @@ mod tests {
 
     #[test]
     fn family_for_gemini_2_5_is_gemini() {
-        assert_eq!(family_for_provider("google-gemini-2.5-pro"), ModelFamily::Gemini);
+        assert_eq!(
+            family_for_provider("google-gemini-2.5-pro"),
+            ModelFamily::Gemini
+        );
     }
 
     #[test]
@@ -980,7 +995,10 @@ mod tests {
         let text = "fn compile_context(raw: &str) -> CompileResult";
         let llama3 = count_for(text, ModelFamily::Llama3);
         let gemini = count_for(text, ModelFamily::Gemini);
-        assert!(gemini <= llama3, "gemini={gemini} should be <= llama3={llama3}");
+        assert!(
+            gemini <= llama3,
+            "gemini={gemini} should be <= llama3={llama3}"
+        );
     }
 
     // ── Accuracy vs. chars / 4 ────────────────────────────────────────────────
@@ -1018,7 +1036,10 @@ mod tests {
         let prose = "the quick brown fox jumps over the dog";
         let token_count = count(prose);
         // 8 words × 1 token each = 8.
-        assert_eq!(token_count, 8, "prose token count should be 8 for 8 short words");
+        assert_eq!(
+            token_count, 8,
+            "prose token count should be 8 for 8 short words"
+        );
     }
 
     #[test]

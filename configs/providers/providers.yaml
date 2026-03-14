@@ -79,6 +79,20 @@ providers:
   #   cost_per_1k_input_tokens: 0.0
   #   cost_per_1k_output_tokens: 0.0
 
+  # ── vLLM (on-prem, http://localhost:8000/v1) ─────────────────────────────────
+  # Install: pip install vllm  |  start: python -m vllm.entrypoints.openai.api_server --model <hf-model>
+  # vLLM exposes a full OpenAI-compatible API — DISTIRA connects transparently,
+  # including streaming (SSE).  No api_key needed for local deployments.
+  #
+  # vllm-default:
+  #   type: openai-compatible
+  #   base_url: http://localhost:8000/v1
+  #   model: meta-llama/Llama-3.1-8B-Instruct  # replace with your loaded model
+  #   deployment: on-prem
+  #   description: vLLM local server — any HuggingFace model with PagedAttention
+  #   cost_per_1k_input_tokens: 0.0
+  #   cost_per_1k_output_tokens: 0.0
+
   # ── LM Studio (on-prem, http://localhost:1234/v1) ────────────────────────────
   # Install: https://lmstudio.ai  |  load any GGUF model, enable the local server
   # LM Studio exposes a full OpenAI-compatible API — DISTIRA connects transparently.
