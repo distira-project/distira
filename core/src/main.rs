@@ -2375,9 +2375,54 @@ fn budget_alerts(
         .collect()
 }
 
+/// Build a full metrics JSON value with all context-memory fields derived live
+/// from the current `ContextStore` state — not from the cached snapshot fields.
+/// Used by both the REST endpoint and the SSE stream so every consumer always
+/// sees the true real-time picture regardless of how recently `record()` ran.
+fn build_full_snapshot(collector: &MetricsCollector) -> serde_json::Value {
+    let mut val = serde_json::to_value(collector.snapshot()).unwrap_or_default();
+
+    // Live context blocks — stability, token count, and intent come straight
+    // from the store, so decay is visible between requests.
+    let blocks_summary: Vec<serde_json::Value> = collector
+        .context_store
+        .blocks()
+        .into_iter()
+        .map(|b| {
+            let short_id = if b.id.len() > 8 {
+                b.id[..8].to_string()
+            } else {
+                b.id.clone()
+            };
+            json!({
+                "id": short_id,
+                "stability": (b.stability * 100.0).round() / 100.0,
+                "token_count": b.content.split_whitespace().count(),
+                "intent": b.intent
+            })
+        })
+        .collect();
+
+    // Override snapshot fields with live values so SSE and REST are always in sync.
+    // stable_blocks — real count from context_store, reflects decay/eviction instantly.
+    val["stable_blocks"] = serde_json::json!(blocks_summary.len());
+
+    // context_reuse_ratio_pct — recomputed from current cumulative totals each tick.
+    let raw = val["raw_tokens"].as_u64().unwrap_or(0) as f32;
+    let reused = val["memory_reused_tokens"].as_u64().unwrap_or(0) as f32;
+    val["context_reuse_ratio_pct"] = serde_json::json!(if raw > 0.0 {
+        (reused / raw * 100.0).min(100.0)
+    } else {
+        0.0
+    });
+
+    val["context_blocks_summary"] = serde_json::Value::Array(blocks_summary);
+    val
+}
+
 async fn metrics_snapshot(State(state): State<SharedState>) -> Json<serde_json::Value> {
     let collector = state.collector.lock().unwrap();
-    Json(serde_json::to_value(collector.snapshot()).unwrap_or_default())
+    Json(build_full_snapshot(&collector))
 }
 
 async fn metrics_reset(State(state): State<SharedState>) -> impl IntoResponse {
@@ -2392,31 +2437,11 @@ async fn metrics_stream(
     let interval = tokio::time::interval(std::time::Duration::from_secs(2));
     let stream = tokio_stream::StreamExt::map(IntervalStream::new(interval), move |_| {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
-        let mut snapshot_val = serde_json::to_value(collector.snapshot()).unwrap_or_default();
+        let mut snapshot_val = build_full_snapshot(&collector);
         let alerts = budget_alerts(&collector.daily_provider_counts, &state.router_config);
         if !alerts.is_empty() {
             snapshot_val["alerts"] = serde_json::Value::Array(alerts);
         }
-        // V10 — Inject live context block summaries (no raw content exposed).
-        let blocks_summary: Vec<serde_json::Value> = collector
-            .context_store
-            .blocks()
-            .into_iter()
-            .map(|b| {
-                let short_id = if b.id.len() > 8 {
-                    b.id[..8].to_string()
-                } else {
-                    b.id.clone()
-                };
-                json!({
-                    "id": short_id,
-                    "stability": (b.stability * 100.0).round() / 100.0,
-                    "token_count": b.content.split_whitespace().count(),
-                    "intent": b.intent
-                })
-            })
-            .collect();
-        snapshot_val["context_blocks_summary"] = serde_json::Value::Array(blocks_summary);
         let data = serde_json::to_string(&snapshot_val).unwrap_or_default();
         Ok(Event::default().event("metrics").data(data))
     });

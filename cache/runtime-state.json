@@ -1,18 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773523956,
-    "total_requests": 51,
-    "raw_tokens": 1903,
-    "compiled_tokens": 1273,
+    "ts": 1773524552,
+    "total_requests": 53,
+    "raw_tokens": 1969,
+    "compiled_tokens": 1316,
     "memory_reused_tokens": 17,
-    "efficiency_score": 63.105625,
-    "local_ratio": 27.450981,
+    "efficiency_score": 63.164043,
+    "local_ratio": 26.415094,
     "cache_hits": 3,
-    "cache_misses": 48,
+    "cache_misses": 50,
     "cache_saved_tokens": 0,
     "history_raw": [
-      863,
-      913,
       956,
       1012,
       1064,
@@ -34,11 +32,11 @@
       1821,
       1846,
       1862,
-      1903
+      1903,
+      1937,
+      1969
     ],
     "history_compiled": [
-      609,
-      630,
       653,
       680,
       719,
@@ -60,7 +58,9 @@
       1208,
       1227,
       1249,
-      1273
+      1273,
+      1298,
+      1316
     ],
     "history_reused": [
       17,
@@ -138,7 +138,7 @@
       0,
       199,
       402,
-      238
+      304
     ],
     "history_hour_compiled": [
       0,
@@ -164,7 +164,7 @@
       0,
       133,
       258,
-      163
+      206
     ],
     "history_hour_reused": [
       0,
@@ -193,13 +193,13 @@
       0
     ],
     "routes_local": 14,
-    "routes_cloud": 36,
+    "routes_cloud": 38,
     "routes_midtier": 1,
     "intent_stats": {
       "general": {
-        "requests": 36,
-        "raw_tokens": 1306,
-        "compiled_tokens": 865
+        "requests": 38,
+        "raw_tokens": 1372,
+        "compiled_tokens": 908
       },
       "debug": {
         "requests": 13,
@@ -245,13 +245,13 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 36,
-        "raw_tokens": 1306,
-        "compiled_tokens": 865,
+        "requests": 38,
+        "raw_tokens": 1372,
+        "compiled_tokens": 908,
         "memory_reused_tokens": 0,
-        "efficiency_score": 63.76723,
+        "efficiency_score": 63.819244,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 36,
+        "non_sovereign_requests": 38,
         "sovereign_ratio": 0.0
       },
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
@@ -279,8 +279,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "GitHub Copilot",
         "upstream_model": "Claude Sonnet 4.6",
-        "requests": 19,
-        "last_seen_ts": 1773523956
+        "requests": 21,
+        "last_seen_ts": 1773524552
       }
     },
     "last_request": {
@@ -290,14 +290,14 @@
       "tenant_id": null,
       "project_id": null,
       "policy_pack": null,
-      "routed_provider": "ollama-mistral-7b-instruct",
-      "routed_model": "mistral:7b-instruct",
-      "intent": "debug",
+      "routed_provider": "openrouter-step-3.5-flash-cloud",
+      "routed_model": "stepfun/step-3.5-flash:free",
+      "intent": "general",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "11184980845543479893",
+      "semantic_fingerprint": "12621793142422189646",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773523956,
+      "ts": 1773524552,
       "cost_usd": 0.0
     },
     "request_history": [
@@ -1167,6 +1167,40 @@
         "sensitive": false,
         "ts": 1773523956,
         "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "8851438590899947899",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773524219,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "12621793142422189646",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773524552,
+        "cost_usd": 0.0
       }
     ],
     "session_cost_usd": 0.0,
@@ -1199,6 +1233,24 @@
       "summary": "Intent: debug. Reduced estimated context from 68 to 49 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
       "compiled_context": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ...",
       "created_at": 1773522140
+    },
+    {
+      "fingerprint": 8851438590899947899,
+      "intent": "general",
+      "raw_tokens_estimate": 34,
+      "compiled_tokens_estimate": 25,
+      "summary": "Intent: general. Reduced estimated context from 34 to 25 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Pourquoi malgré 2 récentes requêtes il n'y a ...",
+      "created_at": 1773524219
+    },
+    {
+      "fingerprint": 12621793142422189646,
+      "intent": "general",
+      "raw_tokens_estimate": 32,
+      "compiled_tokens_estimate": 18,
+      "summary": "Intent: general. Reduced estimated context from 32 to 18 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Il faut que cela soit comme tout le ...",
+      "created_at": 1773524552
     },
     {
       "fingerprint": 3190483154157174394,
@@ -1801,6 +1853,11 @@
       "content": "[k:general]|Is it normal that Reused Tokens shows 17 ..."
     },
     {
+      "id": "8851438590899947899",
+      "stability": 1.0,
+      "content": "[k:general]|Pourquoi malgré 2 récentes requêtes il n'y a ..."
+    },
+    {
       "id": "1611955546985147079",
       "stability": 1.0,
       "content": "[k:general]|Set minimum AI efficiency score floor to 30% ..."
@@ -1814,6 +1871,11 @@
       "id": "9375416537127978950",
       "stability": 1.0,
       "content": "[k:general]|What improvements could be made to the DISTIRA ..."
+    },
+    {
+      "id": "12621793142422189646",
+      "stability": 1.0,
+      "content": "[k:general]|Il faut que cela soit comme tout le ..."
     },
     {
       "id": "3190483154157174394",
@@ -1893,8 +1955,8 @@
   ],
   "hour_buckets": {
     "1773522000": [
-      238,
-      163,
+      304,
+      206,
       0
     ],
     "1773518400": [
