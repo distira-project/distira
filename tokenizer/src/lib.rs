@@ -71,10 +71,14 @@ pub enum ModelFamily {
     /// When `exact-gpt4` is enabled, cl100k_base is used as a proxy (±3 % for English / code).
     /// ~3.3 characters per token; effectively identical to GPT-4 for budgeting purposes.
     Claude,
-    /// Google Gemini 1.5 / 2.0 / Flash / Pro — SentencePiece with 256k vocabulary.
+    /// Google Gemini 1.5 / 2.0 / 2.5 / Flash / Pro — SentencePiece with 256k vocabulary.
     /// No embedded Rust vocabulary available; calibrated heuristic matches GPT-4 accuracy.
     /// ~3.3 characters per token on English; more efficient on multilingual content.
     Gemini,
+    /// ZhipuAI GLM-4 / GLM-Z1 / ChatGLM — custom SentencePiece 130k vocabulary.
+    /// Closely tracks Qwen/Llama3 for Latin text; slightly more efficient on CJK.
+    /// For budgeting purposes identical to `Qwen`.
+    Glm,
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -123,6 +127,8 @@ pub fn count_for(text: &str, family: ModelFamily) -> usize {
         ModelFamily::Claude => exact_gpt4::count_cl100k(text),
         // Gemini — SentencePiece 256k; no embedded Rust vocab, calibrated heuristic.
         ModelFamily::Gemini => (raw * 19) / 20,
+        // GLM / ChatGLM — SentencePiece 130k; tracks Qwen for budgeting.
+        ModelFamily::Glm => raw,
     }
 }
 
@@ -133,6 +139,7 @@ pub fn count_for(text: &str, family: ModelFamily) -> usize {
 /// |-------------------------|-----------|
 /// | `claude`, `anthropic`   | [`ModelFamily::Claude`] |
 /// | `gemini`, `google`, `palm` | [`ModelFamily::Gemini`] |
+/// | `glm`, `chatglm`, `zhipu` | [`ModelFamily::Glm`] |
 /// | `gpt-4o`, `o1`, `o3`, `o4`, `gpt-5` | [`ModelFamily::Gpt4o`] |
 /// | `gpt`, `openai`         | [`ModelFamily::Gpt4`]   |
 /// | `qwen`                  | [`ModelFamily::Qwen`]   |
@@ -145,6 +152,9 @@ pub fn family_for_provider(provider: &str) -> ModelFamily {
     // Google Gemini / PaLM — check before generic string matches.
     } else if lower.contains("gemini") || lower.contains("google") || lower.contains("palm") {
         ModelFamily::Gemini
+    // ZhipuAI GLM / ChatGLM — check before generic matches.
+    } else if lower.contains("glm") || lower.contains("chatglm") || lower.contains("zhipu") {
+        ModelFamily::Glm
     // o200k_base family: GPT-4o, o1, o3, o4, GPT-5 — check before generic "gpt" match.
     } else if lower.contains("gpt-4o")
         || lower.contains("gpt-5")
@@ -830,6 +840,26 @@ mod tests {
     #[test]
     fn family_for_gemini_direct_is_gemini() {
         assert_eq!(family_for_provider("gemini-1.5-pro"), ModelFamily::Gemini);
+    }
+
+    #[test]
+    fn family_for_gemini_2_5_is_gemini() {
+        assert_eq!(family_for_provider("google-gemini-2.5-pro"), ModelFamily::Gemini);
+    }
+
+    #[test]
+    fn family_for_glm_is_glm() {
+        assert_eq!(family_for_provider("ollama-glm4"), ModelFamily::Glm);
+    }
+
+    #[test]
+    fn family_for_chatglm_is_glm() {
+        assert_eq!(family_for_provider("chatglm-6b"), ModelFamily::Glm);
+    }
+
+    #[test]
+    fn family_for_zhipu_is_glm() {
+        assert_eq!(family_for_provider("zhipu-glm4-cloud"), ModelFamily::Glm);
     }
 
     #[test]

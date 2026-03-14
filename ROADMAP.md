@@ -291,6 +291,21 @@ Wave A progress:
 - `core/chat_completions` applies `tokenizer::decode_for(content, token_family)` on all non-streaming provider responses and on accumulated streaming content before cache insertion.
 - Test suite: 131 tests, 0 failures (+33 encode/decode unit tests).
 
+### V9.9 — LM Studio / OpenWebUI + GLM + Gemini 2.5 + Claude 4.x provider coverage
+
+**Status:** Delivered.
+
+- **LM Studio** (`http://localhost:1234/v1`) and **OpenWebUI** (`http://localhost:3000/api`) are now documented as first-class on-prem frontends. Both expose an OpenAI-compatible API — no adapter code changes required. Ready-to-use commented provider stanzas added to `providers.yaml`.
+- **`ModelFamily::Glm`**: GLM-4, GLM-Z1, ChatGLM (ZhipuAI). On-prem via Ollama (`glm4:9b`) or cloud via DashScope/ZhipuAI API.
+- **Full provider coverage added (commented)**:
+  - Anthropic: Claude Sonnet 4.5, 4.6, Opus 4.5, Claude 3.7 Sonnet
+  - Google: Gemini 2.0 Flash, Gemini 2.5 Pro, Gemini 2.5 Flash
+  - ZhipuAI: GLM-4, GLM-Z1 Flash
+  - Alibaba: Qwen 3 235B (MoE, DashScope cloud)
+  - OpenAI: GPT-4o, GPT-5
+- **Complete `ModelFamily` matrix** at V9.9: Universal, Llama3, Qwen, Gpt4, Gpt4o, Claude, Gemini, Glm.
+- Test suite: 159 tests, 0 failures.
+
 ### V9.8 — Full model compatibility + translate intent
 
 **Status:** Delivered.

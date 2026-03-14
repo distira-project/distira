@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — V9.9 LM Studio / OpenWebUI compatibility + GLM / Gemini 2.5 / Claude 4.x (2026-03-13)
+
+- **LM Studio compatible**: Added commented `lmstudio-default` provider entry (`http://localhost:1234/v1`). LM Studio exposes a full OpenAI-compatible API — any GGUF model (Llama 3.3, Qwen 3, Gemma 3, Phi-4, …) can be proxied through DISTIRA by pointing to its local server.
+- **OpenWebUI compatible**: Added commented `openwebui-default` provider entry (`http://localhost:3000/api`). OpenWebUI’s built-in OpenAI-compatible proxy is detected transparently — no adapter change required.
+- **`ModelFamily::Glm`** — ZhipuAI GLM-4 / GLM-Z1 / ChatGLM. SentencePiece 130k vocabulary; calibrated heuristic identical to `Llama3` for Latin text. Activated by `glm`, `chatglm`, `zhipu` substrings in `family_for_provider()`.
+- **Cloud provider entries** (all commented, ready to uncomment):
+  - `openai-gpt4o`, `openai-gpt5` (OpenAI)
+  - `anthropic-claude-sonnet-4-5`, `anthropic-claude-sonnet-4-6`, `anthropic-claude-opus-4-5`, `anthropic-claude-3-7-sonnet` (Anthropic)
+  - `google-gemini-2-flash`, `google-gemini-2-5-pro`, `google-gemini-2-5-flash` (Google)
+  - `zhipu-glm4-cloud`, `zhipu-glm-z1-cloud` (ZhipuAI)
+  - `dashscope-qwen3-235b` (Alibaba DashScope — Qwen 3 235B MoE cloud)
+  - `ollama-qwen3`, `ollama-glm4` (on-prem Ollama)
+- **`providers.yaml` header updated**: Now documents LM Studio and OpenWebUI as first-class supported frontends.
+- **Test suite: 159 tests, 0 failures** (+4: `family_for_gemini_2_5_is_gemini`, `family_for_glm_is_glm`, `family_for_chatglm_is_glm`, `family_for_zhipu_is_glm`).
+
 ### Fixed & Added — V9.8 Full model compatibility + translate intent (2026-03-13)
 
 - **Bug fix — codegen routing was silently broken**: `TaskRouting` struct in `router/src/lib.rs` was missing the `codegen` field, causing the `codegen: ollama-qwen2.5-coder` line in `routing.yaml` to be silently dropped on deserialization. All code generation requests were falling through to the default provider instead of Qwen 2.5 Coder. Fixed by adding `codegen: Option<String>` to the struct and the corresponding `task_map.insert` in `load()`.

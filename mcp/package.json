@@ -1,6 +1,6 @@
 {
   "name": "distira-mcp",
-  "version": "9.8.0",
+  "version": "9.9.0",
   "type": "module",
   "description": "DISTIRA MCP Server for VS Code Copilot Chat",
   "main": "distira-server.mjs",
