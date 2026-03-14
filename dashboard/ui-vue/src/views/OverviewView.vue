@@ -272,6 +272,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useMetricsStore } from '../store/metrics'
+import { classifyRoute, friendlyProvider } from '../utils/providers'
 import MetricCard from '../components/MetricCard.vue'
 import EfficiencyGauge from '../components/EfficiencyGauge.vue'
 import FlowVisualizer from '../components/FlowVisualizer.vue'
@@ -378,16 +379,7 @@ const upstreamTableRows = computed(() => {
   }))
 })
 
-function classifyRoute(provider: string) {
-  const normalized = provider.toLowerCase()
-  if (normalized.includes('ollama') || normalized.includes('local')) {
-    return { routeLabel: 'Local sovereign', routeClass: 'local' }
-  }
-  if (normalized.includes('mistral')) {
-    return { routeLabel: 'Mid-tier', routeClass: 'midtier' }
-  }
-  return { routeLabel: 'Cloud', routeClass: 'cloud' }
-}
+// classifyRoute and friendlyProvider are imported from ../utils/providers
 
 const modelRows = computed(() => {
   return Object.entries(metrics.modelStats)
@@ -398,7 +390,8 @@ const modelRows = computed(() => {
       return {
         key,
         model: stat.model,
-        provider: stat.provider,
+        provider: friendlyProvider(stat.provider),
+        providerRaw: stat.provider,
         requests: stat.requests,
         savedTokens,
         efficiency: Math.round(stat.efficiency_score ?? 0),

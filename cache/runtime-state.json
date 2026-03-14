@@ -1,18 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773461739,
-    "total_requests": 30,
-    "raw_tokens": 956,
-    "compiled_tokens": 653,
+    "ts": 1773462123,
+    "total_requests": 32,
+    "raw_tokens": 1064,
+    "compiled_tokens": 719,
     "memory_reused_tokens": 17,
-    "efficiency_score": 61.69456,
-    "local_ratio": 30.000002,
+    "efficiency_score": 62.424812,
+    "local_ratio": 28.125,
     "cache_hits": 3,
-    "cache_misses": 27,
+    "cache_misses": 29,
     "cache_saved_tokens": 0,
     "history_raw": [
-      241,
-      297,
       298,
       299,
       310,
@@ -34,11 +32,11 @@
       822,
       863,
       913,
-      956
+      956,
+      1012,
+      1064
     ],
     "history_compiled": [
-      161,
-      190,
       191,
       192,
       207,
@@ -60,7 +58,9 @@
       577,
       609,
       630,
-      653
+      653,
+      680,
+      719
     ],
     "history_reused": [
       17,
@@ -138,7 +138,7 @@
       68,
       0,
       395,
-      264
+      372
     ],
     "history_hour_compiled": [
       0,
@@ -164,7 +164,7 @@
       43,
       0,
       294,
-      169
+      235
     ],
     "history_hour_reused": [
       0,
@@ -193,7 +193,7 @@
       0
     ],
     "routes_local": 9,
-    "routes_cloud": 20,
+    "routes_cloud": 22,
     "routes_midtier": 1,
     "intent_stats": {
       "debug": {
@@ -212,9 +212,9 @@
         "compiled_tokens": 22
       },
       "general": {
-        "requests": 20,
-        "raw_tokens": 574,
-        "compiled_tokens": 401
+        "requests": 22,
+        "raw_tokens": 682,
+        "compiled_tokens": 467
       }
     },
     "model_stats": {
@@ -257,13 +257,13 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 20,
-        "raw_tokens": 574,
-        "compiled_tokens": 401,
+        "requests": 22,
+        "raw_tokens": 682,
+        "compiled_tokens": 467,
         "memory_reused_tokens": 0,
-        "efficiency_score": 60.139374,
+        "efficiency_score": 61.524925,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 20,
+        "non_sovereign_requests": 22,
         "sovereign_ratio": 0.0
       }
     },
@@ -272,8 +272,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "unknown-provider",
         "upstream_model": "unknown-model",
-        "requests": 23,
-        "last_seen_ts": 1773461739
+        "requests": 25,
+        "last_seen_ts": 1773462123
       }
     },
     "last_request": {
@@ -283,14 +283,14 @@
       "tenant_id": null,
       "project_id": null,
       "policy_pack": null,
-      "routed_provider": "ollama-mistral-7b-instruct",
-      "routed_model": "mistral:7b-instruct",
-      "intent": "debug",
+      "routed_provider": "openrouter-step-3.5-flash-cloud",
+      "routed_model": "stepfun/step-3.5-flash:free",
+      "intent": "general",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "12779810459712034369",
+      "semantic_fingerprint": "6353571244721902484",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773461739,
+      "ts": 1773462123,
       "cost_usd": 0.0
     },
     "request_history": [
@@ -803,6 +803,40 @@
         "sensitive": false,
         "ts": 1773461739,
         "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": null,
+        "upstream_model": null,
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "6359800104848115740",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773461899,
+        "cost_usd": 0.0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": null,
+        "upstream_model": null,
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "6353571244721902484",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773462123,
+        "cost_usd": 0.0
       }
     ],
     "session_cost_usd": 0.0,
@@ -916,6 +950,24 @@
       "summary": "Intent: general. Reduced estimated context from 1 to 1 tokens and trimmed low-signal context while preserving the main request.",
       "compiled_context": "",
       "created_at": 1773446535
+    },
+    {
+      "fingerprint": 6359800104848115740,
+      "intent": "general",
+      "raw_tokens_estimate": 56,
+      "compiled_tokens_estimate": 27,
+      "summary": "Intent: general. Reduced estimated context from 56 to 27 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Improve dashboard bar chart provider name display: shorten long provider ...",
+      "created_at": 1773461899
+    },
+    {
+      "fingerprint": 6353571244721902484,
+      "intent": "general",
+      "raw_tokens_estimate": 52,
+      "compiled_tokens_estimate": 39,
+      "summary": "Intent: general. Reduced estimated context from 52 to 39 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Clarification: product name is DISTIRA (d-i-s-t-i-r-a), folder on disk ...",
+      "created_at": 1773462123
     },
     {
       "fingerprint": 11480683495429080150,
@@ -1133,6 +1185,11 @@
       "content": "[k:debug]|@distira agent still not showing in VS Code Copilot ..."
     },
     {
+      "id": "6353571244721902484",
+      "stability": 1.0,
+      "content": "[k:general]|Clarification: product name is DISTIRA (d-i-s-t-i-r-a), folder on disk ..."
+    },
+    {
       "id": "9263184382924124552",
       "stability": 1.0,
       "content": "[k:general]|Add improvement iterations to ROADMAP.md toward V10: DELETE /v1/metrics/reset, E2E ..."
@@ -1166,6 +1223,11 @@
       "id": "17185478699218872338",
       "stability": 1.0,
       "content": "[k:general]|Are there existing production-grade tokenizer tools for Mistral, Llama, Qwen, ..."
+    },
+    {
+      "id": "6359800104848115740",
+      "stability": 1.0,
+      "content": "[k:general]|Improve dashboard bar chart provider name display: shorten long provider ..."
     },
     {
       "id": "5857413712018688965",
@@ -1250,8 +1312,8 @@
       17
     ],
     "1773460800": [
-      264,
-      169,
+      372,
+      235,
       0
     ],
     "1773442800": [
