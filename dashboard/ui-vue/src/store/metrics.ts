@@ -44,6 +44,9 @@ export interface RequestLineage {
   cache_hit: boolean
   sensitive: boolean
   cost_usd?: number
+  raw_tokens?: number
+  compiled_tokens?: number
+  tokens_saved?: number
   ts: number
 }
 
@@ -127,6 +130,7 @@ export const useMetricsStore = defineStore('metrics', () => {
   const requestHistory = ref<RequestLineage[]>([])
   const sessionCostUsd = ref(0)
   const lastRequestCostUsd = ref(0)
+  const sessionBudgetUsd = ref(0)
   const alerts = ref<Array<{ type: string; provider?: string; message: string }>>([])
   const stableBlocks = ref(0)
   const contextRatioPct = ref(0)
@@ -200,6 +204,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     requestHistory.value = s.request_history ?? []
     sessionCostUsd.value = s.session_cost_usd ?? 0
     lastRequestCostUsd.value = s.last_request_cost_usd ?? 0
+    sessionBudgetUsd.value = s.session_budget_usd ?? 0
     alerts.value = s.alerts ?? []
     stableBlocks.value = s.stable_blocks ?? 0
     contextRatioPct.value = s.context_reuse_ratio_pct ?? 0
@@ -332,6 +337,7 @@ export const useMetricsStore = defineStore('metrics', () => {
     requestHistory,
     sessionCostUsd,
     lastRequestCostUsd,
+    sessionBudgetUsd,
     alerts,
     stableBlocks,
     contextRatioPct,

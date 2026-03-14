@@ -81,6 +81,15 @@ struct RequestLineage {
     /// Estimated cost of this request in USD (0.0 for on-prem).
     #[serde(default)]
     cost_usd: f64,
+    /// Raw token count before compilation (context size the user submitted).
+    #[serde(default)]
+    raw_tokens: usize,
+    /// Compiled token count after DISTIRA optimisation.
+    #[serde(default)]
+    compiled_tokens: usize,
+    /// Tokens saved by compilation (raw − compiled).
+    #[serde(default)]
+    tokens_saved: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,6 +107,9 @@ struct WorkspaceContext {
     tenant_id: Option<String>,
     project_id: Option<String>,
     policy_pack: Option<String>,
+    /// V10.3 — Session cost budget in USD (0 = disabled).
+    #[serde(default)]
+    session_budget_usd: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -159,6 +171,9 @@ struct MetricsSnapshot {
     /// V10 — Session-level context reuse ratio in percent (memory_reused / raw * 100).
     #[serde(default)]
     context_reuse_ratio_pct: f32,
+    /// V10.3 — Configured session cost budget in USD (0 = disabled).
+    #[serde(default)]
+    session_budget_usd: f64,
 }
 
 #[derive(Debug)]
@@ -269,6 +284,7 @@ impl MetricsCollector {
                 last_request_cost_usd: 0.0,
                 stable_blocks: 0,
                 context_reuse_ratio_pct: 0.0,
+                session_budget_usd: 0.0,
             },
             sem_cache: cache::SemanticCache::new(),
             chat_cache: HashMap::new(),
@@ -518,6 +534,7 @@ impl MetricsCollector {
             0.0
         };
 
+        let tokens_saved = raw.saturating_sub(compiled);
         let lineage = RequestLineage {
             client_app: upstream.client_app,
             upstream_provider: upstream.provider,
@@ -534,6 +551,9 @@ impl MetricsCollector {
             sensitive,
             ts,
             cost_usd,
+            raw_tokens: raw,
+            compiled_tokens: compiled,
+            tokens_saved,
         };
 
         s.last_request = Some(lineage.clone());
@@ -624,6 +644,7 @@ impl MetricsCollector {
             last_request_cost_usd: 0.0,
             stable_blocks: 0,
             context_reuse_ratio_pct: 0.0,
+            session_budget_usd: 0.0,
         };
         self.hour_buckets.clear();
     }
@@ -857,11 +878,13 @@ fn workspace_context_path() -> Option<PathBuf> {
 fn load_workspace_context() -> WorkspaceContext {
     if let Some(path) = workspace_context_path() {
         if let Ok(raw) = std::fs::read_to_string(&path) {
-            if let Ok(context) = serde_yaml::from_str::<WorkspaceContext>(&raw) {
-                return context;
-            }
+            // Try wrapped form first (`workspace:` key) — most yaml configs use this.
             if let Ok(wrapped) = serde_yaml::from_str::<WorkspaceContextFile>(&raw) {
                 return wrapped.workspace;
+            }
+            // Fallback: flat form (no wrapper key).
+            if let Ok(context) = serde_yaml::from_str::<WorkspaceContext>(&raw) {
+                return context;
             }
         }
     }
@@ -870,6 +893,7 @@ fn load_workspace_context() -> WorkspaceContext {
         tenant_id: None,
         project_id: None,
         policy_pack: None,
+        session_budget_usd: 0.0,
     }
 }
 
@@ -2251,6 +2275,9 @@ mod tests {
                 cache_hit: false,
                 sensitive: false,
                 cost_usd: 0.0,
+                raw_tokens: 100,
+                compiled_tokens: 60,
+                tokens_saved: 40,
                 ts: 100,
             },
             RequestLineage {
@@ -2268,6 +2295,9 @@ mod tests {
                 cache_hit: false,
                 sensitive: false,
                 cost_usd: 0.0,
+                raw_tokens: 80,
+                compiled_tokens: 50,
+                tokens_saved: 30,
                 ts: 200,
             },
             RequestLineage {
@@ -2285,6 +2315,9 @@ mod tests {
                 cache_hit: false,
                 sensitive: false,
                 cost_usd: 0.0,
+                raw_tokens: 90,
+                compiled_tokens: 55,
+                tokens_saved: 35,
                 ts: 300,
             },
         ];
@@ -2340,8 +2373,10 @@ mod tests {
 fn budget_alerts(
     daily_counts: &HashMap<String, u64>,
     router: &router::RouterConfig,
+    session_cost_usd: f64,
+    session_budget_usd: f64,
 ) -> Vec<serde_json::Value> {
-    router
+    let mut alerts: Vec<serde_json::Value> = router
         .list_provider_summaries()
         .into_iter()
         .filter_map(|ps| {
@@ -2375,14 +2410,38 @@ fn budget_alerts(
                 None
             }
         })
-        .collect()
+        .collect();
+
+    // V10.3 — Session cost budget alerts.
+    if session_budget_usd > 0.0 {
+        if session_cost_usd >= session_budget_usd {
+            alerts.push(serde_json::json!({
+                "type": "budget_exhausted",
+                "message": format!(
+                    "Session cost budget exhausted: ${:.4} / ${:.4} USD.",
+                    session_cost_usd, session_budget_usd
+                )
+            }));
+        } else if session_cost_usd >= session_budget_usd * 0.8 {
+            let pct = (session_cost_usd / session_budget_usd * 100.0).round() as u64;
+            alerts.push(serde_json::json!({
+                "type": "budget_warning",
+                "message": format!(
+                    "Session cost at {}% of budget: ${:.4} / ${:.4} USD.",
+                    pct, session_cost_usd, session_budget_usd
+                )
+            }));
+        }
+    }
+
+    alerts
 }
 
 /// Build a full metrics JSON value with all context-memory fields derived live
 /// from the current `ContextStore` state — not from the cached snapshot fields.
 /// Used by both the REST endpoint and the SSE stream so every consumer always
 /// sees the true real-time picture regardless of how recently `record()` ran.
-fn build_full_snapshot(collector: &MetricsCollector) -> serde_json::Value {
+fn build_full_snapshot(collector: &MetricsCollector, session_budget_usd: f64) -> serde_json::Value {
     let mut val = serde_json::to_value(collector.snapshot()).unwrap_or_default();
 
     // Live context blocks — stability, token count, and intent come straight
@@ -2420,12 +2479,28 @@ fn build_full_snapshot(collector: &MetricsCollector) -> serde_json::Value {
     });
 
     val["context_blocks_summary"] = serde_json::Value::Array(blocks_summary);
+
+    // V10.3 — Inject configured session budget so the dashboard can render utilisation.
+    val["session_budget_usd"] = serde_json::json!(session_budget_usd);
+
     val
 }
 
 async fn metrics_snapshot(State(state): State<SharedState>) -> Json<serde_json::Value> {
     let collector = state.collector.lock().unwrap();
-    Json(build_full_snapshot(&collector))
+    let session_cost = collector.snapshot().session_cost_usd;
+    let budget = state.workspace_context.session_budget_usd;
+    let mut snapshot_val = build_full_snapshot(&collector, budget);
+    let alerts = budget_alerts(
+        &collector.daily_provider_counts,
+        &state.router_config,
+        session_cost,
+        budget,
+    );
+    if !alerts.is_empty() {
+        snapshot_val["alerts"] = serde_json::Value::Array(alerts);
+    }
+    Json(snapshot_val)
 }
 
 async fn metrics_reset(State(state): State<SharedState>) -> impl IntoResponse {
@@ -2440,8 +2515,15 @@ async fn metrics_stream(
     let interval = tokio::time::interval(std::time::Duration::from_secs(2));
     let stream = tokio_stream::StreamExt::map(IntervalStream::new(interval), move |_| {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
-        let mut snapshot_val = build_full_snapshot(&collector);
-        let alerts = budget_alerts(&collector.daily_provider_counts, &state.router_config);
+        let mut snapshot_val =
+            build_full_snapshot(&collector, state.workspace_context.session_budget_usd);
+        let session_cost = collector.snapshot().session_cost_usd;
+        let alerts = budget_alerts(
+            &collector.daily_provider_counts,
+            &state.router_config,
+            session_cost,
+            state.workspace_context.session_budget_usd,
+        );
         if !alerts.is_empty() {
             snapshot_val["alerts"] = serde_json::Value::Array(alerts);
         }

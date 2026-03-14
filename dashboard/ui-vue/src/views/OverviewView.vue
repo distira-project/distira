@@ -34,6 +34,22 @@
         <SparklineChart :data="localHistory" color="var(--accent)" :height="40" />
       </MetricCard>
     </div>
+
+    <!-- V10.3 — Session cost budget bar (only shown when budget is configured) -->
+    <div v-if="metrics.sessionBudgetUsd > 0" class="budget-bar-wrap card">
+      <div class="budget-bar-header">
+        <span class="budget-bar-title">Session Cost Budget</span>
+        <span class="budget-bar-amounts">
+          ${{ metrics.sessionCostUsd.toFixed(4) }}
+          <span class="budget-bar-sep">/</span>
+          ${{ metrics.sessionBudgetUsd.toFixed(4) }}
+        </span>
+        <span class="budget-bar-pct" :class="budgetPctClass">{{ budgetUsedPct }}%</span>
+      </div>
+      <div class="budget-track">
+        <div class="budget-fill" :class="budgetPctClass" :style="{ width: Math.min(budgetUsedPct, 100) + '%' }"></div>
+      </div>
+    </div>
     <div class="two-col">
       <EfficiencyGauge :score="metrics.efficiencyScore" />
       <FlowVisualizer />
@@ -369,6 +385,18 @@ const localHistory = computed(() => {
   return metrics.historyRaw.map((_: number, i: number) =>
     Math.round((metrics.routesLocal / Math.max(1, total)) * 100)
   )
+})
+
+// V10.3 — Session budget utilisation
+const budgetUsedPct = computed(() => {
+  if (!metrics.sessionBudgetUsd) return 0
+  return Math.round((metrics.sessionCostUsd / metrics.sessionBudgetUsd) * 100)
+})
+const budgetPctClass = computed(() => {
+  const pct = budgetUsedPct.value
+  if (pct >= 100) return 'budget-exhausted'
+  if (pct >= 80) return 'budget-warning'
+  return 'budget-ok'
 })
 
 // TvChart: prefer true hourly buckets when available, fallback to legacy history.
@@ -1263,4 +1291,58 @@ const intentRows = computed(() => {
   color: var(--muted);
   font-family: monospace;
 }
+
+/* ── V10.3 Session Cost Budget bar ────────────────────── */
+.budget-bar-wrap {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.budget-bar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.budget-bar-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.budget-bar-amounts {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.budget-bar-sep { margin: 0 4px; }
+
+.budget-bar-pct {
+  font-weight: 700;
+  font-size: 0.88rem;
+  min-width: 44px;
+  text-align: right;
+}
+
+.budget-track {
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.budget-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.budget-fill.budget-ok        { background: var(--accent); }
+.budget-fill.budget-warning   { background: #ffa940; }
+.budget-fill.budget-exhausted { background: #ff6060; }
+
+.budget-bar-pct.budget-ok        { color: var(--accent); }
+.budget-bar-pct.budget-warning   { color: #ffa940; }
+.budget-bar-pct.budget-exhausted { color: #ff6060; }
 </style>

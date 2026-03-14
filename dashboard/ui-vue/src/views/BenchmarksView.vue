@@ -101,8 +101,10 @@ const INTENT_LABELS: Record<string, string> = {
   debug: 'Debug / Trace',
   summarize: 'Summarization',
   review: 'Code Review',
+  codegen: 'Code Generation',
   general: 'General',
   ocr: 'OCR',
+  translate: 'Translation',
 }
 
 const benchmarks = computed(() => {
@@ -122,6 +124,7 @@ const benchmarks = computed(() => {
         reduction,
       }
     })
+    .filter((r) => r.reduction > 0)
     .sort((a, b) => b.requests - a.requests)
 })
 

@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.3.0] — Session Cost Budget & Alerts
+
+### Added
+- `session_budget_usd` field in `configs/workspace/workspace.yaml` (default `1.0`); set to `0` to disable.
+- `WorkspaceContext` and `MetricsSnapshot` carry `session_budget_usd: f64`.
+- `budget_alerts()` extended: fires **Warning** at 80 % of session budget, **Exhausted** at 100 % — surfaced in the existing alerts banner.
+- `build_full_snapshot()` injects `session_budget_usd` into every metrics snapshot.
+- Dashboard store exposes `sessionBudgetUsd` ref (bound to SSE `applySnapshot`).
+- OverviewView: **Session Cost Budget** utilisation bar visible when budget > 0 — fills green / amber / red based on usage %, with current cost / budget amounts.
+
+### Fixed — Benchmarks & version badge (2026-03-14)
+
+- **`BenchmarksView.vue`** — Intent rows with 0% token reduction (codegen, summarize when compiler yields no gain) are now filtered out; only intents that produce measurable savings appear in the table. Added `codegen: 'Code Generation'` and `translate: 'Translation'` to `INTENT_LABELS`.
+- **README version badge** — Hardcoded badge version updated to `10.2.0` and a new GitHub Actions workflow (`.github/workflows/sync-version-badge.yml`) auto-patches the badge whenever `VERSION` is pushed — uses `[skip ci]` on the commit so it does not trigger a CI loop.
+
+### Added — V10.2 Dynamic Audit & Security-Cost Transparency (2026-03-14)
+
+- **`core/src/main.rs` `RequestLineage`** — 3 new fields with `#[serde(default)]`: `raw_tokens: usize`, `compiled_tokens: usize`, `tokens_saved: usize`. Written on every compile/chat request via `record()`.
+- **`dashboard/store/metrics.ts` `RequestHistoryEntry`** — added `raw_tokens?`, `compiled_tokens?`, `tokens_saved?` optional fields.
+- **`dashboard/AuditView.vue`** — complete redesign:
+  - **4 KPI cards**: Session cloud cost, Tokens saved by compilation, Requests forced on-prem, Cloud cost avoided (security-driven savings).
+  - **Table** condensed to 7 semantic columns: Time, Scope, Client, Routed, Intent, Tokens (saved / raw→compiled), Cost/Security.
+  - **🔒 Secured badge** on `sensitive=true` rows — replaces the generic "Sensitive override" pill; makes security decisions visible as cost optimizations.
+  - **Cost column** shows formatted `$0.00000` per request or "Secured" badge when on-prem-forced.
+  - **Cloud cost avoided estimator** — computes counterfactual savings from on-prem routing using session average cost of non-sensitive requests.
+  - **CSV export** enriched with `raw_tokens`, `compiled_tokens`, `tokens_saved`, `cost_usd` columns.
+
+### Added — V10.1 Live Memory Reuse Estimation (2026-03-14)
+
+- **`memory/src/lib.rs` `ContextStore::estimate_coverage()`** — lexical word-set intersection between compiled context and prior stable blocks of same intent. Returns `MemorySummary { reused_tokens, delta_tokens }` even on cache miss, replacing hard-coded `reused=0`.
+- **Compile handler** — on cache miss, calls `estimate_coverage()` so `memory_reused_tokens` grows proportionally to real overlap with session memory.
+- **`MemoryView.vue`** — full UX redesign: user-friendly labels ("Tokens Saved by Memory", "Memory Efficiency", "Topics in Memory"), Session Savings progress bar, per-intent topic groups with health bars (strong/mid/weak), no hex IDs.
+- **+4 memory tests**: `estimate_coverage_empty_store_returns_zero`, `estimate_coverage_full_overlap_returns_all`, `estimate_coverage_partial_overlap`, `estimate_coverage_intent_mismatch_ignored`. Memory crate: 13 → 17 tests. Total: **206 tests**.
+
 ### Fixed — Context Memory live metrics (2026-03-14)
 
 - **`MetricsSnapshot`** — added `stable_blocks: usize` and `context_reuse_ratio_pct: f32` fields (serde default = 0); updated in `record()` from `context_store.len()` and `memory_reused_tokens / raw_tokens`.

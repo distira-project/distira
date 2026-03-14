@@ -449,3 +449,35 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - Router suite: 11 → 14 tests (3 new adaptive tests). All 202+ workspace tests pass.
 
 *Multi-tenant isolation, native VS Code extension dedicated build, and cluster mode are scoped for V11+.*
+
+### V10.1 — Live Memory Reuse Estimation
+
+**Status:** Delivered (2026-03-14).
+
+- `ContextStore::estimate_coverage()` in `memory/src/lib.rs` — lexical word-set intersection (compiled context ∩ prior stable blocks of same intent); replaces hard-coded `reused=0` on cache miss.
+- Compile handler: `estimate_coverage()` called on every cache miss so `memory_reused_tokens` grows proportionally to real session memory overlap.
+- `MemoryView.vue` fully redesigned: user-friendly labels, Session Savings progress bar, per-intent topic groups with health bars, no hex block IDs.
+- +4 memory unit tests. Memory crate: 13 → 17 tests. Total workspace: **206 tests**.
+
+### V10.2 — Dynamic Audit & Security-Cost Transparency
+
+**Status:** Delivered (2026-03-14 — VERSION 10.2.0).
+
+- `RequestLineage` struct extended with `raw_tokens`, `compiled_tokens`, `tokens_saved` (all `#[serde(default)]`); written on every compile/chat request.
+- `AuditView.vue` redesigned:
+  - 4 KPI cards: session cloud cost, tokens saved, on-prem-forced request count, cloud cost avoided.
+  - Table: Time / Scope / Client / Routed / Intent / Tokens (saved + raw→compiled) / Cost or Security badge.
+  - **🔒 Secured badge** makes `sensitive=true` routing visible as a cost optimization, not just a security decision.
+  - Cloud cost avoided estimator: counterfactual savings from on-prem routing using session average cost.
+  - CSV export enriched with `raw_tokens`, `compiled_tokens`, `tokens_saved`.
+
+### V10.3 — Session Cost Budget & Alerts
+
+**Status:** Delivered (2026-03-14 — VERSION 10.3.0).
+
+- `session_budget_usd` field in `configs/workspace/workspace.yaml` — configures a USD cap for the session. Set to `0` to disable.
+- `WorkspaceContext` and `MetricsSnapshot` carry `session_budget_usd: f64` (`#[serde(default)]`).
+- `budget_alerts()` extended with session-cost threshold logic: **Warning** fires when session cost ≥ 80 % of budget; **Exhausted** fires at 100 %. Both surface in the existing dashboard alerts banner.
+- `build_full_snapshot()` injects `session_budget_usd` into every SSE and REST metrics snapshot.
+- Dashboard store: `sessionBudgetUsd` reactive ref bound via `applySnapshot`.
+- **OverviewView**: Session Cost Budget utilisation bar — shows current cost / budget with colour-coded fill (green/amber/red) and percentage. Hidden when budget is `0` (disabled)., `cost_usd`.

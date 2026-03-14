@@ -3,3 +3,6 @@ workspace:
   tenant_id: "default-tenant"
   project_id: "distira-platform"
   policy_pack: "baseline"
+  # V10.3 — Session cost budget in USD. Set to 0 to disable.
+  # Warning alert fires at 80 %, exhausted alert fires at 100 %.
+  session_budget_usd: 1.0

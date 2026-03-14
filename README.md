@@ -7,7 +7,7 @@
 
 [![CI](https://github.com/distira-project/distira/actions/workflows/ci.yml/badge.svg?branch=wip-chf)](https://github.com/distira-project/distira/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-9.5.0-brightgreen.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-10.2.0-brightgreen.svg)](VERSION)
 
 > **Distira reduces token waste before the model call — not after it.**
 
@@ -375,7 +375,7 @@ See [INSTALL.md](INSTALL.md#vs-code-agent-mcp) for setup instructions and [TESTI
 
 ## Version
 
-Current runtime version: **9.10.1** — served from [VERSION](VERSION) and exposed live via `GET /version`.
+Current runtime version: **10.2.0** — served from [VERSION](VERSION) and exposed live via `GET /version`.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history and [ROADMAP.md](ROADMAP.md) for planned iterations.
 

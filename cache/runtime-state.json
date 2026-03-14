@@ -1,24 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773525596,
-    "total_requests": 59,
-    "raw_tokens": 2119,
-    "compiled_tokens": 1430,
-    "memory_reused_tokens": 42,
-    "efficiency_score": 62.51534,
-    "local_ratio": 25.423729,
+    "ts": 1773529390,
+    "total_requests": 67,
+    "raw_tokens": 2390,
+    "compiled_tokens": 1626,
+    "memory_reused_tokens": 110,
+    "efficiency_score": 61.96653,
+    "local_ratio": 23.880596,
     "cache_hits": 3,
-    "cache_misses": 56,
+    "cache_misses": 64,
     "cache_saved_tokens": 0,
     "history_raw": [
-      1263,
-      1306,
-      1353,
-      1381,
-      1416,
-      1458,
-      1505,
-      1549,
       1607,
       1665,
       1716,
@@ -34,17 +26,17 @@
       2065,
       2081,
       2095,
-      2119
+      2119,
+      2145,
+      2187,
+      2250,
+      2289,
+      2310,
+      2330,
+      2389,
+      2390
     ],
     "history_compiled": [
-      852,
-      886,
-      909,
-      933,
-      962,
-      984,
-      1015,
-      1041,
       1075,
       1110,
       1137,
@@ -60,7 +52,15 @@
       1372,
       1393,
       1409,
-      1430
+      1430,
+      1460,
+      1483,
+      1511,
+      1541,
+      1562,
+      1584,
+      1618,
+      1626
     ],
     "history_reused": [
       17,
@@ -76,21 +76,19 @@
       17,
       17,
       17,
-      17,
-      17,
-      17,
-      17,
-      17,
-      17,
-      17,
-      17,
       26,
       33,
-      42
+      42,
+      51,
+      60,
+      69,
+      82,
+      91,
+      100,
+      109,
+      110
     ],
     "history_hour_epochs": [
-      1773439200,
-      1773442800,
       1773446400,
       1773450000,
       1773453600,
@@ -112,11 +110,11 @@
       1773511200,
       1773514800,
       1773518400,
-      1773522000
+      1773522000,
+      1773525600,
+      1773529200
     ],
     "history_hour_raw": [
-      0,
-      67,
       162,
       68,
       0,
@@ -138,11 +136,11 @@
       0,
       199,
       402,
-      454
+      454,
+      211,
+      60
     ],
     "history_hour_compiled": [
-      0,
-      42,
       105,
       43,
       0,
@@ -164,11 +162,11 @@
       0,
       133,
       258,
-      320
+      320,
+      154,
+      42
     ],
     "history_hour_reused": [
-      0,
-      0,
       17,
       0,
       0,
@@ -190,75 +188,47 @@
       0,
       0,
       0,
-      25
+      25,
+      58,
+      10
     ],
-    "routes_local": 15,
-    "routes_cloud": 43,
+    "routes_local": 16,
+    "routes_cloud": 50,
     "routes_midtier": 1,
     "intent_stats": {
+      "debug": {
+        "requests": 15,
+        "raw_tokens": 610,
+        "compiled_tokens": 406
+      },
       "codegen": {
         "requests": 1,
         "raw_tokens": 16,
         "compiled_tokens": 20
-      },
-      "general": {
-        "requests": 43,
-        "raw_tokens": 1514,
-        "compiled_tokens": 1012
       },
       "summarize": {
         "requests": 1,
         "raw_tokens": 18,
         "compiled_tokens": 22
       },
-      "debug": {
-        "requests": 14,
-        "raw_tokens": 571,
-        "compiled_tokens": 376
+      "general": {
+        "requests": 50,
+        "raw_tokens": 1746,
+        "compiled_tokens": 1178
       }
     },
     "model_stats": {
-      "mistral:7b-instruct@ollama-mistral-7b-instruct": {
-        "model": "mistral:7b-instruct",
-        "provider": "ollama-mistral-7b-instruct",
-        "requests": 14,
-        "raw_tokens": 571,
-        "compiled_tokens": 376,
-        "memory_reused_tokens": 17,
-        "efficiency_score": 64.15061,
-        "sovereign_requests": 14,
-        "non_sovereign_requests": 0,
-        "sovereign_ratio": 100.0,
-        "avg_latency_ms": 0.0,
-        "latency_sum_ms": 0.0,
-        "latency_samples": 0
-      },
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 43,
-        "raw_tokens": 1514,
-        "compiled_tokens": 1012,
-        "memory_reused_tokens": 25,
-        "efficiency_score": 63.1572,
+        "requests": 50,
+        "raw_tokens": 1746,
+        "compiled_tokens": 1178,
+        "memory_reused_tokens": 80,
+        "efficiency_score": 62.5315,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 43,
+        "non_sovereign_requests": 50,
         "sovereign_ratio": 0.0,
-        "avg_latency_ms": 0.0,
-        "latency_sum_ms": 0.0,
-        "latency_samples": 0
-      },
-      "qwen2.5-coder:7b@ollama-qwen2.5-coder": {
-        "model": "qwen2.5-coder:7b",
-        "provider": "ollama-qwen2.5-coder",
-        "requests": 1,
-        "raw_tokens": 16,
-        "compiled_tokens": 20,
-        "memory_reused_tokens": 0,
-        "efficiency_score": 0.0,
-        "sovereign_requests": 1,
-        "non_sovereign_requests": 0,
-        "sovereign_ratio": 100.0,
         "avg_latency_ms": 0.0,
         "latency_sum_ms": 0.0,
         "latency_samples": 0
@@ -277,28 +247,65 @@
         "avg_latency_ms": 0.0,
         "latency_sum_ms": 0.0,
         "latency_samples": 0
+      },
+      "mistral:7b-instruct@ollama-mistral-7b-instruct": {
+        "model": "mistral:7b-instruct",
+        "provider": "ollama-mistral-7b-instruct",
+        "requests": 15,
+        "raw_tokens": 610,
+        "compiled_tokens": 406,
+        "memory_reused_tokens": 30,
+        "efficiency_score": 63.442623,
+        "sovereign_requests": 15,
+        "non_sovereign_requests": 0,
+        "sovereign_ratio": 100.0,
+        "avg_latency_ms": 0.0,
+        "latency_sum_ms": 0.0,
+        "latency_samples": 0
+      },
+      "qwen2.5-coder:7b@ollama-qwen2.5-coder": {
+        "model": "qwen2.5-coder:7b",
+        "provider": "ollama-qwen2.5-coder",
+        "requests": 1,
+        "raw_tokens": 16,
+        "compiled_tokens": 20,
+        "memory_reused_tokens": 0,
+        "efficiency_score": 0.0,
+        "sovereign_requests": 1,
+        "non_sovereign_requests": 0,
+        "sovereign_ratio": 100.0,
+        "avg_latency_ms": 0.0,
+        "latency_sum_ms": 0.0,
+        "latency_samples": 0
       }
     },
     "upstream_stats": {
+      "VS Code Copilot Chat|GitHub Copilot|Claude Sonnet 4.6": {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "requests": 32,
+        "last_seen_ts": 1773529278
+      },
+      "unknown-client|test|test": {
+        "client_app": "unknown-client",
+        "upstream_provider": "test",
+        "upstream_model": "test",
+        "requests": 1,
+        "last_seen_ts": 1773529390
+      },
       "VS Code Copilot Chat|unknown-provider|unknown-model": {
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "unknown-provider",
         "upstream_model": "unknown-model",
         "requests": 25,
         "last_seen_ts": 1773462123
-      },
-      "VS Code Copilot Chat|GitHub Copilot|Claude Sonnet 4.6": {
-        "client_app": "VS Code Copilot Chat",
-        "upstream_provider": "GitHub Copilot",
-        "upstream_model": "Claude Sonnet 4.6",
-        "requests": 25,
-        "last_seen_ts": 1773525596
       }
     },
     "last_request": {
-      "client_app": "VS Code Copilot Chat",
-      "upstream_provider": "GitHub Copilot",
-      "upstream_model": "Claude Sonnet 4.6",
+      "client_app": null,
+      "upstream_provider": "test",
+      "upstream_model": "test",
       "tenant_id": null,
       "project_id": null,
       "policy_pack": null,
@@ -306,11 +313,14 @@
       "routed_model": "stepfun/step-3.5-flash:free",
       "intent": "general",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "6208340959708412316",
+      "semantic_fingerprint": "2271575940368597870",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773525596,
-      "cost_usd": 0.0
+      "ts": 1773529390,
+      "cost_usd": 0.0,
+      "raw_tokens": 1,
+      "compiled_tokens": 8,
+      "tokens_saved": 0
     },
     "request_history": [
       {
@@ -328,7 +338,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773446128,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -345,7 +358,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773446535,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -362,7 +378,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773446544,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -379,7 +398,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773446723,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -396,7 +418,10 @@
         "cache_hit": true,
         "sensitive": false,
         "ts": 1773446723,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -413,7 +438,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773446944,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -430,7 +458,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773452429,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -447,7 +478,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773453152,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -464,7 +498,10 @@
         "cache_hit": true,
         "sensitive": false,
         "ts": 1773457377,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -481,7 +518,10 @@
         "cache_hit": true,
         "sensitive": false,
         "ts": 1773458158,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -498,7 +538,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459264,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -515,7 +558,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459340,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -532,7 +578,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459343,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -549,7 +598,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459408,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -566,7 +618,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459412,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -583,7 +638,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459415,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -600,7 +658,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773459908,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -617,7 +678,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460020,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -634,7 +698,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460232,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -651,7 +718,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460372,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -668,7 +738,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460490,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -685,7 +758,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460639,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -702,7 +778,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460788,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -719,7 +798,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460863,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -736,7 +818,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773460904,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -753,7 +838,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773461024,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -770,7 +858,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773461207,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -787,7 +878,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773461356,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -804,7 +898,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773461508,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -821,7 +918,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773461739,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -838,7 +938,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773461899,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -855,7 +958,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773462123,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -872,7 +978,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773517311,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -889,7 +998,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773517733,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -906,7 +1018,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773517797,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -923,7 +1038,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773518276,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -940,7 +1058,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773518435,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -957,7 +1078,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773518900,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -974,7 +1098,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773518940,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -991,7 +1118,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773519193,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1008,7 +1138,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773519363,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1025,7 +1158,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773519472,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1042,7 +1178,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773519999,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1059,7 +1198,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773520205,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1076,7 +1218,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773521385,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1093,7 +1238,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773522001,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1110,7 +1258,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773522140,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1127,7 +1278,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773522892,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1144,7 +1298,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773523258,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1161,7 +1318,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773523353,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1178,7 +1338,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773523956,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1195,7 +1358,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773524219,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1212,7 +1378,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773524552,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1229,7 +1398,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773525012,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -1246,7 +1418,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773525078,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1263,7 +1438,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773525357,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": null,
@@ -1280,7 +1458,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773525457,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1297,7 +1478,10 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773525511,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
       },
       {
         "client_app": "VS Code Copilot Chat",
@@ -1314,15 +1498,458 @@
         "cache_hit": false,
         "sensitive": false,
         "ts": 1773525596,
-        "cost_usd": 0.0
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "3317143531942121987",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773525892,
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "5072821791127692047",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773526026,
+        "cost_usd": 0.0,
+        "raw_tokens": 0,
+        "compiled_tokens": 0,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "6898683250167972360",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773526509,
+        "cost_usd": 0.0,
+        "raw_tokens": 63,
+        "compiled_tokens": 28,
+        "tokens_saved": 35
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "ollama-mistral-7b-instruct",
+        "routed_model": "mistral:7b-instruct",
+        "intent": "debug",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "18013287927905389549",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773526541,
+        "cost_usd": 0.0,
+        "raw_tokens": 39,
+        "compiled_tokens": 30,
+        "tokens_saved": 9
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "16150089390088692795",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773528732,
+        "cost_usd": 0.0,
+        "raw_tokens": 21,
+        "compiled_tokens": 21,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "11274100039847627137",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773528905,
+        "cost_usd": 0.0,
+        "raw_tokens": 20,
+        "compiled_tokens": 22,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "3874556199129105479",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773529278,
+        "cost_usd": 0.0,
+        "raw_tokens": 59,
+        "compiled_tokens": 34,
+        "tokens_saved": 25
+      },
+      {
+        "client_app": null,
+        "upstream_provider": "test",
+        "upstream_model": "test",
+        "tenant_id": null,
+        "project_id": null,
+        "policy_pack": null,
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "2271575940368597870",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773529390,
+        "cost_usd": 0.0,
+        "raw_tokens": 1,
+        "compiled_tokens": 8,
+        "tokens_saved": 0
       }
     ],
     "session_cost_usd": 0.0,
     "last_request_cost_usd": 0.0,
-    "stable_blocks": 59,
-    "context_reuse_ratio_pct": 1.982067
+    "stable_blocks": 67,
+    "context_reuse_ratio_pct": 4.6025105,
+    "session_budget_usd": 0.0
   },
   "sem_cache_entries": [
+    {
+      "fingerprint": 4493670442940444874,
+      "intent": "general",
+      "raw_tokens_estimate": 28,
+      "compiled_tokens_estimate": 24,
+      "summary": "Intent: general. Reduced estimated context from 28 to 24 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Il faut automatiser l'appel distira_compile à chaque réponse ...",
+      "created_at": 1773518940
+    },
+    {
+      "fingerprint": 15793213290072416126,
+      "intent": "general",
+      "raw_tokens_estimate": 37,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 37 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Why are Context Memory metrics (Reused Tokens, Reuse ...",
+      "created_at": 1773522892
+    },
+    {
+      "fingerprint": 1785656827680731086,
+      "intent": "general",
+      "raw_tokens_estimate": 47,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: general. Reduced estimated context from 47 to 23 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Pourquoi distira ne s'enclenche pas a chaque fois ...",
+      "created_at": 1773518900
+    },
+    {
+      "fingerprint": 15496538832898051538,
+      "intent": "general",
+      "raw_tokens_estimate": 16,
+      "compiled_tokens_estimate": 21,
+      "summary": "Intent: general. Reduced estimated context from 16 to 21 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|implement a typescript function to parse JWT tokens ...",
+      "created_at": 1773525457
+    },
+    {
+      "fingerprint": 12779810459712034369,
+      "intent": "debug",
+      "raw_tokens_estimate": 43,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: debug. Reduced estimated context from 43 to 23 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|User observation: real usage = copy/paste stack traces, error ...",
+      "created_at": 1773461739
+    },
+    {
+      "fingerprint": 6359800104848115740,
+      "intent": "general",
+      "raw_tokens_estimate": 56,
+      "compiled_tokens_estimate": 27,
+      "summary": "Intent: general. Reduced estimated context from 56 to 27 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Improve dashboard bar chart provider name display: shorten long provider ...",
+      "created_at": 1773461899
+    },
+    {
+      "fingerprint": 16355688510647601632,
+      "intent": "debug",
+      "raw_tokens_estimate": 50,
+      "compiled_tokens_estimate": 21,
+      "summary": "Intent: debug. Reduced estimated context from 50 to 21 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Benchmarks view shows negative saved tokens for codegen and ...",
+      "created_at": 1773461508
+    },
+    {
+      "fingerprint": 4877531500058267576,
+      "intent": "general",
+      "raw_tokens_estimate": 51,
+      "compiled_tokens_estimate": 27,
+      "summary": "Intent: general. Reduced estimated context from 51 to 27 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|continuions - resume at V9.16 release finalization: cargo fmt, ...",
+      "created_at": 1773522001
+    },
+    {
+      "fingerprint": 5465441198155784657,
+      "intent": "general",
+      "raw_tokens_estimate": 38,
+      "compiled_tokens_estimate": 24,
+      "summary": "Intent: general. Reduced estimated context from 38 to 24 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Malgré les récents changements, les chiffres dans Context ...",
+      "created_at": 1773525012
+    },
+    {
+      "fingerprint": 15753786166317833697,
+      "intent": "general",
+      "raw_tokens_estimate": 50,
+      "compiled_tokens_estimate": 30,
+      "summary": "Intent: general. Reduced estimated context from 50 to 30 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Tokenizer-aware prompt pre-processing optimization: BPE whitespace normalization, JSON ...",
+      "created_at": 1773517733
+    },
+    {
+      "fingerprint": 6898683250167972360,
+      "intent": "general",
+      "raw_tokens_estimate": 63,
+      "compiled_tokens_estimate": 28,
+      "summary": "Intent: general. Reduced estimated context from 63 to 28 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|V10.2 Dynamic Audit Security-Cost Transparency: AuditView redesign with ...",
+      "created_at": 1773526509
+    },
+    {
+      "fingerprint": 13622943012937592796,
+      "intent": "general",
+      "raw_tokens_estimate": 24,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: general. Reduced estimated context from 24 to 23 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Test efficiency score calculation after server rebuild. Checking ...",
+      "created_at": 1773461024
+    },
+    {
+      "fingerprint": 3340392064253580669,
+      "intent": "general",
+      "raw_tokens_estimate": 74,
+      "compiled_tokens_estimate": 46,
+      "summary": "Intent: general. Reduced estimated context from 74 to 46 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Implement V9.10.1 TokenOptimizer in compiler crate: whitespace normalization, JSON compaction, number formatting, repeated phrase dedup, code ...",
+      "created_at": 1773517797
+    },
+    {
+      "fingerprint": 9263184382924124552,
+      "intent": "general",
+      "raw_tokens_estimate": 54,
+      "compiled_tokens_estimate": 33,
+      "summary": "Intent: general. Reduced estimated context from 54 to 33 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Add improvement iterations to ROADMAP.md toward V10: DELETE /v1/metrics/reset, E2E ...",
+      "created_at": 1773460490
+    },
+    {
+      "fingerprint": 7294020892820348209,
+      "intent": "general",
+      "raw_tokens_estimate": 14,
+      "compiled_tokens_estimate": 16,
+      "summary": "Intent: general. Reduced estimated context from 14 to 16 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|You are a helpful assistant. What is 2+2? 4. And 3+3?",
+      "created_at": 1773446613
+    },
+    {
+      "fingerprint": 15140788319858001182,
+      "intent": "general",
+      "raw_tokens_estimate": 58,
+      "compiled_tokens_estimate": 35,
+      "summary": "Intent: general. Reduced estimated context from 58 to 35 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Continue DISTIRA iterations: V9.16 Latency-Aware Routing - track rolling average response ...",
+      "created_at": 1773521385
+    },
+    {
+      "fingerprint": 4107398640131594682,
+      "intent": "debug",
+      "raw_tokens_estimate": 47,
+      "compiled_tokens_estimate": 31,
+      "summary": "Intent: debug. Reduced estimated context from 47 to 31 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Fix missing field max_requests_per_day in ProviderConfig initializer at router/src/lib.rs ...",
+      "created_at": 1773519472
+    },
+    {
+      "fingerprint": 9271702967383698034,
+      "intent": "debug",
+      "raw_tokens_estimate": 8,
+      "compiled_tokens_estimate": 10,
+      "summary": "Intent: debug. Reduced estimated context from 8 to 10 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|test ...",
+      "created_at": 1773525078
+    },
+    {
+      "fingerprint": 7374753616703002473,
+      "intent": "general",
+      "raw_tokens_estimate": 23,
+      "compiled_tokens_estimate": 25,
+      "summary": "Intent: general. Reduced estimated context from 23 to 25 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Discussion about upcoming DISTIRA iterations and LinkedIn communication ...",
+      "created_at": 1773461207
+    },
+    {
+      "fingerprint": 1324878416449660251,
+      "intent": "general",
+      "raw_tokens_estimate": 12,
+      "compiled_tokens_estimate": 14,
+      "summary": "Intent: general. Reduced estimated context from 12 to 14 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|health check - verify ...",
+      "created_at": 1773452429
+    },
+    {
+      "fingerprint": 5988368974772434557,
+      "intent": "debug",
+      "raw_tokens_estimate": 39,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: debug. Reduced estimated context from 39 to 22 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|@distira agent still not showing in VS Code Copilot ...",
+      "created_at": 1773460020
+    },
+    {
+      "fingerprint": 16150089390088692795,
+      "intent": "general",
+      "raw_tokens_estimate": 21,
+      "compiled_tokens_estimate": 21,
+      "summary": "Intent: general. Reduced estimated context from 21 to 21 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Replace emojis with professional SVG icons in MemoryView ...",
+      "created_at": 1773528732
+    },
+    {
+      "fingerprint": 8851438590899947899,
+      "intent": "general",
+      "raw_tokens_estimate": 34,
+      "compiled_tokens_estimate": 25,
+      "summary": "Intent: general. Reduced estimated context from 34 to 25 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Pourquoi malgré 2 récentes requêtes il n'y a ...",
+      "created_at": 1773524219
+    },
+    {
+      "fingerprint": 1057678211070359286,
+      "intent": "general",
+      "raw_tokens_estimate": 14,
+      "compiled_tokens_estimate": 16,
+      "summary": "Intent: general. Reduced estimated context from 14 to 16 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|A quoi sert Memory Reused tokens ...",
+      "created_at": 1773525511
+    },
+    {
+      "fingerprint": 12638352127299873646,
+      "intent": "general",
+      "raw_tokens_estimate": 1,
+      "compiled_tokens_estimate": 1,
+      "summary": "Intent: general. Reduced estimated context from 1 to 1 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "",
+      "created_at": 1773446535
+    },
+    {
+      "fingerprint": 5072821791127692047,
+      "intent": "general",
+      "raw_tokens_estimate": 42,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: general. Reduced estimated context from 42 to 23 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Audit trail dynamique et auditable - chaque dÃ©cision ...",
+      "created_at": 1773526026
+    },
+    {
+      "fingerprint": 12991895568732174329,
+      "intent": "general",
+      "raw_tokens_estimate": 25,
+      "compiled_tokens_estimate": 19,
+      "summary": "Intent: general. Reduced estimated context from 25 to 19 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Is it normal that Reused Tokens shows 17 ...",
+      "created_at": 1773523258
+    },
+    {
+      "fingerprint": 14551990969649365271,
+      "intent": "general",
+      "raw_tokens_estimate": 46,
+      "compiled_tokens_estimate": 26,
+      "summary": "Intent: general. Reduced estimated context from 46 to 26 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|MCP status check: Is the Distira MCP server correctly connected to VS Code Copilot Chat? ...",
+      "created_at": 1773446944
+    },
+    {
+      "fingerprint": 12621793142422189646,
+      "intent": "general",
+      "raw_tokens_estimate": 32,
+      "compiled_tokens_estimate": 18,
+      "summary": "Intent: general. Reduced estimated context from 32 to 18 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Il faut que cela soit comme tout le ...",
+      "created_at": 1773524552
+    },
+    {
+      "fingerprint": 13633043931202537950,
+      "intent": "general",
+      "raw_tokens_estimate": 14,
+      "compiled_tokens_estimate": 18,
+      "summary": "Intent: general. Reduced estimated context from 14 to 18 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|test live dashboard update - requête ...",
+      "created_at": 1773459343
+    },
+    {
+      "fingerprint": 9051423584075268846,
+      "intent": "general",
+      "raw_tokens_estimate": 42,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 42 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Quels sont les optimisations possibles pour DISTIRA selon ...",
+      "created_at": 1773519363
+    },
     {
       "fingerprint": 15346885113162753947,
       "intent": "debug",
@@ -1342,364 +1969,22 @@
       "created_at": 1773459415
     },
     {
-      "fingerprint": 4493670442940444874,
-      "intent": "general",
-      "raw_tokens_estimate": 28,
-      "compiled_tokens_estimate": 24,
-      "summary": "Intent: general. Reduced estimated context from 28 to 24 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Il faut automatiser l'appel distira_compile à chaque réponse ...",
-      "created_at": 1773518940
-    },
-    {
-      "fingerprint": 7914118774547064933,
-      "intent": "general",
-      "raw_tokens_estimate": 50,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: general. Reduced estimated context from 50 to 22 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Reused Tokens 17 ne bouge pas - memory_reused_tokens ...",
-      "created_at": 1773525357
-    },
-    {
-      "fingerprint": 4885177160968071103,
-      "intent": "general",
-      "raw_tokens_estimate": 41,
-      "compiled_tokens_estimate": 32,
-      "summary": "Intent: general. Reduced estimated context from 41 to 32 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Preparing for next iteration V9.10 tomorrow: DELETE /v1/metrics/reset, ...",
-      "created_at": 1773461356
-    },
-    {
-      "fingerprint": 7374753616703002473,
-      "intent": "general",
-      "raw_tokens_estimate": 23,
-      "compiled_tokens_estimate": 25,
-      "summary": "Intent: general. Reduced estimated context from 23 to 25 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Discussion about upcoming DISTIRA iterations and LinkedIn communication ...",
-      "created_at": 1773461207
-    },
-    {
-      "fingerprint": 16320271377359283698,
-      "intent": "debug",
-      "raw_tokens_estimate": 34,
-      "compiled_tokens_estimate": 24,
-      "summary": "Intent: debug. Reduced estimated context from 34 to 24 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|error: thread 'main' panicked at 'index out of bounds: ...",
-      "created_at": 1773459408
-    },
-    {
-      "fingerprint": 5857413712018688965,
-      "intent": "debug",
-      "raw_tokens_estimate": 130,
-      "compiled_tokens_estimate": 80,
-      "summary": "Intent: debug. Reduced estimated context from 130 to 80 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|You are a senior Rust engineer helping diagnose production crashes. Our service panics in production. Logs: ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil pointer dereference goroutine 1 main.(*DBPool).Acquire pool.go:87 Root cause: nil ...",
-      "created_at": 1773446564
-    },
-    {
-      "fingerprint": 8851438590899947899,
-      "intent": "general",
-      "raw_tokens_estimate": 34,
-      "compiled_tokens_estimate": 25,
-      "summary": "Intent: general. Reduced estimated context from 34 to 25 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Pourquoi malgré 2 récentes requêtes il n'y a ...",
-      "created_at": 1773524219
-    },
-    {
-      "fingerprint": 9051423584075268846,
-      "intent": "general",
-      "raw_tokens_estimate": 42,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: general. Reduced estimated context from 42 to 22 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Quels sont les optimisations possibles pour DISTIRA selon ...",
-      "created_at": 1773519363
-    },
-    {
-      "fingerprint": 6353571244721902484,
-      "intent": "general",
-      "raw_tokens_estimate": 52,
-      "compiled_tokens_estimate": 39,
-      "summary": "Intent: general. Reduced estimated context from 52 to 39 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Clarification: product name is DISTIRA (d-i-s-t-i-r-a), folder on disk ...",
-      "created_at": 1773462123
-    },
-    {
-      "fingerprint": 3340392064253580669,
-      "intent": "general",
-      "raw_tokens_estimate": 74,
-      "compiled_tokens_estimate": 46,
-      "summary": "Intent: general. Reduced estimated context from 74 to 46 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Implement V9.10.1 TokenOptimizer in compiler crate: whitespace normalization, JSON compaction, number formatting, repeated phrase dedup, code ...",
-      "created_at": 1773517797
-    },
-    {
-      "fingerprint": 10337431104576234312,
-      "intent": "debug",
-      "raw_tokens_estimate": 67,
-      "compiled_tokens_estimate": 42,
-      "summary": "Intent: debug. Reduced estimated context from 67 to 42 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|2024-01-15 ERROR db: connection failed dial tcp 10.0.0.5:5432 connect: connection refused retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil ...",
-      "created_at": 1773446128
-    },
-    {
-      "fingerprint": 9375416537127978950,
-      "intent": "general",
-      "raw_tokens_estimate": 34,
-      "compiled_tokens_estimate": 20,
-      "summary": "Intent: general. Reduced estimated context from 34 to 20 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|What improvements could be made to the DISTIRA ...",
-      "created_at": 1773460372
-    },
-    {
-      "fingerprint": 17185478699218872338,
-      "intent": "general",
-      "raw_tokens_estimate": 56,
-      "compiled_tokens_estimate": 29,
-      "summary": "Intent: general. Reduced estimated context from 56 to 29 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Are there existing production-grade tokenizer tools for Mistral, Llama, Qwen, ...",
-      "created_at": 1773453152
-    },
-    {
-      "fingerprint": 13622943012937592796,
-      "intent": "general",
-      "raw_tokens_estimate": 24,
-      "compiled_tokens_estimate": 23,
-      "summary": "Intent: general. Reduced estimated context from 24 to 23 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Test efficiency score calculation after server rebuild. Checking ...",
-      "created_at": 1773461024
-    },
-    {
-      "fingerprint": 8440517712153994175,
-      "intent": "general",
-      "raw_tokens_estimate": 60,
-      "compiled_tokens_estimate": 32,
-      "summary": "Intent: general. Reduced estimated context from 60 to 32 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Change efficiency score calculation: instead of floor 30%, add 30% as sovereign ...",
-      "created_at": 1773460788
-    },
-    {
-      "fingerprint": 13633043931202537950,
-      "intent": "general",
-      "raw_tokens_estimate": 14,
-      "compiled_tokens_estimate": 18,
-      "summary": "Intent: general. Reduced estimated context from 14 to 18 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|test live dashboard update - requête ...",
-      "created_at": 1773459343
-    },
-    {
-      "fingerprint": 1324878416449660251,
-      "intent": "general",
-      "raw_tokens_estimate": 12,
-      "compiled_tokens_estimate": 14,
-      "summary": "Intent: general. Reduced estimated context from 12 to 14 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|health check - verify ...",
-      "created_at": 1773452429
-    },
-    {
-      "fingerprint": 10490942574422338149,
-      "intent": "summarize",
-      "raw_tokens_estimate": 18,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: summarize. Reduced estimated context from 18 to 22 tokens and compressed the transcript to the latest high-signal points.",
-      "compiled_context": "[k:summarize]|summarize the key architectural decisions made in this ...",
-      "created_at": 1773459412
-    },
-    {
-      "fingerprint": 13204829732094483989,
-      "intent": "general",
-      "raw_tokens_estimate": 16,
-      "compiled_tokens_estimate": 18,
-      "summary": "Intent: general. Reduced estimated context from 16 to 18 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Reply in one word only. Capital of France? Paris. Population?",
-      "created_at": 1773446655
-    },
-    {
-      "fingerprint": 6359800104848115740,
-      "intent": "general",
-      "raw_tokens_estimate": 56,
-      "compiled_tokens_estimate": 27,
-      "summary": "Intent: general. Reduced estimated context from 56 to 27 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Improve dashboard bar chart provider name display: shorten long provider ...",
-      "created_at": 1773461899
-    },
-    {
-      "fingerprint": 1611955546985147079,
-      "intent": "general",
-      "raw_tokens_estimate": 43,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: general. Reduced estimated context from 43 to 22 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Set minimum AI efficiency score floor to 30% ...",
-      "created_at": 1773460639
-    },
-    {
-      "fingerprint": 9271702967383698034,
-      "intent": "debug",
-      "raw_tokens_estimate": 8,
-      "compiled_tokens_estimate": 10,
-      "summary": "Intent: debug. Reduced estimated context from 8 to 10 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|test ...",
-      "created_at": 1773525078
-    },
-    {
-      "fingerprint": 12991895568732174329,
-      "intent": "general",
-      "raw_tokens_estimate": 25,
-      "compiled_tokens_estimate": 19,
-      "summary": "Intent: general. Reduced estimated context from 25 to 19 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Is it normal that Reused Tokens shows 17 ...",
-      "created_at": 1773523258
-    },
-    {
-      "fingerprint": 16355688510647601632,
-      "intent": "debug",
-      "raw_tokens_estimate": 50,
-      "compiled_tokens_estimate": 21,
-      "summary": "Intent: debug. Reduced estimated context from 50 to 21 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|Benchmarks view shows negative saved tokens for codegen and ...",
-      "created_at": 1773461508
-    },
-    {
-      "fingerprint": 14996624585939956983,
-      "intent": "general",
-      "raw_tokens_estimate": 44,
-      "compiled_tokens_estimate": 26,
-      "summary": "Intent: general. Reduced estimated context from 44 to 26 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Continue DISTIRA project iterations - V9.13 Memory stability ...",
-      "created_at": 1773519999
-    },
-    {
-      "fingerprint": 3963497400335545383,
-      "intent": "general",
-      "raw_tokens_estimate": 29,
-      "compiled_tokens_estimate": 23,
-      "summary": "Intent: general. Reduced estimated context from 29 to 23 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Pourquoi j'ai pas @distria ? The user cannot ...",
-      "created_at": 1773459908
-    },
-    {
-      "fingerprint": 12621793142422189646,
-      "intent": "general",
-      "raw_tokens_estimate": 32,
-      "compiled_tokens_estimate": 18,
-      "summary": "Intent: general. Reduced estimated context from 32 to 18 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Il faut que cela soit comme tout le ...",
-      "created_at": 1773524552
-    },
-    {
-      "fingerprint": 9953705670253448336,
-      "intent": "general",
-      "raw_tokens_estimate": 51,
-      "compiled_tokens_estimate": 34,
-      "summary": "Intent: general. Reduced estimated context from 51 to 34 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Implement V9.10: DELETE /v1/metrics/reset endpoint in Rust backend, dashboard ...",
-      "created_at": 1773517311
-    },
-    {
-      "fingerprint": 7319471201334746039,
-      "intent": "general",
-      "raw_tokens_estimate": 35,
-      "compiled_tokens_estimate": 23,
-      "summary": "Intent: general. Reduced estimated context from 35 to 23 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Remove mention of +30% sovereign bonus from the ...",
-      "created_at": 1773460863
-    },
-    {
-      "fingerprint": 5465441198155784657,
-      "intent": "general",
-      "raw_tokens_estimate": 38,
-      "compiled_tokens_estimate": 24,
-      "summary": "Intent: general. Reduced estimated context from 38 to 24 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Malgré les récents changements, les chiffres dans Context ...",
-      "created_at": 1773525012
-    },
-    {
-      "fingerprint": 9263184382924124552,
-      "intent": "general",
-      "raw_tokens_estimate": 54,
-      "compiled_tokens_estimate": 33,
-      "summary": "Intent: general. Reduced estimated context from 54 to 33 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Add improvement iterations to ROADMAP.md toward V10: DELETE /v1/metrics/reset, E2E ...",
-      "created_at": 1773460490
-    },
-    {
-      "fingerprint": 4877531500058267576,
-      "intent": "general",
-      "raw_tokens_estimate": 51,
-      "compiled_tokens_estimate": 27,
-      "summary": "Intent: general. Reduced estimated context from 51 to 27 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|continuions - resume at V9.16 release finalization: cargo fmt, ...",
-      "created_at": 1773522001
-    },
-    {
-      "fingerprint": 14466688963884948110,
-      "intent": "general",
-      "raw_tokens_estimate": 27,
-      "compiled_tokens_estimate": 23,
-      "summary": "Intent: general. Reduced estimated context from 27 to 23 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|How to add chat.agent.enabled flag in VS Code ...",
-      "created_at": 1773460232
-    },
-    {
-      "fingerprint": 1371050076928744382,
-      "intent": "general",
-      "raw_tokens_estimate": 48,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: general. Reduced estimated context from 48 to 22 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|User stuck at 30% efficiency score. Need to ...",
-      "created_at": 1773460904
-    },
-    {
-      "fingerprint": 7294020892820348209,
-      "intent": "general",
-      "raw_tokens_estimate": 14,
-      "compiled_tokens_estimate": 16,
-      "summary": "Intent: general. Reduced estimated context from 14 to 16 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|You are a helpful assistant. What is 2+2? 4. And 3+3?",
-      "created_at": 1773446613
-    },
-    {
-      "fingerprint": 10397056956543200707,
-      "intent": "debug",
-      "raw_tokens_estimate": 13,
-      "compiled_tokens_estimate": 16,
-      "summary": "Intent: debug. Reduced estimated context from 13 to 16 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|Can you show me the exact code fix for pool.go line 87?",
-      "created_at": 1773446544
-    },
-    {
-      "fingerprint": 6208340959708412316,
-      "intent": "general",
-      "raw_tokens_estimate": 24,
-      "compiled_tokens_estimate": 21,
-      "summary": "Intent: general. Reduced estimated context from 24 to 21 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Context Block Status section not meaningful to end ...",
-      "created_at": 1773525596
-    },
-    {
-      "fingerprint": 3514485783912649129,
-      "intent": "general",
-      "raw_tokens_estimate": 16,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: general. Reduced estimated context from 16 to 22 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Est-ce que c'est normal que Reused Tokens soit ...",
-      "created_at": 1773523353
-    },
-    {
-      "fingerprint": 12638352127299873646,
+      "fingerprint": 2271575940368597870,
       "intent": "general",
       "raw_tokens_estimate": 1,
-      "compiled_tokens_estimate": 1,
-      "summary": "Intent: general. Reduced estimated context from 1 to 1 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "",
-      "created_at": 1773446535
+      "compiled_tokens_estimate": 8,
+      "summary": "Intent: general. Reduced estimated context from 1 to 8 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|test",
+      "created_at": 1773529390
     },
     {
-      "fingerprint": 15140788319858001182,
+      "fingerprint": 11274100039847627137,
       "intent": "general",
-      "raw_tokens_estimate": 58,
-      "compiled_tokens_estimate": 35,
-      "summary": "Intent: general. Reduced estimated context from 58 to 35 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Continue DISTIRA iterations: V9.16 Latency-Aware Routing - track rolling average response ...",
-      "created_at": 1773521385
+      "raw_tokens_estimate": 20,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 20 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Continue DISTIRA development - check roadmap for next ...",
+      "created_at": 1773528905
     },
     {
       "fingerprint": 11480683495429080150,
@@ -1711,58 +1996,22 @@
       "created_at": 1773446723
     },
     {
-      "fingerprint": 1057678211070359286,
+      "fingerprint": 14996624585939956983,
       "intent": "general",
-      "raw_tokens_estimate": 14,
-      "compiled_tokens_estimate": 16,
-      "summary": "Intent: general. Reduced estimated context from 14 to 16 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|A quoi sert Memory Reused tokens ...",
-      "created_at": 1773525511
-    },
-    {
-      "fingerprint": 15496538832898051538,
-      "intent": "general",
-      "raw_tokens_estimate": 16,
-      "compiled_tokens_estimate": 21,
-      "summary": "Intent: general. Reduced estimated context from 16 to 21 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|implement a typescript function to parse JWT tokens ...",
-      "created_at": 1773525457
-    },
-    {
-      "fingerprint": 14240787143837098978,
-      "intent": "debug",
-      "raw_tokens_estimate": 68,
-      "compiled_tokens_estimate": 49,
-      "summary": "Intent: debug. Reduced estimated context from 68 to 49 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ...",
-      "created_at": 1773522140
-    },
-    {
-      "fingerprint": 11184980845543479893,
-      "intent": "debug",
-      "raw_tokens_estimate": 41,
-      "compiled_tokens_estimate": 24,
-      "summary": "Intent: debug. Reduced estimated context from 41 to 24 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|Run cargo fmt --all -- --check fix formatting error ...",
-      "created_at": 1773523956
-    },
-    {
-      "fingerprint": 14551990969649365271,
-      "intent": "general",
-      "raw_tokens_estimate": 46,
+      "raw_tokens_estimate": 44,
       "compiled_tokens_estimate": 26,
-      "summary": "Intent: general. Reduced estimated context from 46 to 26 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|MCP status check: Is the Distira MCP server correctly connected to VS Code Copilot Chat? ...",
-      "created_at": 1773446944
+      "summary": "Intent: general. Reduced estimated context from 44 to 26 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Continue DISTIRA project iterations - V9.13 Memory stability ...",
+      "created_at": 1773519999
     },
     {
-      "fingerprint": 18402317411799006816,
+      "fingerprint": 9953705670253448336,
       "intent": "general",
-      "raw_tokens_estimate": 43,
+      "raw_tokens_estimate": 51,
       "compiled_tokens_estimate": 34,
-      "summary": "Intent: general. Reduced estimated context from 43 to 34 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Implement V9.11: per-provider max_requests_per_day budget in providers.yaml, automatic ...",
-      "created_at": 1773518435
+      "summary": "Intent: general. Reduced estimated context from 51 to 34 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Implement V9.10: DELETE /v1/metrics/reset endpoint in Rust backend, dashboard ...",
+      "created_at": 1773517311
     },
     {
       "fingerprint": 571823978330740633,
@@ -1774,40 +2023,148 @@
       "created_at": 1773459264
     },
     {
-      "fingerprint": 5988368974772434557,
+      "fingerprint": 11184980845543479893,
       "intent": "debug",
-      "raw_tokens_estimate": 39,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: debug. Reduced estimated context from 39 to 22 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|@distira agent still not showing in VS Code Copilot ...",
-      "created_at": 1773460020
+      "raw_tokens_estimate": 41,
+      "compiled_tokens_estimate": 24,
+      "summary": "Intent: debug. Reduced estimated context from 41 to 24 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Run cargo fmt --all -- --check fix formatting error ...",
+      "created_at": 1773523956
     },
     {
-      "fingerprint": 15753786166317833697,
+      "fingerprint": 3963497400335545383,
+      "intent": "general",
+      "raw_tokens_estimate": 29,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: general. Reduced estimated context from 29 to 23 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Pourquoi j'ai pas @distria ? The user cannot ...",
+      "created_at": 1773459908
+    },
+    {
+      "fingerprint": 6353571244721902484,
+      "intent": "general",
+      "raw_tokens_estimate": 52,
+      "compiled_tokens_estimate": 39,
+      "summary": "Intent: general. Reduced estimated context from 52 to 39 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Clarification: product name is DISTIRA (d-i-s-t-i-r-a), folder on disk ...",
+      "created_at": 1773462123
+    },
+    {
+      "fingerprint": 4885177160968071103,
+      "intent": "general",
+      "raw_tokens_estimate": 41,
+      "compiled_tokens_estimate": 32,
+      "summary": "Intent: general. Reduced estimated context from 41 to 32 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Preparing for next iteration V9.10 tomorrow: DELETE /v1/metrics/reset, ...",
+      "created_at": 1773461356
+    },
+    {
+      "fingerprint": 9375416537127978950,
+      "intent": "general",
+      "raw_tokens_estimate": 34,
+      "compiled_tokens_estimate": 20,
+      "summary": "Intent: general. Reduced estimated context from 34 to 20 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|What improvements could be made to the DISTIRA ...",
+      "created_at": 1773460372
+    },
+    {
+      "fingerprint": 8440517712153994175,
+      "intent": "general",
+      "raw_tokens_estimate": 60,
+      "compiled_tokens_estimate": 32,
+      "summary": "Intent: general. Reduced estimated context from 60 to 32 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Change efficiency score calculation: instead of floor 30%, add 30% as sovereign ...",
+      "created_at": 1773460788
+    },
+    {
+      "fingerprint": 1371050076928744382,
+      "intent": "general",
+      "raw_tokens_estimate": 48,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 48 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|User stuck at 30% efficiency score. Need to ...",
+      "created_at": 1773460904
+    },
+    {
+      "fingerprint": 3874556199129105479,
+      "intent": "general",
+      "raw_tokens_estimate": 59,
+      "compiled_tokens_estimate": 34,
+      "summary": "Intent: general. Reduced estimated context from 59 to 34 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Continue V10.3 implementation: add budgetUsedPct/budgetPctClass computed to OverviewView.vue ...",
+      "created_at": 1773529278
+    },
+    {
+      "fingerprint": 10337431104576234312,
+      "intent": "debug",
+      "raw_tokens_estimate": 67,
+      "compiled_tokens_estimate": 42,
+      "summary": "Intent: debug. Reduced estimated context from 67 to 42 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|2024-01-15 ERROR db: connection failed dial tcp 10.0.0.5:5432 connect: connection refused retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil ...",
+      "created_at": 1773446128
+    },
+    {
+      "fingerprint": 10397056956543200707,
+      "intent": "debug",
+      "raw_tokens_estimate": 13,
+      "compiled_tokens_estimate": 16,
+      "summary": "Intent: debug. Reduced estimated context from 13 to 16 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Can you show me the exact code fix for pool.go line 87?",
+      "created_at": 1773446544
+    },
+    {
+      "fingerprint": 16320271377359283698,
+      "intent": "debug",
+      "raw_tokens_estimate": 34,
+      "compiled_tokens_estimate": 24,
+      "summary": "Intent: debug. Reduced estimated context from 34 to 24 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|error: thread 'main' panicked at 'index out of bounds: ...",
+      "created_at": 1773459408
+    },
+    {
+      "fingerprint": 7914118774547064933,
       "intent": "general",
       "raw_tokens_estimate": 50,
-      "compiled_tokens_estimate": 30,
-      "summary": "Intent: general. Reduced estimated context from 50 to 30 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Tokenizer-aware prompt pre-processing optimization: BPE whitespace normalization, JSON ...",
-      "created_at": 1773517733
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 50 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Reused Tokens 17 ne bouge pas - memory_reused_tokens ...",
+      "created_at": 1773525357
     },
     {
-      "fingerprint": 1785656827680731086,
-      "intent": "general",
-      "raw_tokens_estimate": 47,
-      "compiled_tokens_estimate": 23,
-      "summary": "Intent: general. Reduced estimated context from 47 to 23 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Pourquoi distira ne s'enclenche pas a chaque fois ...",
-      "created_at": 1773518900
-    },
-    {
-      "fingerprint": 4107398640131594682,
+      "fingerprint": 5857413712018688965,
       "intent": "debug",
-      "raw_tokens_estimate": 47,
-      "compiled_tokens_estimate": 31,
-      "summary": "Intent: debug. Reduced estimated context from 47 to 31 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|Fix missing field max_requests_per_day in ProviderConfig initializer at router/src/lib.rs ...",
-      "created_at": 1773519472
+      "raw_tokens_estimate": 130,
+      "compiled_tokens_estimate": 80,
+      "summary": "Intent: debug. Reduced estimated context from 130 to 80 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|You are a senior Rust engineer helping diagnose production crashes. Our service panics in production. Logs: ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil pointer dereference goroutine 1 main.(*DBPool).Acquire pool.go:87 Root cause: nil ...",
+      "created_at": 1773446564
+    },
+    {
+      "fingerprint": 14240787143837098978,
+      "intent": "debug",
+      "raw_tokens_estimate": 68,
+      "compiled_tokens_estimate": 49,
+      "summary": "Intent: debug. Reduced estimated context from 68 to 49 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ...",
+      "created_at": 1773522140
+    },
+    {
+      "fingerprint": 13204829732094483989,
+      "intent": "general",
+      "raw_tokens_estimate": 16,
+      "compiled_tokens_estimate": 18,
+      "summary": "Intent: general. Reduced estimated context from 16 to 18 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Reply in one word only. Capital of France? Paris. Population?",
+      "created_at": 1773446655
+    },
+    {
+      "fingerprint": 7319471201334746039,
+      "intent": "general",
+      "raw_tokens_estimate": 35,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: general. Reduced estimated context from 35 to 23 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Remove mention of +30% sovereign bonus from the ...",
+      "created_at": 1773460863
     },
     {
       "fingerprint": 13122807935544650924,
@@ -1819,22 +2176,31 @@
       "created_at": 1773520205
     },
     {
-      "fingerprint": 15793213290072416126,
+      "fingerprint": 3317143531942121987,
       "intent": "general",
-      "raw_tokens_estimate": 37,
-      "compiled_tokens_estimate": 22,
-      "summary": "Intent: general. Reduced estimated context from 37 to 22 tokens and trimmed low-signal context while preserving the main request.",
-      "compiled_context": "[k:general]|Why are Context Memory metrics (Reused Tokens, Reuse ...",
-      "created_at": 1773522892
+      "raw_tokens_estimate": 26,
+      "compiled_tokens_estimate": 30,
+      "summary": "Intent: general. Reduced estimated context from 26 to 30 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|AmÃ©lioration expÃ©rience utilisateur DISTIRA outil pre-LLM optimisation calcul ...",
+      "created_at": 1773525892
     },
     {
-      "fingerprint": 12779810459712034369,
+      "fingerprint": 18013287927905389549,
       "intent": "debug",
-      "raw_tokens_estimate": 43,
-      "compiled_tokens_estimate": 23,
-      "summary": "Intent: debug. Reduced estimated context from 43 to 23 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
-      "compiled_context": "[k:debug]|User observation: real usage = copy/paste stack traces, error ...",
-      "created_at": 1773461739
+      "raw_tokens_estimate": 39,
+      "compiled_tokens_estimate": 30,
+      "summary": "Intent: debug. Reduced estimated context from 39 to 30 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Remove 0% benchmark entries for codegen and summarization from BenchmarksView. Fix README ...",
+      "created_at": 1773526541
+    },
+    {
+      "fingerprint": 10490942574422338149,
+      "intent": "summarize",
+      "raw_tokens_estimate": 18,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: summarize. Reduced estimated context from 18 to 22 tokens and compressed the transcript to the latest high-signal points.",
+      "compiled_context": "[k:summarize]|summarize the key architectural decisions made in this ...",
+      "created_at": 1773459412
     },
     {
       "fingerprint": 13630229181434885465,
@@ -1846,6 +2212,33 @@
       "created_at": 1773459340
     },
     {
+      "fingerprint": 18402317411799006816,
+      "intent": "general",
+      "raw_tokens_estimate": 43,
+      "compiled_tokens_estimate": 34,
+      "summary": "Intent: general. Reduced estimated context from 43 to 34 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Implement V9.11: per-provider max_requests_per_day budget in providers.yaml, automatic ...",
+      "created_at": 1773518435
+    },
+    {
+      "fingerprint": 17185478699218872338,
+      "intent": "general",
+      "raw_tokens_estimate": 56,
+      "compiled_tokens_estimate": 29,
+      "summary": "Intent: general. Reduced estimated context from 56 to 29 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Are there existing production-grade tokenizer tools for Mistral, Llama, Qwen, ...",
+      "created_at": 1773453152
+    },
+    {
+      "fingerprint": 3514485783912649129,
+      "intent": "general",
+      "raw_tokens_estimate": 16,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 16 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Est-ce que c'est normal que Reused Tokens soit ...",
+      "created_at": 1773523353
+    },
+    {
       "fingerprint": 954453020827799537,
       "intent": "debug",
       "raw_tokens_estimate": 24,
@@ -1853,390 +2246,445 @@
       "summary": "Intent: debug. Reduced estimated context from 24 to 23 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
       "compiled_context": "[k:debug]|Fix TvChart sparkline: curves clipped at top, yMax needs ...",
       "created_at": 1773518276
+    },
+    {
+      "fingerprint": 14466688963884948110,
+      "intent": "general",
+      "raw_tokens_estimate": 27,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: general. Reduced estimated context from 27 to 23 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|How to add chat.agent.enabled flag in VS Code ...",
+      "created_at": 1773460232
+    },
+    {
+      "fingerprint": 1611955546985147079,
+      "intent": "general",
+      "raw_tokens_estimate": 43,
+      "compiled_tokens_estimate": 22,
+      "summary": "Intent: general. Reduced estimated context from 43 to 22 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Set minimum AI efficiency score floor to 30% ...",
+      "created_at": 1773460639
+    },
+    {
+      "fingerprint": 6208340959708412316,
+      "intent": "general",
+      "raw_tokens_estimate": 24,
+      "compiled_tokens_estimate": 21,
+      "summary": "Intent: general. Reduced estimated context from 24 to 21 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Context Block Status section not meaningful to end ...",
+      "created_at": 1773525596
     }
   ],
   "chat_cache": {},
   "context_blocks": [
     {
-      "id": "15496538832898051538",
-      "stability": 0.8464,
-      "content": "[k:general]|implement a typescript function to parse JWT tokens ...",
-      "intent": "general"
-    },
-    {
-      "id": "4885177160968071103",
-      "stability": 0.716393,
-      "content": "[k:general]|Preparing for next iteration V9.10 tomorrow: DELETE /v1/metrics/reset, ...",
-      "intent": ""
-    },
-    {
-      "id": "7319471201334746039",
-      "stability": 0.716393,
-      "content": "[k:general]|Remove mention of +30% sovereign bonus from the ...",
-      "intent": ""
-    },
-    {
-      "id": "15793213290072416126",
-      "stability": 0.716393,
-      "content": "[k:general]|Why are Context Memory metrics (Reused Tokens, Reuse ...",
-      "intent": ""
-    },
-    {
-      "id": "14466688963884948110",
-      "stability": 0.716393,
-      "content": "[k:general]|How to add chat.agent.enabled flag in VS Code ...",
-      "intent": ""
-    },
-    {
-      "id": "13630229181434885465",
-      "stability": 0.716393,
-      "content": "[k:general]|test live dashboard update - requête ...",
-      "intent": ""
-    },
-    {
-      "id": "954453020827799537",
-      "stability": 0.716393,
-      "content": "[k:debug]|Fix TvChart sparkline: curves clipped at top, yMax needs ...",
-      "intent": ""
-    },
-    {
-      "id": "1324878416449660251",
-      "stability": 0.716393,
-      "content": "[k:general]|health check - verify ...",
-      "intent": ""
-    },
-    {
-      "id": "11184980845543479893",
-      "stability": 0.716393,
-      "content": "[k:debug]|Run cargo fmt --all -- --check fix formatting error ...",
-      "intent": ""
-    },
-    {
-      "id": "9953705670253448336",
-      "stability": 0.716393,
-      "content": "[k:general]|Implement V9.10: DELETE /v1/metrics/reset endpoint in Rust backend, dashboard ...",
-      "intent": ""
-    },
-    {
-      "id": "6353571244721902484",
-      "stability": 0.716393,
-      "content": "[k:general]|Clarification: product name is DISTIRA (d-i-s-t-i-r-a), folder on disk ...",
-      "intent": ""
-    },
-    {
-      "id": "3190483154157174394",
-      "stability": 0.716393,
-      "content": "[k:codegen]|write a typescript function to parse a JWT ...",
-      "intent": ""
-    },
-    {
-      "id": "10337431104576234312",
-      "stability": 0.716393,
-      "content": "[k:debug]|2024-01-15 ERROR db: connection failed dial tcp 10.0.0.5:5432 connect: connection refused retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil ...",
-      "intent": ""
-    },
-    {
-      "id": "6359800104848115740",
-      "stability": 0.716393,
-      "content": "[k:general]|Improve dashboard bar chart provider name display: shorten long provider ...",
-      "intent": ""
-    },
-    {
-      "id": "17185478699218872338",
-      "stability": 0.716393,
-      "content": "[k:general]|Are there existing production-grade tokenizer tools for Mistral, Llama, Qwen, ...",
-      "intent": ""
-    },
-    {
-      "id": "8851438590899947899",
-      "stability": 0.716393,
-      "content": "[k:general]|Pourquoi malgré 2 récentes requêtes il n'y a ...",
-      "intent": ""
-    },
-    {
-      "id": "12991895568732174329",
-      "stability": 0.716393,
-      "content": "[k:general]|Is it normal that Reused Tokens shows 17 ...",
-      "intent": ""
-    },
-    {
-      "id": "3963497400335545383",
-      "stability": 0.716393,
-      "content": "[k:general]|Pourquoi j'ai pas @distria ? The user cannot ...",
-      "intent": ""
-    },
-    {
-      "id": "15753786166317833697",
-      "stability": 0.716393,
-      "content": "[k:general]|Tokenizer-aware prompt pre-processing optimization: BPE whitespace normalization, JSON ...",
-      "intent": ""
-    },
-    {
-      "id": "5857413712018688965",
-      "stability": 0.716393,
-      "content": "[k:debug]|You are a senior Rust engineer helping diagnose production crashes. Our service panics in production. Logs: ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil pointer dereference goroutine 1 main.(*DBPool).Acquire pool.go:87 Root cause: nil ...",
-      "intent": ""
-    },
-    {
-      "id": "16355688510647601632",
-      "stability": 0.716393,
-      "content": "[k:debug]|Benchmarks view shows negative saved tokens for codegen and ...",
-      "intent": ""
-    },
-    {
-      "id": "12621793142422189646",
-      "stability": 0.716393,
-      "content": "[k:general]|Il faut que cela soit comme tout le ...",
-      "intent": ""
-    },
-    {
-      "id": "10490942574422338149",
-      "stability": 0.716393,
-      "content": "[k:summarize]|summarize the key architectural decisions made in this ...",
-      "intent": ""
-    },
-    {
-      "id": "5988368974772434557",
-      "stability": 0.716393,
-      "content": "[k:debug]|@distira agent still not showing in VS Code Copilot ...",
+      "id": "1785656827680731086",
+      "stability": 0.36766648,
+      "content": "[k:general]|Pourquoi distira ne s'enclenche pas a chaque fois ...",
       "intent": ""
     },
     {
       "id": "4877531500058267576",
-      "stability": 0.716393,
+      "stability": 0.36766648,
       "content": "[k:general]|continuions - resume at V9.16 release finalization: cargo fmt, ...",
       "intent": ""
     },
     {
-      "id": "9375416537127978950",
-      "stability": 0.716393,
-      "content": "[k:general]|What improvements could be made to the DISTIRA ...",
-      "intent": ""
-    },
-    {
-      "id": "15140788319858001182",
-      "stability": 0.716393,
-      "content": "[k:general]|Continue DISTIRA iterations: V9.16 Latency-Aware Routing - track rolling average response ...",
-      "intent": ""
-    },
-    {
-      "id": "7294020892820348209",
-      "stability": 0.716393,
-      "content": "[k:general]|You are a helpful assistant. What is 2+2? 4. And 3+3?",
-      "intent": ""
-    },
-    {
-      "id": "12638352127299873646",
-      "stability": 0.716393,
-      "content": "",
-      "intent": ""
-    },
-    {
       "id": "1057678211070359286",
-      "stability": 0.92,
+      "stability": 0.47216144,
       "content": "[k:general]|A quoi sert Memory Reused tokens ...",
       "intent": "general"
     },
     {
-      "id": "5465441198155784657",
-      "stability": 0.716393,
-      "content": "[k:general]|Malgré les récents changements, les chiffres dans Context ...",
+      "id": "4493670442940444874",
+      "stability": 0.36766648,
+      "content": "[k:general]|Il faut automatiser l'appel distira_compile à chaque réponse ...",
       "intent": ""
     },
     {
-      "id": "571823978330740633",
-      "stability": 0.716393,
-      "content": "[k:general]|test distira dashboard ...",
+      "id": "17185478699218872338",
+      "stability": 0.36766648,
+      "content": "[k:general]|Are there existing production-grade tokenizer tools for Mistral, Llama, Qwen, ...",
       "intent": ""
     },
     {
-      "id": "14551990969649365271",
-      "stability": 0.716393,
-      "content": "[k:general]|MCP status check: Is the Distira MCP server correctly connected to VS Code Copilot Chat? ...",
+      "id": "5072821791127692047",
+      "stability": 0.6063551,
+      "content": "[k:general]|Audit trail dynamique et auditable - chaque dÃ©cision ...",
+      "intent": "general"
+    },
+    {
+      "id": "11480683495429080150",
+      "stability": 0.36766648,
+      "content": "[k:debug]|ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL all retries exhausted panic ...",
       "intent": ""
     },
     {
-      "id": "9271702967383698034",
-      "stability": 0.716393,
-      "content": "[k:debug]|test ...",
+      "id": "15140788319858001182",
+      "stability": 0.36766648,
+      "content": "[k:general]|Continue DISTIRA iterations: V9.16 Latency-Aware Routing - track rolling average response ...",
       "intent": ""
     },
     {
-      "id": "10397056956543200707",
-      "stability": 0.716393,
-      "content": "[k:debug]|Can you show me the exact code fix for pool.go line 87?",
+      "id": "14466688963884948110",
+      "stability": 0.36766648,
+      "content": "[k:general]|How to add chat.agent.enabled flag in VS Code ...",
       "intent": ""
     },
     {
-      "id": "9051423584075268846",
-      "stability": 0.716393,
-      "content": "[k:general]|Quels sont les optimisations possibles pour DISTIRA selon ...",
+      "id": "16355688510647601632",
+      "stability": 0.36766648,
+      "content": "[k:debug]|Benchmarks view shows negative saved tokens for codegen and ...",
       "intent": ""
     },
     {
-      "id": "14240787143837098978",
-      "stability": 0.716393,
-      "content": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ...",
+      "id": "6353571244721902484",
+      "stability": 0.36766648,
+      "content": "[k:general]|Clarification: product name is DISTIRA (d-i-s-t-i-r-a), folder on disk ...",
+      "intent": ""
+    },
+    {
+      "id": "12621793142422189646",
+      "stability": 0.36766648,
+      "content": "[k:general]|Il faut que cela soit comme tout le ...",
       "intent": ""
     },
     {
       "id": "12779810459712034369",
-      "stability": 0.716393,
+      "stability": 0.36766648,
       "content": "[k:debug]|User observation: real usage = copy/paste stack traces, error ...",
       "intent": ""
     },
     {
-      "id": "13622943012937592796",
-      "stability": 0.716393,
-      "content": "[k:general]|Test efficiency score calculation after server rebuild. Checking ...",
+      "id": "15793213290072416126",
+      "stability": 0.36766648,
+      "content": "[k:general]|Why are Context Memory metrics (Reused Tokens, Reuse ...",
+      "intent": ""
+    },
+    {
+      "id": "13630229181434885465",
+      "stability": 0.36766648,
+      "content": "[k:general]|test live dashboard update - requête ...",
+      "intent": ""
+    },
+    {
+      "id": "5988368974772434557",
+      "stability": 0.36766648,
+      "content": "[k:debug]|@distira agent still not showing in VS Code Copilot ...",
+      "intent": ""
+    },
+    {
+      "id": "571823978330740633",
+      "stability": 0.36766648,
+      "content": "[k:general]|test distira dashboard ...",
       "intent": ""
     },
     {
       "id": "7374753616703002473",
-      "stability": 0.716393,
+      "stability": 0.36766648,
       "content": "[k:general]|Discussion about upcoming DISTIRA iterations and LinkedIn communication ...",
       "intent": ""
     },
     {
+      "id": "10337431104576234312",
+      "stability": 0.36766648,
+      "content": "[k:debug]|2024-01-15 ERROR db: connection failed dial tcp 10.0.0.5:5432 connect: connection refused retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil ...",
+      "intent": ""
+    },
+    {
+      "id": "13204829732094483989",
+      "stability": 0.36766648,
+      "content": "[k:general]|Reply in one word only. Capital of France? Paris. Population?",
+      "intent": ""
+    },
+    {
+      "id": "10397056956543200707",
+      "stability": 0.36766648,
+      "content": "[k:debug]|Can you show me the exact code fix for pool.go line 87?",
+      "intent": ""
+    },
+    {
+      "id": "7914118774547064933",
+      "stability": 0.39963746,
+      "content": "[k:general]|Reused Tokens 17 ne bouge pas - memory_reused_tokens ...",
+      "intent": "general"
+    },
+    {
       "id": "4107398640131594682",
-      "stability": 0.716393,
+      "stability": 0.36766648,
       "content": "[k:debug]|Fix missing field max_requests_per_day in ProviderConfig initializer at router/src/lib.rs ...",
       "intent": ""
     },
     {
       "id": "18402317411799006816",
-      "stability": 0.716393,
+      "stability": 0.36766648,
       "content": "[k:general]|Implement V9.11: per-provider max_requests_per_day budget in providers.yaml, automatic ...",
       "intent": ""
     },
     {
-      "id": "1785656827680731086",
-      "stability": 0.716393,
-      "content": "[k:general]|Pourquoi distira ne s'enclenche pas a chaque fois ...",
+      "id": "13622943012937592796",
+      "stability": 0.36766648,
+      "content": "[k:general]|Test efficiency score calculation after server rebuild. Checking ...",
       "intent": ""
     },
     {
-      "id": "14996624585939956983",
-      "stability": 0.716393,
-      "content": "[k:general]|Continue DISTIRA project iterations - V9.13 Memory stability ...",
-      "intent": ""
-    },
-    {
-      "id": "3340392064253580669",
-      "stability": 0.716393,
-      "content": "[k:general]|Implement V9.10.1 TokenOptimizer in compiler crate: whitespace normalization, JSON compaction, number formatting, repeated phrase dedup, code ...",
-      "intent": ""
-    },
-    {
-      "id": "16320271377359283698",
-      "stability": 0.716393,
-      "content": "[k:debug]|error: thread 'main' panicked at 'index out of bounds: ...",
-      "intent": ""
-    },
-    {
-      "id": "15346885113162753947",
-      "stability": 0.716393,
-      "content": "[k:debug]|Fix cargo fmt formatting error in compiler/src/optimizer.rs line 305 ...",
-      "intent": ""
-    },
-    {
-      "id": "13122807935544650924",
-      "stability": 0.716393,
-      "content": "[k:general]|Continue iterations V9.15 quality-tier routing + fallback chains, then implement response ...",
-      "intent": ""
-    },
-    {
-      "id": "11480683495429080150",
-      "stability": 0.716393,
-      "content": "[k:debug]|ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL all retries exhausted panic ...",
-      "intent": ""
-    },
-    {
-      "id": "8440517712153994175",
-      "stability": 0.716393,
-      "content": "[k:general]|Change efficiency score calculation: instead of floor 30%, add 30% as sovereign ...",
-      "intent": ""
-    },
-    {
-      "id": "4493670442940444874",
-      "stability": 0.716393,
-      "content": "[k:general]|Il faut automatiser l'appel distira_compile à chaque réponse ...",
-      "intent": ""
+      "id": "3317143531942121987",
+      "stability": 0.55784667,
+      "content": "[k:general]|AmÃ©lioration expÃ©rience utilisateur DISTIRA outil pre-LLM optimisation calcul ...",
+      "intent": "general"
     },
     {
       "id": "6208340959708412316",
-      "stability": 1.0,
+      "stability": 0.51321894,
       "content": "[k:general]|Context Block Status section not meaningful to end ...",
       "intent": "general"
     },
     {
-      "id": "9263184382924124552",
-      "stability": 0.716393,
-      "content": "[k:general]|Add improvement iterations to ROADMAP.md toward V10: DELETE /v1/metrics/reset, E2E ...",
+      "id": "14240787143837098978",
+      "stability": 0.36766648,
+      "content": "[k:debug]|Fix clippy error: manual implementation of split_once in core/src/main.rs line 1079 - .splitn(2, '|').nth(1) should ...",
       "intent": ""
     },
     {
-      "id": "1371050076928744382",
-      "stability": 0.716393,
-      "content": "[k:general]|User stuck at 30% efficiency score. Need to ...",
-      "intent": ""
-    },
-    {
-      "id": "1611955546985147079",
-      "stability": 0.716393,
-      "content": "[k:general]|Set minimum AI efficiency score floor to 30% ...",
-      "intent": ""
-    },
-    {
-      "id": "7914118774547064933",
-      "stability": 0.778688,
-      "content": "[k:general]|Reused Tokens 17 ne bouge pas - memory_reused_tokens ...",
-      "intent": "general"
-    },
-    {
-      "id": "3514485783912649129",
-      "stability": 0.716393,
-      "content": "[k:general]|Est-ce que c'est normal que Reused Tokens soit ...",
+      "id": "3340392064253580669",
+      "stability": 0.36766648,
+      "content": "[k:general]|Implement V9.10.1 TokenOptimizer in compiler crate: whitespace normalization, JSON compaction, number formatting, repeated phrase dedup, code ...",
       "intent": ""
     },
     {
       "id": "13633043931202537950",
-      "stability": 0.716393,
+      "stability": 0.36766648,
       "content": "[k:general]|test live dashboard update - requête ...",
       "intent": ""
     },
     {
-      "id": "13204829732094483989",
-      "stability": 0.716393,
-      "content": "[k:general]|Reply in one word only. Capital of France? Paris. Population?",
+      "id": "4885177160968071103",
+      "stability": 0.36766648,
+      "content": "[k:general]|Preparing for next iteration V9.10 tomorrow: DELETE /v1/metrics/reset, ...",
       "intent": ""
+    },
+    {
+      "id": "3514485783912649129",
+      "stability": 0.36766648,
+      "content": "[k:general]|Est-ce que c'est normal que Reused Tokens soit ...",
+      "intent": ""
+    },
+    {
+      "id": "16150089390088692795",
+      "stability": 0.778688,
+      "content": "[k:general]|Replace emojis with professional SVG icons in MemoryView ...",
+      "intent": "general"
+    },
+    {
+      "id": "8440517712153994175",
+      "stability": 0.36766648,
+      "content": "[k:general]|Change efficiency score calculation: instead of floor 30%, add 30% as sovereign ...",
+      "intent": ""
+    },
+    {
+      "id": "3963497400335545383",
+      "stability": 0.36766648,
+      "content": "[k:general]|Pourquoi j'ai pas @distria ? The user cannot ...",
+      "intent": ""
+    },
+    {
+      "id": "5465441198155784657",
+      "stability": 0.36766648,
+      "content": "[k:general]|Malgré les récents changements, les chiffres dans Context ...",
+      "intent": ""
+    },
+    {
+      "id": "9953705670253448336",
+      "stability": 0.36766648,
+      "content": "[k:general]|Implement V9.10: DELETE /v1/metrics/reset endpoint in Rust backend, dashboard ...",
+      "intent": ""
+    },
+    {
+      "id": "7294020892820348209",
+      "stability": 0.36766648,
+      "content": "[k:general]|You are a helpful assistant. What is 2+2? 4. And 3+3?",
+      "intent": ""
+    },
+    {
+      "id": "9375416537127978950",
+      "stability": 0.36766648,
+      "content": "[k:general]|What improvements could be made to the DISTIRA ...",
+      "intent": ""
+    },
+    {
+      "id": "9263184382924124552",
+      "stability": 0.36766648,
+      "content": "[k:general]|Add improvement iterations to ROADMAP.md toward V10: DELETE /v1/metrics/reset, E2E ...",
+      "intent": ""
+    },
+    {
+      "id": "954453020827799537",
+      "stability": 0.36766648,
+      "content": "[k:debug]|Fix TvChart sparkline: curves clipped at top, yMax needs ...",
+      "intent": ""
+    },
+    {
+      "id": "14996624585939956983",
+      "stability": 0.36766648,
+      "content": "[k:general]|Continue DISTIRA project iterations - V9.13 Memory stability ...",
+      "intent": ""
+    },
+    {
+      "id": "1611955546985147079",
+      "stability": 0.36766648,
+      "content": "[k:general]|Set minimum AI efficiency score floor to 30% ...",
+      "intent": ""
+    },
+    {
+      "id": "15346885113162753947",
+      "stability": 0.36766648,
+      "content": "[k:debug]|Fix cargo fmt formatting error in compiler/src/optimizer.rs line 305 ...",
+      "intent": ""
+    },
+    {
+      "id": "10490942574422338149",
+      "stability": 0.36766648,
+      "content": "[k:summarize]|summarize the key architectural decisions made in this ...",
+      "intent": ""
+    },
+    {
+      "id": "13122807935544650924",
+      "stability": 0.36766648,
+      "content": "[k:general]|Continue iterations V9.15 quality-tier routing + fallback chains, then implement response ...",
+      "intent": ""
+    },
+    {
+      "id": "1371050076928744382",
+      "stability": 0.36766648,
+      "content": "[k:general]|User stuck at 30% efficiency score. Need to ...",
+      "intent": ""
+    },
+    {
+      "id": "9051423584075268846",
+      "stability": 0.36766648,
+      "content": "[k:general]|Quels sont les optimisations possibles pour DISTIRA selon ...",
+      "intent": ""
+    },
+    {
+      "id": "1324878416449660251",
+      "stability": 0.36766648,
+      "content": "[k:general]|health check - verify ...",
+      "intent": ""
+    },
+    {
+      "id": "3874556199129105479",
+      "stability": 0.92,
+      "content": "[k:general]|Continue V10.3 implementation: add budgetUsedPct/budgetPctClass computed to OverviewView.vue ...",
+      "intent": "general"
+    },
+    {
+      "id": "5857413712018688965",
+      "stability": 0.36766648,
+      "content": "[k:debug]|You are a senior Rust engineer helping diagnose production crashes. Our service panics in production. Logs: ERROR db: connection failed dial tcp 10.0.0.5:5432 retrying 1/3 retrying 2/3 FATAL: all retries exhausted panic: nil pointer dereference goroutine 1 main.(*DBPool).Acquire pool.go:87 Root cause: nil ...",
+      "intent": ""
+    },
+    {
+      "id": "11184980845543479893",
+      "stability": 0.36766648,
+      "content": "[k:debug]|Run cargo fmt --all -- --check fix formatting error ...",
+      "intent": ""
+    },
+    {
+      "id": "16320271377359283698",
+      "stability": 0.36766648,
+      "content": "[k:debug]|error: thread 'main' panicked at 'index out of bounds: ...",
+      "intent": ""
+    },
+    {
+      "id": "2271575940368597870",
+      "stability": 1.0,
+      "content": "[k:general]|test",
+      "intent": "general"
+    },
+    {
+      "id": "8851438590899947899",
+      "stability": 0.36766648,
+      "content": "[k:general]|Pourquoi malgré 2 récentes requêtes il n'y a ...",
+      "intent": ""
+    },
+    {
+      "id": "12991895568732174329",
+      "stability": 0.36766648,
+      "content": "[k:general]|Is it normal that Reused Tokens shows 17 ...",
+      "intent": ""
+    },
+    {
+      "id": "14551990969649365271",
+      "stability": 0.36766648,
+      "content": "[k:general]|MCP status check: Is the Distira MCP server correctly connected to VS Code Copilot Chat? ...",
+      "intent": ""
+    },
+    {
+      "id": "18013287927905389549",
+      "stability": 0.716393,
+      "content": "[k:debug]|Remove 0% benchmark entries for codegen and summarization from BenchmarksView. Fix README ...",
+      "intent": "debug"
+    },
+    {
+      "id": "11274100039847627137",
+      "stability": 0.8464,
+      "content": "[k:general]|Continue DISTIRA development - check roadmap for next ...",
+      "intent": "general"
+    },
+    {
+      "id": "6359800104848115740",
+      "stability": 0.36766648,
+      "content": "[k:general]|Improve dashboard bar chart provider name display: shorten long provider ...",
+      "intent": ""
+    },
+    {
+      "id": "7319471201334746039",
+      "stability": 0.36766648,
+      "content": "[k:general]|Remove mention of +30% sovereign bonus from the ...",
+      "intent": ""
+    },
+    {
+      "id": "3190483154157174394",
+      "stability": 0.36766648,
+      "content": "[k:codegen]|write a typescript function to parse a JWT ...",
+      "intent": ""
+    },
+    {
+      "id": "12638352127299873646",
+      "stability": 0.36766648,
+      "content": "",
+      "intent": ""
+    },
+    {
+      "id": "15753786166317833697",
+      "stability": 0.36766648,
+      "content": "[k:general]|Tokenizer-aware prompt pre-processing optimization: BPE whitespace normalization, JSON ...",
+      "intent": ""
+    },
+    {
+      "id": "9271702967383698034",
+      "stability": 0.36766648,
+      "content": "[k:debug]|test ...",
+      "intent": ""
+    },
+    {
+      "id": "6898683250167972360",
+      "stability": 0.6590816,
+      "content": "[k:general]|V10.2 Dynamic Audit Security-Cost Transparency: AuditView redesign with ...",
+      "intent": "general"
+    },
+    {
+      "id": "15496538832898051538",
+      "stability": 0.43438855,
+      "content": "[k:general]|implement a typescript function to parse JWT tokens ...",
+      "intent": "general"
     }
   ],
   "hour_buckets": {
-    "1773457200": [
-      395,
-      294,
-      0
-    ],
-    "1773442800": [
-      67,
-      42,
-      0
-    ],
-    "1773446400": [
-      162,
-      105,
-      17
-    ],
-    "1773514800": [
-      199,
-      133,
-      0
-    ],
-    "1773450000": [
-      68,
-      43,
-      0
+    "1773525600": [
+      211,
+      154,
+      58
     ],
     "1773460800": [
       372,
@@ -2248,10 +2696,35 @@
       258,
       0
     ],
+    "1773446400": [
+      162,
+      105,
+      17
+    ],
+    "1773529200": [
+      60,
+      42,
+      10
+    ],
     "1773522000": [
       454,
       320,
       25
+    ],
+    "1773450000": [
+      68,
+      43,
+      0
+    ],
+    "1773457200": [
+      395,
+      294,
+      0
+    ],
+    "1773514800": [
+      199,
+      133,
+      0
     ]
   }
 }
