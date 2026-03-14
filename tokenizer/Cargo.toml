@@ -1,0 +1,8 @@
+[package]
+name = "tokenizer"
+description = "Distira Universal Token Estimator — accurate BPE-style counting without vocabulary files"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]

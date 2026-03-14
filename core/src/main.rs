@@ -1342,12 +1342,20 @@ async fn chat_completions(
     // Compress history when conversation has grown beyond MAX_FULL_TURNS
     let forwarded_messages = compress_conversation_history(&compiled_messages);
 
+    // Determine route early so compiled_total uses model-aware token counting.
+    let route = state
+        .router_config
+        .choose_provider(&result.intent, sensitive);
+    let model = payload.model.clone().unwrap_or_else(|| route.model.clone());
+
     // ── 4. Measure COMPILED = actual forwarded token count ────────────────────
     // Honest measure: what DISTIRA actually sends to the LLM after history
     // compression and per-turn compilation.  The gap vs raw_tokens_estimate
     // is the real savings delivered by the full pipeline.
+    // V9.4: model-aware tokenizer calibrated for provider family (Llama3/GPT-4/Qwen).
     let forwarded_text = extract_conversation_text(&forwarded_messages);
-    let compiled_total = compiler::estimate_tokens(&forwarded_text);
+    let token_family = tokenizer::family_for_provider(&route.provider);
+    let compiled_total = tokenizer::count_for(&forwarded_text, token_family).max(1);
 
     let fp = build_chat_cache_key(&forwarded_messages, &payload.extra_body);
 
@@ -1372,10 +1380,6 @@ async fn chat_completions(
             context_reuse_ratio: 0.0,
         }
     };
-    let route = state
-        .router_config
-        .choose_provider(&result.intent, sensitive);
-    let model = payload.model.clone().unwrap_or_else(|| route.model.clone());
     let stream = payload.stream.unwrap_or(false);
     let runtime_context = read_runtime_client_context();
     let scope = resolve_workspace_scope(
@@ -1565,6 +1569,10 @@ async fn chat_completions(
                     }
 
                     if !cached_content.is_empty() {
+                        // V9.5: decode streamed content before caching so that
+                        // cache replays serve clean, artifact-free output.
+                        let decoded = tokenizer::decode_for(&cached_content, token_family);
+                        cached_content = decoded;
                         if let Ok(mut collector) = state_for_stream.collector.lock() {
                             collector.chat_cache.insert(
                                 cache_key_for_stream,
@@ -1625,12 +1633,15 @@ async fn chat_completions(
     .await
     {
         Ok(fwd) => {
+            // V9.5: decode LLM output to fix BPE reconstruction artifacts
+            // (stray spaces before punctuation, CRLF, double spaces, CJK spacing).
+            let decoded_content = tokenizer::decode_for(&fwd.content, token_family);
             {
                 let mut collector = state.collector.lock().unwrap();
                 collector.chat_cache.insert(
                     cache_key,
                     CachedChatResponse {
-                        content: fwd.content.clone(),
+                        content: decoded_content.clone(),
                         model: fwd.model.clone(),
                         prompt_tokens: fwd.prompt_tokens,
                         completion_tokens: fwd.completion_tokens,
@@ -1667,7 +1678,7 @@ async fn chat_completions(
                     "index": 0,
                     "message": {
                         "role": "assistant",
-                        "content": fwd.content
+                        "content": decoded_content
                     },
                     "finish_reason": "stop"
                 }],

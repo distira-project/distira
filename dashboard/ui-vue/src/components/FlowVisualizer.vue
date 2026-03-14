@@ -310,7 +310,7 @@ const branches = computed(() => {
   50% { box-shadow: 0 0 28px rgba(57, 211, 255, 0.6), 0 10px 28px rgba(0, 0, 0, 0.35); }
 }
 
-
+@keyframes branchPulse {
   0%, 100% { transform: scaleX(1); opacity: 0.22; }
   50% { transform: scaleX(1.05); opacity: 0.35; }
 }

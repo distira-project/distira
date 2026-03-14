@@ -8,6 +8,7 @@ members = [
   "metrics",
   "cache",
   "fingerprint",
+  "tokenizer",
 ]
 resolver = "2"
 
