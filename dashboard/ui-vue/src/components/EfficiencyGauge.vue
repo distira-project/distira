@@ -30,13 +30,13 @@
       </div>
     </div>
     <p class="gauge-helper muted">
-      Minimum 30% — routing through Distira already provides sovereign value. 100% is a theoretical ceiling.
+      Between 50% and 75%, Distira is already highly efficient. 100% is a practical ceiling.
     </p>
     <div v-if="showHelp" class="gauge-help-panel">
       <p><strong>How should you read this score?</strong></p>
-      <p>30% is the baseline floor — just routing through Distira earns that through sovereign routing, on-prem preference, and context compilation.</p>
-      <p>50–75% means Distira is actively compressing and reusing context. Above 75% is excellent on heavy workflows.</p>
-      <p>100% is theoretical. In practice, 50%+ on recurring tasks is an outstanding target.</p>
+      <p>Combines token compression, context reuse, and routing quality into a single score.</p>
+      <p>Above 50% means Distira is actively trimming and reusing context. Above 75% is excellent on heavy workflows.</p>
+      <p>100% is the practical ceiling — reached when context is heavily compressed across repeated requests.</p>
     </div>
   </section>
 </template>

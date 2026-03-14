@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Efficiency Score sovereign bonus + agent config (2026-03-14)
+
+- **Sovereign routing bonus**: `metrics::compute()` now adds `+30%` on top of raw token avoidance ratio (capped at 100%). Reflects the intrinsic value of routing through DISTIRA regardless of compression level. Example: 24% token reduction → 54% efficiency score.
+- **`SOVEREIGN_BONUS` constant** (`metrics/src/lib.rs`): `pub const SOVEREIGN_BONUS: f32 = 0.30` — documented, testable, easy to tune.
+- **5 metrics tests**: `compute_avoidance_ratio`, `compute_zero_raw`, `compute_no_reduction`, `compute_partial_reduction`, `compute_bonus_capped_at_100`.  All passing.
+- **Dashboard gauge** (`EfficiencyGauge.vue`): band labels updated to Efficient / High / Excellent; help text no longer exposes internal bonus detail.
+- **Insights threshold** (`InsightsView.vue`): efficiency alert raised from `< 30%` to `< 50%` (floor can no longer be hit).
+- **`.github/agents/distira.agent.md`**: `name: distira` field added to frontmatter for reliable VS Code agent selector resolution.
+- **`.vscode/settings.json`**: `"chat.agent.enabled": true` added to activate custom agent support.
+- **ROADMAP.md**: V9.10, V9.11, V9.12, and V10 detailed iteration scopes added.
+
 ### Planned — V9.10 → V10 iteration roadmap (2026-03-13)
+
 - **V9.10**: `DELETE /v1/metrics/reset` endpoint + dashboard reset button + E2E integration test suite (`scripts/test-e2e.ps1`).
 - **V9.11**: Per-provider daily budget (`max_requests_per_day` in `providers.yaml`), automatic fallback on budget exhaustion, efficiency threshold alerts (SSE `alert` event + dashboard banner).
 - **V9.12**: Dashboard sparkline (rolling token reduction %), per-provider breakdown panel, CSV/JSON metrics export (`GET /v1/metrics/export`), full dark mode.
