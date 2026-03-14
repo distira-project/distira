@@ -1,11 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Minimum stability before a block is evicted (V9.13).
+const DECAY_EVICT_THRESHOLD: f32 = 0.10;
+/// Decay multiplier applied to non-accessed blocks on each register call (V9.13).
+const DECAY_FACTOR: f32 = 0.92;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextBlock {
     pub id: String,
     pub stability: f32,
     pub content: String,
+    /// Intent the block was compiled for (V9.13 — intent-scoped injection).
+    #[serde(default)]
+    pub intent: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,22 +41,52 @@ impl ContextStore {
         }
     }
 
-    /// Store a compiled context block keyed by fingerprint.
-    pub fn register(&mut self, fingerprint: u64, compiled: &str) {
+    /// Store a compiled context block keyed by fingerprint (V9.13: with intent).
+    /// Decays all other blocks' stability and evicts those below the threshold.
+    pub fn register(&mut self, fingerprint: u64, compiled: &str, intent: &str) {
+        // Decay all existing blocks except the one being registered.
+        let keys: Vec<u64> = self.blocks.keys().copied().collect();
+        for key in keys {
+            if key == fingerprint {
+                continue;
+            }
+            if let Some(block) = self.blocks.get_mut(&key) {
+                block.stability *= DECAY_FACTOR;
+            }
+        }
+        // Evict blocks that have decayed below the threshold.
+        self.blocks
+            .retain(|_, b| b.stability >= DECAY_EVICT_THRESHOLD);
+
+        // Upsert the current block with full stability.
         self.blocks.insert(
             fingerprint,
             ContextBlock {
                 id: fingerprint.to_string(),
                 stability: 1.0,
                 content: compiled.to_string(),
+                intent: intent.to_string(),
             },
         );
     }
 
-    /// Return real reuse stats: if fingerprint matches a stored block, those
-    /// compiled tokens are considered reused; otherwise zero reuse.
-    pub fn compute_reuse(&self, fingerprint: u64, raw_tokens: usize) -> MemorySummary {
+    /// Return reuse stats for an exact fingerprint hit (V9.13: intent-scoped).
+    /// Returns zero reuse if the block exists but was compiled for a different intent.
+    pub fn compute_reuse(
+        &self,
+        fingerprint: u64,
+        raw_tokens: usize,
+        intent: &str,
+    ) -> MemorySummary {
         if let Some(block) = self.blocks.get(&fingerprint) {
+            // Intent-scope guard: only reuse if intent matches or block has no intent tag.
+            if !block.intent.is_empty() && block.intent != intent {
+                return MemorySummary {
+                    reused_tokens: 0,
+                    delta_tokens: raw_tokens,
+                    context_reuse_ratio: 0.0,
+                };
+            }
             let reused = token_count(&block.content).min(raw_tokens);
             let delta = raw_tokens.saturating_sub(reused);
             let ratio = if raw_tokens > 0 {
@@ -86,7 +124,10 @@ impl ContextStore {
         self.blocks.clear();
         for block in blocks {
             if let Ok(fingerprint) = block.id.parse::<u64>() {
-                self.blocks.insert(fingerprint, block);
+                // Evict already-decayed blocks that survived serialization
+                if block.stability >= DECAY_EVICT_THRESHOLD {
+                    self.blocks.insert(fingerprint, block);
+                }
             }
         }
     }
@@ -161,9 +202,9 @@ mod tests {
     #[test]
     fn context_store_registers_and_computes_reuse() {
         let mut store = ContextStore::new();
-        store.register(42, "hello world compiled");
+        store.register(42, "hello world compiled", "general");
 
-        let reuse = store.compute_reuse(42, 10);
+        let reuse = store.compute_reuse(42, 10, "general");
         // compiled has 3 tokens, raw=10 → reused=3, delta=7
         assert_eq!(reuse.reused_tokens, 3);
         assert_eq!(reuse.delta_tokens, 7);
@@ -173,7 +214,7 @@ mod tests {
     #[test]
     fn context_store_miss_returns_zero() {
         let store = ContextStore::new();
-        let reuse = store.compute_reuse(999, 50);
+        let reuse = store.compute_reuse(999, 50, "general");
         assert_eq!(reuse.reused_tokens, 0);
         assert_eq!(reuse.delta_tokens, 50);
         assert_eq!(reuse.context_reuse_ratio, 0.0);
@@ -183,11 +224,48 @@ mod tests {
     fn context_store_caps_reuse_at_raw() {
         let mut store = ContextStore::new();
         // compiled has more tokens than raw — reuse capped at raw
-        store.register(1, "alpha beta gamma delta epsilon");
-        let reuse = store.compute_reuse(1, 3); // raw=3, compiled=5
+        store.register(1, "alpha beta gamma delta epsilon", "debug");
+        let reuse = store.compute_reuse(1, 3, "debug"); // raw=3, compiled=5
         assert_eq!(reuse.reused_tokens, 3);
         assert_eq!(reuse.delta_tokens, 0);
         assert!((reuse.context_reuse_ratio - 1.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn context_store_intent_mismatch_returns_zero() {
+        let mut store = ContextStore::new();
+        store.register(10, "compiled debug content", "debug");
+        // Same fingerprint but different intent → no reuse
+        let reuse = store.compute_reuse(10, 20, "general");
+        assert_eq!(reuse.reused_tokens, 0);
+        assert_eq!(reuse.delta_tokens, 20);
+    }
+
+    #[test]
+    fn context_store_stability_decays_on_register() {
+        let mut store = ContextStore::new();
+        store.register(1, "block one", "general");
+        // Register a second block — first should decay
+        store.register(2, "block two", "general");
+        let block1 = store.blocks.get(&1).unwrap();
+        assert!(block1.stability < 1.0, "block1 should have decayed");
+        assert!((block1.stability - DECAY_FACTOR).abs() < 0.001);
+    }
+
+    #[test]
+    fn context_store_evicts_fully_decayed_blocks() {
+        let mut store = ContextStore::new();
+        store.register(1, "old block", "general");
+        // Register enough new blocks to decay block 1 below threshold
+        // After N registers: stability = DECAY_FACTOR^N
+        // DECAY_FACTOR=0.92, threshold=0.10 → need ~28 registers
+        for i in 2..35u64 {
+            store.register(i, "newer block", "general");
+        }
+        assert!(
+            !store.blocks.contains_key(&1),
+            "fully decayed block should be evicted"
+        );
     }
 
     // ── compute_delta (V9.0 Memory Lensing) ────────────────────────────────

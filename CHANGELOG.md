@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — V9.15 Quality-Tier Routing + Conciseness Injection (2026-03-14)
+
+- **`router/ProviderConfig`** — `quality_tier: Option<String>` ("low" | "standard" | "high", serde default absent = "standard") and `fallback_chain: Vec<String>` (per-provider ordered fallback; empty = use global chain).
+- **`router/ProviderSummary`** — `quality_tier: String` exposed on every `/v1/providers` entry.
+- **`router/RouterConfig`** — `concise_mode: bool` field; `concise_mode()` accessor; loaded from `routing.yaml`.
+- **`router/choose_provider_with_budget()`** — per-provider `fallback_chain` used when non-empty; otherwise falls back to global `default → fallback` sequence.
+- **`configs/routing/routing.yaml`** — `concise_mode: true` enabled by default.
+- **`configs/providers/providers.yaml`** — `quality_tier` annotation on all eight active providers (low/standard/high).
+- **`core/inject_conciseness_directive()`** — inserts (or prepends to existing) system message: "Respond as concisely as possible. Use plain, simple language…" Reduces output token consumption across all providers.
+- **`core/chat_completions`** — applies `inject_conciseness_directive` when `router_config.concise_mode()` is true.
+- **`dashboard/utils/providers.ts`** — `qualityTier(key)` function + `PROVIDER_QUALITY` map.
+- **`dashboard/OverviewView.vue`** — Quality tier badge column in Live AI Efficiency table; `.quality-pill.high/.standard/.low` CSS.
+
+### Added — V9.14 Compiler-driven Chat History Compression (2026-03-14)
+
+- **`core/compress_conversation_history()`** (V9.14) — older conversation turns now pass through `compiler::compile_context()` for real semantic distillation instead of naive 20-word truncation. Intent marker prefix stripped before embedding in summary block. Fallback to word-truncation when compiled output is empty.
+
+### Added — V9.13 Memory Stability Decay + Intent-Scoped Injection (2026-03-14)
+
+- **`memory/ContextBlock`** — new `intent: String` field (serde default = `""`), persisted in `runtime-state.json`.
+- **`memory/ContextStore::register()`** — now takes `intent: &str`; decays all other blocks by `×0.92` per register call; evicts blocks below `stability < 0.10`.
+- **`memory/ContextStore::compute_reuse()`** — now takes `intent: &str`; returns zero reuse when block intent ≠ request intent (intent-scope guard).
+- **`memory/ContextStore::load_blocks()`** — skips blocks already below eviction threshold on restore.
+- **`core/compile_with_semantic_cache()`** — passes `result.intent` to `register()`.
+- **`core/compile` handler** — passes `result.intent` to `compute_reuse()`.
+- **`core/chat_completions` handler** — passes `result.intent` to `compute_reuse()`.
+- **5 new tests**: intent mismatch returns zero, stability decays on register, fully decayed blocks are evicted, plus updated existing tests for new signatures.
+
+### Added — V9.12 Distillation Ratios + BM25 Salience (2026-03-14)
+
+- **`compiler/distillation_divisor(intent)`** — per-intent ratios: ocr/translate keep 100%, debug/review keep 50%, codegen keeps 33%, general keeps 25%, summarize keeps 20%.
+- **`compiler/salience_score()`** — BM25-inspired line scorer: word density + keyword hits × 5 + structure bonus (`:`, `=`, `->`, bullet).
+- **`compiler/reduce_by_salience()`** — selects top-2/3 lines by salience preserving original order; replaces head/tail truncation for `general` and `summarize` intents.
+
+### Added — V9.11 Provider Budget & Alerting (2026-03-14)
+
+- **`router/ProviderConfig`** — `max_requests_per_day: u64` field (serde default = 0 = unlimited); `defaults()` initializers updated.
+- **`router/choose_provider_with_budget()`** — budget-aware routing with candidate fallback chain; `choose_provider()` delegates to it with empty counts.
+- **`router/list_provider_summaries()`** — maps `max_requests_per_day` to `ProviderSummary`.
+- **`core/MetricsCollector`** — `daily_provider_counts: HashMap<String, u64>` + `daily_reset_epoch: u64`; auto-resets at UTC midnight in `record()`.
+- **`core/budget_alerts()`** — emits `budget_warning` (≥80%) and `budget_exhausted` (≥100%) JSON objects.
+- **`core/metrics_stream`** SSE payload includes `"alerts": [...]` when any provider is near/over budget.
+- **Dashboard `store/metrics.ts`** — `alerts` reactive ref, `applySnapshot` maps `s.alerts`, exported.
+- **Dashboard `OverviewView.vue`** — alert banner shown above metrics grid (orange warning / red exhausted).
+
 ### Added — V9.10.1 BPE-Aware Token Optimizer (2026-03-14)
 
 - **`compiler/src/optimizer.rs`** (new file, 421 lines) — `TokenOptimizer` with 6 lossless passes:

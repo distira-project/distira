@@ -641,7 +641,7 @@ fn compile_with_semantic_cache(
     // Register compiled context in real memory store for future reuse tracking
     collector
         .context_store
-        .register(fingerprint, &result.compiled_context);
+        .register(fingerprint, &result.compiled_context, &result.intent);
     (fingerprint, result, false)
 }
 
@@ -983,7 +983,31 @@ fn apply_compiled_user_message(messages: &[Value], compiled_content: &str) -> Ve
 
 /// Compress a long conversation: if > MAX_FULL_TURNS messages, collapse older turns
 /// into a compact system-message summary to preserve context budget.
+/// V9.14: older turns are distilled via the compiler pipeline instead of naive word-truncation.
 const MAX_FULL_TURNS: usize = 6;
+
+/// V9.15 — Conciseness Injection.
+/// Prepend a brevity directive to the system role so the LLM returns
+/// shorter, plain-language answers — reducing output token consumption.
+fn inject_conciseness_directive(mut messages: Vec<Value>) -> Vec<Value> {
+    const DIRECTIVE: &str = "Respond as concisely as possible. \
+        Use plain, simple language that anyone can understand. \
+        No emojis, no markdown decorations, no unnecessary bullet points. \
+        Keep answers short and direct.";
+
+    if let Some(idx) = messages.iter().position(|m| m["role"] == "system") {
+        let existing = extract_message_text(&messages[idx]);
+        if let Some(obj) = messages[idx].as_object_mut() {
+            obj.insert(
+                "content".into(),
+                Value::String(format!("{DIRECTIVE}\n\n{existing}")),
+            );
+        }
+    } else {
+        messages.insert(0, json!({ "role": "system", "content": DIRECTIVE }));
+    }
+    messages
+}
 
 fn compress_conversation_history(messages: &[Value]) -> Vec<Value> {
     if messages.len() <= MAX_FULL_TURNS {
@@ -1002,17 +1026,33 @@ fn compress_conversation_history(messages: &[Value]) -> Vec<Value> {
             if content.is_empty() {
                 return None;
             }
-            let short: String = if content.split_whitespace().count() > 20 {
-                content
-                    .split_whitespace()
-                    .take(20)
-                    .collect::<Vec<_>>()
-                    .join(" ")
-                    + " [...]"
+            // V9.14: compile each older turn through the DISTIRA pipeline for
+            // real semantic compression instead of naive 20-word truncation.
+            let compiled = compiler::compile_context(&content);
+            // Strip the intent marker prefix ([k:intent]|) before embedding in summary.
+            let compressed_text = compiled
+                .compiled_context
+                .splitn(2, '|')
+                .nth(1)
+                .unwrap_or(&compiled.compiled_context)
+                .trim()
+                .to_string();
+            let display = if compressed_text.is_empty() {
+                // Fallback: keep first 20 words of original
+                if content.split_whitespace().count() > 20 {
+                    content
+                        .split_whitespace()
+                        .take(20)
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                        + " [...]"
+                } else {
+                    content
+                }
             } else {
-                content
+                compressed_text
             };
-            Some(format!("[{role}]: {short}"))
+            Some(format!("[{role}]: {display}"))
         })
         .collect();
 
@@ -1210,7 +1250,7 @@ async fn compile(
     let mem = if cache_hit {
         collector
             .context_store
-            .compute_reuse(fp, result.raw_tokens_estimate)
+            .compute_reuse(fp, result.raw_tokens_estimate, &result.intent)
     } else {
         memory::MemorySummary {
             reused_tokens: 0,
@@ -1395,6 +1435,12 @@ async fn chat_completions(
     };
     // Compress history when conversation has grown beyond MAX_FULL_TURNS
     let forwarded_messages = compress_conversation_history(&compiled_messages);
+    // V9.15: inject conciseness directive when concise_mode is enabled.
+    let forwarded_messages = if state.router_config.concise_mode() {
+        inject_conciseness_directive(forwarded_messages)
+    } else {
+        forwarded_messages
+    };
 
     // Determine route early so compiled_total uses model-aware token counting.
     // V9.11: snapshot daily counts before locking for the cache check.
@@ -1426,9 +1472,11 @@ async fn chat_completions(
     // Single-turn or empty prior context → zero reuse, everything is new.
     let mem = if semantic_cache_hit {
         let collector = state.collector.lock().unwrap();
-        collector
-            .context_store
-            .compute_reuse(semantic_fp, result.raw_tokens_estimate)
+        collector.context_store.compute_reuse(
+            semantic_fp,
+            result.raw_tokens_estimate,
+            &result.intent,
+        )
     } else if payload.messages.len() > 1 && !latest_user.trim().is_empty() {
         let latest_user_tokens = compiler::estimate_tokens(&latest_user);
         let prior_tokens = result

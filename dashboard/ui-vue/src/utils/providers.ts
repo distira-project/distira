@@ -34,6 +34,26 @@ export function friendlyProvider(key: string): string {
   return PROVIDER_LABELS[key] ?? key
 }
 
+/** Quality tier for a provider key: "high" | "standard" | "low". */
+const PROVIDER_QUALITY: Record<string, 'high' | 'standard' | 'low'> = {
+  'ollama-llama3':                                   'standard',
+  'ollama-llama3.3':                                 'high',
+  'ollama-qwen2.5-coder':                            'high',
+  'ollama-mistral-7b-instruct':                      'standard',
+  'ollama-deepseek-ocr':                             'low',
+  'openrouter-step-3.5-flash-cloud':                 'standard',
+  'openrouter-mistral-small-3.1-24b-instruct-cloud': 'high',
+  'mistral-ocr-2512-cloud':                          'high',
+  'openai-gpt4o':                                    'high',
+  'openai-gpt5':                                     'high',
+  'anthropic-claude-sonnet-4-6':                     'high',
+  'google-gemini-2-flash':                           'high',
+}
+
+export function qualityTier(key: string): 'high' | 'standard' | 'low' {
+  return PROVIDER_QUALITY[key] ?? 'standard'
+}
+
 /**
  * Classifies a provider key into a routing tier.
  * Uses key structure (ollama- prefix, -cloud suffix) rather than model name

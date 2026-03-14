@@ -222,6 +222,7 @@
               <th>Model</th>
               <th>Provider</th>
               <th>Route</th>
+              <th>Quality</th>
               <th>Requests</th>
               <th>Saved Tokens</th>
               <th>Efficiency</th>
@@ -235,6 +236,9 @@
               <td>
                 <span class="route-pill" :class="entry.routeClass">{{ entry.routeLabel }}</span>
               </td>
+              <td>
+                <span class="quality-pill" :class="entry.qualityTier">{{ entry.qualityTier }}</span>
+              </td>
               <td>{{ entry.requests }}</td>
               <td>{{ entry.savedTokens.toLocaleString() }}</td>
               <td>
@@ -245,7 +249,7 @@
               </td>
             </tr>
             <tr v-if="!modelRows.length">
-              <td colspan="7" class="muted">No model data yet. Send a few requests to populate live stats.</td>
+              <td colspan="8" class="muted">No model data yet. Send a few requests to populate live stats.</td>
             </tr>
           </tbody>
         </table>
@@ -279,7 +283,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useMetricsStore } from '../store/metrics'
-import { classifyRoute, friendlyProvider } from '../utils/providers'
+import { classifyRoute, friendlyProvider, qualityTier } from '../utils/providers'
 import MetricCard from '../components/MetricCard.vue'
 import EfficiencyGauge from '../components/EfficiencyGauge.vue'
 import FlowVisualizer from '../components/FlowVisualizer.vue'
@@ -413,6 +417,7 @@ const modelRows = computed(() => {
         sovereignClass: sovereignRatio >= 100 ? 'sovereign' : 'mixed',
         routeLabel: route.routeLabel,
         routeClass: route.routeClass,
+        qualityTier: qualityTier(stat.provider),
       }
     })
     .sort((a, b) => b.requests - a.requests)
@@ -907,6 +912,32 @@ const intentRows = computed(() => {
 .route-pill.midtier {
   background: rgba(96, 156, 255, 0.15);
   color: #8ab6ff;
+}
+
+.quality-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.quality-pill.high {
+  background: rgba(44, 255, 179, 0.12);
+  color: var(--accent);
+}
+
+.quality-pill.standard {
+  background: rgba(255, 196, 0, 0.12);
+  color: #ffd84d;
+}
+
+.quality-pill.low {
+  background: rgba(150, 150, 150, 0.12);
+  color: #999;
 }
 
 .status-pill {

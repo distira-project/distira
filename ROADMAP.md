@@ -376,21 +376,59 @@ Wave A progress:
 
 ### V9.11 — Provider Budget & Alerting
 
-**Status:** Planned.
+**Status:** Delivered (2026-03-14).
 
 - Per-provider daily request budget (`max_requests_per_day`) configurable in `providers.yaml`.
 - Automatic fallback to the next available provider when budget is exhausted.
-- Efficiency threshold alert: configurable minimum efficiency score; logs a `WARN` and emits an SSE `alert` event when breached.
-- Dashboard alert banner displayed when backend emits an `alert` SSE event.
+- Budget warning at ≥80%, exhausted at ≥100%; SSE `alerts` array emitted in metrics stream.
+- Dashboard alert banner displayed above metrics grid (orange warning / red exhausted).
 
-### V9.12 — Dashboard Analytics
+### V9.12 — Distillation Ratios + BM25 Salience Scoring
+
+**Status:** Delivered (2026-03-14).
+
+- Per-intent distillation ratios: ocr/translate 100%, debug/review 50%, codegen 33%, general 25%, summarize 20%.
+- BM25-inspired `salience_score()` line scorer replacing head/tail truncation for `general` and `summarize`.
+- `reduce_by_salience()` selects top-2/3 lines by signal density, preserves original order.
+
+### V9.13 — Memory Stability Decay + Intent-Scoped Injection
+
+**Status:** Delivered (2026-03-14).
+
+- `ContextBlock` gains `intent` field for scoped injection.
+- `register()` decays all other blocks ×0.92 per call; evicts blocks below stability 0.10.
+- `compute_reuse()` intent-scope guard: returns zero reuse when block intent ≠ request intent.
+- 5 new unit tests covering decay, eviction, and intent mismatch.
+
+### V9.14 — Compiler-driven Chat History Compression
+
+**Status:** Delivered (2026-03-14).
+
+- `compress_conversation_history()` now runs each older turn through `compiler::compile_context()`.
+- Intent marker prefix stripped before embedding in summary block.
+- Fallback to word-truncation when compiled output is empty.
+
+### V9.15 — Quality-Tier Routing + Conciseness Injection
+
+**Status:** Delivered (2026-03-14 — VERSION 9.15.0).
+
+- `quality_tier: low|standard|high` added to all active providers in `providers.yaml`.
+- Per-provider `fallback_chain` in `ProviderConfig` overrides global fallback sequence when non-empty.
+- `concise_mode: true` in `routing.yaml` — DISTIRA injects a conciseness directive into every forwarded LLM request, reducing output token usage across all providers.
+- `inject_conciseness_directive()` helper in `core/main.rs` — prepends brevity system message; merges with existing system message if present.
+- Dashboard: quality tier badge (`high`/`standard`/`low`) column in Live AI Efficiency table.
+
+### V9.15.1 — Response Conciseness — rationale
+
+Requesting the LLM to be concise in plain language (no emojis, no markdown decorations, short direct answers) reduces output token count, lowers latency, and makes responses more accessible to non-technical users. Enabled by default via `concise_mode: true` in `routing.yaml` — fully reversible by setting to `false`.
+
+### V9.16 — Latency-Aware Routing
 
 **Status:** Planned.
 
-- Sparkline chart showing token reduction % over the last N requests (rolling window, in-memory).
-- Per-provider breakdown panel: request count, avg token reduction, avg latency per provider.
-- Metrics CSV/JSON export button (`GET /v1/metrics/export?format=csv`).
-- Dashboard dark mode finalized (full component coverage).
+- Track rolling average response latency per provider in `MetricsCollector`.
+- Expose `avg_latency_ms` in `/v1/providers` response and dashboard.
+- When two providers are equal for an intent, prefer the faster one.
 
 ### V10 — Adaptive AI Optimization Network
 

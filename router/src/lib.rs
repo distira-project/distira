@@ -24,6 +24,15 @@ pub struct ProviderConfig {
     /// 0 or absent = unlimited.
     #[serde(default)]
     pub max_requests_per_day: u64,
+    /// Quality tier: "low" | "standard" | "high".
+    /// Used for quality-aware routing decisions.  Absent = "standard".
+    #[serde(default)]
+    pub quality_tier: Option<String>,
+    /// Per-provider ordered fallback chain (provider keys).
+    /// When non-empty, overrides the global fallback sequence
+    /// when this provider's daily budget is exhausted.
+    #[serde(default)]
+    pub fallback_chain: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -48,6 +57,9 @@ struct RoutingInner {
     fallback_provider: Option<String>,
     sensitive_override: Option<String>,
     task_routing: Option<TaskRouting>,
+    /// Inject a conciseness directive into every forwarded LLM request.
+    /// Reduces output token usage by instructing the model to be brief.
+    concise_mode: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -78,6 +90,7 @@ pub struct ProviderSummary {
     pub cost_per_1k_input_tokens: f64,
     pub cost_per_1k_output_tokens: f64,
     pub max_requests_per_day: u64,
+    pub quality_tier: String,
 }
 
 /// Holds the loaded config. Created once at startup, then shared.
@@ -88,6 +101,9 @@ pub struct RouterConfig {
     fallback_provider: String,
     sensitive_override: String,
     task_routing: HashMap<String, String>,
+    /// When true, DISTIRA injects a response-conciseness directive into every
+    /// forwarded LLM request to reduce output token usage.
+    concise_mode: bool,
 }
 
 impl RouterConfig {
@@ -139,6 +155,7 @@ impl RouterConfig {
             fallback_provider: fallback,
             sensitive_override: sensitive,
             task_routing: task_map,
+            concise_mode: r.concise_mode.unwrap_or(false),
         })
     }
 
@@ -157,6 +174,8 @@ impl RouterConfig {
                 cost_per_1k_input_tokens: 0.0,
                 cost_per_1k_output_tokens: 0.0,
                 max_requests_per_day: 0,
+                quality_tier: Some("standard".into()),
+                fallback_chain: vec![],
             },
         );
         providers.insert(
@@ -171,6 +190,8 @@ impl RouterConfig {
                 cost_per_1k_input_tokens: 0.15,
                 cost_per_1k_output_tokens: 0.60,
                 max_requests_per_day: 0,
+                quality_tier: Some("high".into()),
+                fallback_chain: vec![],
             },
         );
 
@@ -184,6 +205,7 @@ impl RouterConfig {
             fallback_provider: "openai-compatible".into(),
             sensitive_override: "ollama-local".into(),
             task_routing,
+            concise_mode: false,
         }
     }
 
@@ -214,20 +236,31 @@ impl RouterConfig {
             };
         }
 
-        // Build ordered candidate list: task-specific → default → fallback
+        // Build ordered candidate list.
+        // If the preferred provider declares a per-provider fallback_chain, use
+        // it; otherwise fall through to the global default → fallback sequence.
         let preferred = if let Some(name) = self.task_routing.get(intent) {
             name.clone()
         } else {
             self.default_provider.clone()
         };
-        let candidates = [
-            preferred.as_str(),
-            self.default_provider.as_str(),
-            self.fallback_provider.as_str(),
-        ];
+        let per_provider_chain: Vec<String> = self
+            .providers
+            .get(&preferred)
+            .map(|cfg| cfg.fallback_chain.clone())
+            .unwrap_or_default();
+        let mut candidate_keys: Vec<String> = vec![preferred.clone()];
+        if per_provider_chain.is_empty() {
+            candidate_keys.push(self.default_provider.clone());
+            candidate_keys.push(self.fallback_provider.clone());
+        } else {
+            candidate_keys.extend(per_provider_chain);
+            candidate_keys.push(self.fallback_provider.clone());
+        }
 
         let mut seen = std::collections::HashSet::new();
-        for candidate in candidates {
+        for candidate in &candidate_keys {
+            let candidate = candidate.as_str();
             if !seen.insert(candidate) {
                 continue; // skip duplicates
             }
@@ -307,10 +340,20 @@ impl RouterConfig {
                 cost_per_1k_input_tokens: config.cost_per_1k_input_tokens,
                 cost_per_1k_output_tokens: config.cost_per_1k_output_tokens,
                 max_requests_per_day: config.max_requests_per_day,
+                quality_tier: config
+                    .quality_tier
+                    .clone()
+                    .unwrap_or_else(|| "standard".into()),
             })
             .collect();
         summaries.sort_by(|left, right| left.key.cmp(&right.key));
         summaries
+    }
+
+    /// Whether DISTIRA injects a response-conciseness directive into every
+    /// forwarded LLM request (reduces output token usage).
+    pub fn concise_mode(&self) -> bool {
+        self.concise_mode
     }
 
     /// Estimate the USD cost of a request for the given provider.
