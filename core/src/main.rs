@@ -2027,7 +2027,7 @@ async fn metrics_stream(
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
-/// ── Main ──────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────
 
 /// Optional Bearer-token middleware for /v1/* routes.
 /// Activated only when the `DISTIRA_API_KEY` env var is set.
