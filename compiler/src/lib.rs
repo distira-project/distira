@@ -194,9 +194,18 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
     let optimizer_savings = raw_tokens_estimate.saturating_sub(optimized_tokens);
 
     // V9.12 — Per-intent distillation ratio.
+    // Very short inputs (< 32 tokens) are already minimal — skip reduction.
+    // Short inputs (< 64 tokens) get gentler treatment to preserve signal.
+    let effective_divisor = if optimized_tokens < 32 {
+        1
+    } else if optimized_tokens < 64 {
+        distillation_divisor(&intent).min(2)
+    } else {
+        distillation_divisor(&intent)
+    };
     let target_tokens = optimized_tokens
-        .saturating_div(distillation_divisor(&intent))
-        .max(16)
+        .saturating_div(effective_divisor)
+        .max(8)
         .min(optimized_tokens);
     let marker_cost = token_count(intent_marker(&intent));
     let truncation_target = target_tokens.saturating_sub(marker_cost).max(1);
@@ -266,12 +275,10 @@ fn intent_marker(intent: &str) -> &'static str {
 fn distillation_divisor(intent: &str) -> usize {
     match intent {
         "ocr" | "translate" => 1,
-        "debug" | "review" => 2,
-        "codegen" => 3,
-        "summarize" => 5,
-        "fast" => 5,    // aggressive reduction for speed
         "quality" => 2, // preserve more context for quality
-        _ => 4,         // general
+        "debug" | "review" | "codegen" => 3,
+        "summarize" | "fast" => 5,
+        _ => 5, // general: aggressive default
     }
 }
 
@@ -291,13 +298,11 @@ fn build_compiled_context(raw: &str, intent: &str, target_tokens: usize) -> Stri
     };
 
     let truncated = truncate_to_token_budget(&reduced, target_tokens);
-    let compact = if truncated.trim().is_empty() {
+    if truncated.trim().is_empty() {
         truncate_to_token_budget(raw, target_tokens)
     } else {
         truncated
-    };
-
-    shape_by_intent(intent, &compact)
+    }
 }
 
 fn shape_by_intent(intent: &str, content: &str) -> String {
@@ -573,7 +578,7 @@ fn reduce_debug_context(raw: &str) -> String {
             selected.push(l.clone());
         }
     }
-    for l in priority2.iter().take(10) {
+    for l in priority2.iter().take(5) {
         if !selected.contains(l) {
             selected.push(l.clone());
         }
@@ -581,7 +586,7 @@ fn reduce_debug_context(raw: &str) -> String {
 
     let non_empty = selected.iter().filter(|l| !l.is_empty()).count();
     if non_empty <= 3 {
-        join_lines(&keep_head_tail(&lines, 4, 12))
+        join_lines(&keep_head_tail(&lines, 3, 6))
     } else {
         join_lines(&selected)
     }
@@ -696,7 +701,7 @@ fn reduce_review_context(raw: &str) -> String {
             "const ",
             "static ",
         ];
-        return reduce_by_salience(raw, REVIEW_KW);
+        return reduce_by_salience_pct(raw, REVIEW_KW, 40);
     }
 
     join_lines(&selected)
@@ -709,7 +714,7 @@ fn reduce_review_context(raw: &str) -> String {
 /// Strips: function bodies (inner logic), test code, doc examples, verbose comments.
 fn reduce_codegen_context(raw: &str) -> String {
     let lines = normalize_lines(raw);
-    if lines.len() <= 16 {
+    if lines.len() <= 8 {
         return join_lines(&lines);
     }
 
@@ -807,7 +812,7 @@ fn reduce_codegen_context(raw: &str) -> String {
             "fixme",
             "implement",
         ];
-        return reduce_by_salience(raw, CG_KW);
+        return reduce_by_salience_pct(raw, CG_KW, 35);
     }
 
     join_lines(&selected)
@@ -883,8 +888,18 @@ fn reduce_summarize_context(raw: &str) -> String {
         "therefore",
         "finally",
         "overall",
+        "highlight",
+        "outcome",
+        "action",
+        "takeaway",
+        "insight",
+        "agree",
+        "disagree",
+        "resolved",
+        "next step",
     ];
-    reduce_by_salience(raw, KW)
+    // Aggressive: keep only top 35% of lines for summarization.
+    reduce_by_salience_pct(raw, KW, 35)
 }
 
 fn reduce_general_context(raw: &str) -> String {
@@ -901,8 +916,15 @@ fn reduce_general_context(raw: &str) -> String {
         "because",
         "therefore",
         "summary",
+        "question",
+        "answer",
+        "implement",
+        "create",
+        "fix",
+        "update",
     ];
-    reduce_by_salience(raw, KW)
+    // Keep top 40% for general intent.
+    reduce_by_salience_pct(raw, KW, 40)
 }
 
 /// Score a single line by signal density relative to intent keywords (V9.12 BM25-inspired).
@@ -929,14 +951,14 @@ fn salience_score(line: &str, keywords: &[&str]) -> usize {
 }
 
 /// Select the most salient lines (BM25-inspired) while preserving original order.
+/// `keep_pct` controls what fraction of lines to keep (1..=100).
 /// Falls back to head/tail for very short inputs.
-fn reduce_by_salience(raw: &str, keywords: &[&str]) -> String {
+fn reduce_by_salience_pct(raw: &str, keywords: &[&str], keep_pct: usize) -> String {
     let lines = normalize_lines(raw);
-    if lines.len() <= 16 {
+    if lines.len() <= 6 {
         return join_lines(&lines);
     }
-    // Score every line, keep top 2/3 by salience, restore original order.
-    let keep = (lines.len() * 2 / 3).max(8);
+    let keep = (lines.len() * keep_pct / 100).max(3);
     let mut scored: Vec<(usize, usize)> = lines
         .iter()
         .enumerate()
@@ -1681,5 +1703,125 @@ mod tests {
         let input = "fn main() {\n    // TODO: implement this\n    let x = 1;\n}";
         let out = reduce_codegen_context(input);
         assert!(out.contains("TODO: implement this"));
+    }
+
+    // ── V10.13 — Reduction effectiveness validation ─────────────────
+
+    /// Helper: build a realistic multi-line input of roughly `n` lines.
+    fn make_lines(n: usize, prefix: &str) -> String {
+        (0..n)
+            .map(|i| {
+                format!("{prefix} line {i}: some filler context data here for testing purposes")
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn reduction_pct(raw: usize, compiled: usize) -> f64 {
+        if raw == 0 {
+            return 0.0;
+        }
+        ((raw as f64 - compiled as f64) / raw as f64) * 100.0
+    }
+
+    #[test]
+    fn general_intent_achieves_30pct_reduction() {
+        let input = make_lines(60, "Note: important context about the project");
+        let r = compile_context(&input);
+        let pct = reduction_pct(r.raw_tokens_estimate, r.compiled_tokens_estimate);
+        assert!(
+            pct >= 30.0,
+            "general: expected >=30% reduction, got {pct:.1}% (raw={}, compiled={})",
+            r.raw_tokens_estimate,
+            r.compiled_tokens_estimate
+        );
+    }
+
+    #[test]
+    fn debug_intent_achieves_30pct_reduction() {
+        let mut lines = vec![
+            "error: mismatched types".to_string(),
+            "panic: thread main panicked".to_string(),
+        ];
+        for i in 0..40 {
+            lines.push(format!("trace: frame {i} at src/app.rs:{}", 100 + i));
+        }
+        for i in 0..20 {
+            lines.push(format!("info: processing step {i} completed successfully"));
+        }
+        let input = lines.join("\n");
+        let r = compile_context(&input);
+        let pct = reduction_pct(r.raw_tokens_estimate, r.compiled_tokens_estimate);
+        assert!(
+            pct >= 30.0,
+            "debug: expected >=30% reduction, got {pct:.1}% (raw={}, compiled={})",
+            r.raw_tokens_estimate,
+            r.compiled_tokens_estimate
+        );
+    }
+
+    #[test]
+    fn review_intent_achieves_30pct_reduction() {
+        let mut lines = vec![
+            "diff --git a/src/main.rs b/src/main.rs".to_string(),
+            "--- a/src/main.rs".to_string(),
+            "+++ b/src/main.rs".to_string(),
+            "@@ -10,20 +10,20 @@".to_string(),
+        ];
+        for i in 0..30 {
+            lines.push(format!(" unchanged context line {i}"));
+        }
+        lines.push("-old code that was removed".to_string());
+        lines.push("+new code that was added".to_string());
+        for i in 0..30 {
+            lines.push(format!(" more unchanged context line {i}"));
+        }
+        let input = lines.join("\n");
+        let r = compile_context(&input);
+        let pct = reduction_pct(r.raw_tokens_estimate, r.compiled_tokens_estimate);
+        assert!(
+            pct >= 30.0,
+            "review: expected >=30% reduction, got {pct:.1}% (raw={}, compiled={})",
+            r.raw_tokens_estimate,
+            r.compiled_tokens_estimate
+        );
+    }
+
+    #[test]
+    fn summarize_intent_achieves_30pct_reduction() {
+        let input = "/summarize ".to_owned()
+            + &make_lines(80, "The meeting discussed various topics including");
+        let r = compile_context(&input);
+        let pct = reduction_pct(r.raw_tokens_estimate, r.compiled_tokens_estimate);
+        assert!(
+            pct >= 30.0,
+            "summarize: expected >=30% reduction, got {pct:.1}% (raw={}, compiled={})",
+            r.raw_tokens_estimate,
+            r.compiled_tokens_estimate
+        );
+    }
+
+    #[test]
+    fn codegen_intent_achieves_30pct_reduction() {
+        let mut lines = vec!["/code implement a sort function".to_string()];
+        for i in 0..20 {
+            lines.push(format!("fn helper_{i}(x: i32) -> i32 {{"));
+            lines.push(format!("    let result = x * {i};"));
+            lines.push(format!("    println!(\"debug: {{}}\", result);"));
+            lines.push("}".to_string());
+        }
+        lines.push("#[test]".to_string());
+        lines.push("fn test_sort() {".to_string());
+        lines.push("    assert_eq!(sort(vec![3,1,2]), vec![1,2,3]);".to_string());
+        lines.push("}".to_string());
+        let input = lines.join("\n");
+        let r = compile_context(&input);
+        let pct = reduction_pct(r.raw_tokens_estimate, r.compiled_tokens_estimate);
+        assert!(
+            pct >= 30.0,
+            "codegen: expected >=30% reduction, got {pct:.1}% (raw={}, compiled={})",
+            r.raw_tokens_estimate,
+            r.compiled_tokens_estimate
+        );
     }
 }

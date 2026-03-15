@@ -194,7 +194,7 @@ Ready-to-use commented entries for every provider above are in [`configs/provide
 | `dashboard/ui-vue/` | AI Flow Visualizer — Vue 3 + Vite dark dashboard |
 | `configs/` | Provider, routing, policy, and workspace configuration |
 | `deployments/` | Docker, Kubernetes, and Helm manifests |
-| `docs/` | Architecture and implementation notes |
+| `docs/` | Architecture, API reference, and implementation notes |
 | `examples/` | Quick integration examples |
 | `mcp/` | MCP server for VS Code Copilot integration |
 | `benchmarks/` | Reproducible token-reduction fixtures |
@@ -280,6 +280,8 @@ export DISTIRA_CACHE_TTL_SECS=3600  # 1 hour
 ```
 
 ## VS Code Agent Integration
+
+> **Full API documentation:** [`docs/api-reference.md`](docs/api-reference.md) — Complete REST API guide with request/response schemas, metrics explanation, slash commands, and integration recipes.
 
 DISTIRA ships with a built-in MCP (Model Context Protocol) server.
 Once configured, type `@distira` in VS Code Copilot Chat to invoke DISTIRA tools directly.

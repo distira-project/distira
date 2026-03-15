@@ -582,7 +582,19 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - **Review distillation** — ÷2 → ÷3 (33% target instead of 50%)
 - **16 new tests** — Covering all new passes and reducers (233 total workspace tests)
 
-### V10.13 — (Planned)
+### V10.13 — Minimum 30 % Reduction Across All Intents
+
+**Status:** Delivered (VERSION 10.13.0).
+
+- **Per-intent reduction targets enforced** — 5 benchmark tests validate ≥ 30 % token reduction for general, debug, review, summarize, codegen intents.
+- **Configurable salience keep ratio** — `reduce_by_salience_pct` with per-intent fractions (35–40 %) replaces the fixed 67 % keep.
+- **Double `shape_by_intent` bug fixed** — Marker now applied once; eliminates double-prefix inflation.
+- **RCTIA excluded for debug intent** — Preserves natural line structure (errors/stack traces) for the debug reducer.
+- **Raised distillation divisors** — debug/review/codegen ÷3, general ÷5. Compile floor lowered to 8. Smart short-input protection (< 32 tokens = no reduction, 32–63 = gentle).
+- **Tighter debug reducer** — Top 5 trace frames (was 10), fallback head/tail 3/6 (was 4/12).
+- **238 tests, clippy clean, fmt clean.**
+
+### V10.14 — (Planned)
 
 **Status:** Planned.
 

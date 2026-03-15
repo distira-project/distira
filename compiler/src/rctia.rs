@@ -30,8 +30,10 @@ pub fn restructure(text: &str, intent: &str) -> Option<RctiaResult> {
         return None;
     }
 
-    // Don't restructure OCR or translate — content must be preserved verbatim.
-    if matches!(intent, "ocr" | "translate") {
+    // Don't restructure OCR, translate, or debug — content must be preserved
+    // verbatim.  Debug text has natural line structure (errors, stack traces)
+    // that the reducer relies on; flattening into [C] destroys that signal.
+    if matches!(intent, "ocr" | "translate" | "debug") {
         return None;
     }
 
@@ -323,13 +325,13 @@ mod tests {
     #[test]
     fn intent_inferred_role() {
         let prompt =
-            "I have a panic in my Rust application at line 42 of main.rs. The stack trace shows \
-                       an unwrap on a None value. Fix the code to handle the Option properly. \
+            "Review the code in my Rust application at line 42 of main.rs. The diff shows \
+                       a removed unwrap on a None value. Refactor the code to handle the Option properly. \
                        Add error handling with anyhow.";
-        let result = restructure(prompt, "debug");
+        let result = restructure(prompt, "review");
         assert!(result.is_some());
         let r = result.unwrap();
-        assert!(r.structured.contains("debugging assistant"));
+        assert!(r.structured.contains("code reviewer"));
     }
 
     #[test]

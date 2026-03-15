@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Complete REST API Reference** — [`docs/api-reference.md`](docs/api-reference.md): Full documentation covering all 11 endpoints, request/response schemas, metrics glossary, slash commands, intent routing, authentication, 7 integration recipes (curl, PowerShell, Python SSE, OpenAI drop-in), and error handling.
+
+## [10.13.0] — Minimum 30 % Reduction Across All Intents
+
+### Added
+- **5 benchmark validation tests** — Per-intent reduction tests (general, debug, review, summarize, codegen) each asserting ≥ 30 % token reduction on realistic multi-line inputs.
+- **Configurable salience keep ratio** — `reduce_by_salience_pct(raw, keywords, keep_pct)` replaces the old 67 %-fixed `reduce_by_salience`; callers now specify intent-specific keep fractions (35–40 %).
+
+### Fixed
+- **Critical double `shape_by_intent` bug** — `build_compiled_context()` was calling `shape_by_intent()`, and `compile_context_with_hint()` called it again after the convergence loop, producing double markers (`[k:debug]|[k:debug]|…`) and inflating compiled token count. Marker is now applied once.
+- **RCTIA destroying debug line structure** — RCTIA flattened 62 debug lines into 3 huge `[R]/[C]/[T]` lines, making the debug reducer's line-based analysis ineffective (17 % → 90 % after fix). Debug intent is now excluded from RCTIA restructuring.
+
+### Changed
+- **Distillation divisors raised** — debug/review/codegen ÷3 (was ÷2/÷3), general ÷5 (was ÷4), more aggressive compression.
+- **Compile floor lowered** — `.max(16)` → `.max(8)` to allow deeper reduction for small inputs.
+- **Smart short-input protection** — Inputs < 32 tokens skip reduction (divisor 1); inputs 32–63 tokens get gentle treatment (divisor capped at 2).
+- **Per-intent salience ratios** — summarize 35 %, general 40 %, review fallback 40 %, codegen fallback 35 % (all were 67 %).
+- **Debug reducer tightened** — Stack trace frames: top 10 → top 5; fallback head/tail 4/12 → 3/6. 20+ new salience keywords for summarize and general.
+- **Codegen bypass lowered** — Short-input bypass from 16 → 8 lines.
+
 ## [10.12.0] — Aggressive Code Review & Codegen Token Reduction
 
 ### Added
