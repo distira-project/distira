@@ -1561,7 +1561,11 @@ async fn chat_completions(
 
     let (semantic_fp, result, semantic_cache_hit) = {
         let mut collector = state.collector.lock().unwrap();
-        compile_with_semantic_cache(&mut collector, &compile_input, payload.client_app.as_deref())
+        compile_with_semantic_cache(
+            &mut collector,
+            &compile_input,
+            payload.client_app.as_deref(),
+        )
     };
 
     // ── 2. Compile latest user message for clean LLM injection ───────────────

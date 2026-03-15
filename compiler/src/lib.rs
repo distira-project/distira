@@ -653,49 +653,105 @@ pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32
 
     // ── Debug ────────────────────────────────────────────────────────────
     for (kw, w) in [
-        ("error:", 3.0), ("panic:", 3.5), ("panicked at", 4.0),
-        ("exception", 2.5), ("traceback", 3.5), ("segfault", 4.0),
-        ("stack trace", 3.5), ("stack overflow", 4.0), ("at line ", 2.0),
-        ("thread 'main'", 3.0), ("fatal:", 3.0), ("undefined behavior", 3.5),
-        ("core dumped", 4.0), ("null pointer", 3.0), ("out of memory", 3.5),
+        ("error:", 3.0),
+        ("panic:", 3.5),
+        ("panicked at", 4.0),
+        ("exception", 2.5),
+        ("traceback", 3.5),
+        ("segfault", 4.0),
+        ("stack trace", 3.5),
+        ("stack overflow", 4.0),
+        ("at line ", 2.0),
+        ("thread 'main'", 3.0),
+        ("fatal:", 3.0),
+        ("undefined behavior", 3.5),
+        ("core dumped", 4.0),
+        ("null pointer", 3.0),
+        ("out of memory", 3.5),
         // French
-        ("erreur:", 2.5), ("plantage", 3.0), ("bogue", 2.5),
+        ("erreur:", 2.5),
+        ("plantage", 3.0),
+        ("bogue", 2.5),
     ] {
         if lower.contains(kw) {
             *scores.entry("debug").or_default() += w;
         }
     }
     // Single-word signals — present in old detector, lower weight when alone.
-    if lower.contains("panic") { *scores.entry("debug").or_default() += 2.0; }
-    if lower.contains("trace") { *scores.entry("debug").or_default() += 1.0; }
-    if lower.contains("debug") { *scores.entry("debug").or_default() += 1.5; }
+    if lower.contains("panic") {
+        *scores.entry("debug").or_default() += 2.0;
+    }
+    if lower.contains("trace") {
+        *scores.entry("debug").or_default() += 1.0;
+    }
+    if lower.contains("debug") {
+        *scores.entry("debug").or_default() += 1.5;
+    }
     // "bug" / "crash" / "fix" — weak alone, combined stronger.
-    if lower.contains("bug") { *scores.entry("debug").or_default() += 1.2; }
-    if lower.contains("crash") { *scores.entry("debug").or_default() += 2.0; }
+    if lower.contains("bug") {
+        *scores.entry("debug").or_default() += 1.2;
+    }
+    if lower.contains("crash") {
+        *scores.entry("debug").or_default() += 2.0;
+    }
     if lower.contains("fix") {
-        let bonus: f32 = if lower.contains("bug") || lower.contains("error") ||
-            lower.contains("crash") || lower.contains("broken") { 2.5 } else { 0.6 };
+        let bonus: f32 = if lower.contains("bug")
+            || lower.contains("error")
+            || lower.contains("crash")
+            || lower.contains("broken")
+        {
+            2.5
+        } else {
+            0.6
+        };
         *scores.entry("debug").or_default() += bonus;
     }
 
     // ── Code generation ──────────────────────────────────────────────────
     for (kw, w) in [
-        ("write a function", 4.5), ("write a method", 4.0), ("write code", 3.5),
-        ("write a script", 3.5), ("write me a", 3.0), ("implement this", 3.5),
-        ("implement in", 3.0), ("generate code", 4.0), ("generate a function", 4.5),
-        ("create a function", 4.0), ("create a class", 4.0), ("create a script", 3.5),
-        ("code snippet", 3.5), ("code example", 3.0), ("help me code", 3.5),
-        ("complete this code", 3.5), ("complete this function", 3.5),
-        ("complete the code", 3.5), ("add a function", 3.0), ("add a method", 3.0),
-        ("give me the code", 3.5), ("show me the code", 3.0), ("codex", 2.0),
+        ("write a function", 4.5),
+        ("write a method", 4.0),
+        ("write code", 3.5),
+        ("write a script", 3.5),
+        ("write me a", 3.0),
+        ("implement this", 3.5),
+        ("implement in", 3.0),
+        ("generate code", 4.0),
+        ("generate a function", 4.5),
+        ("create a function", 4.0),
+        ("create a class", 4.0),
+        ("create a script", 3.5),
+        ("code snippet", 3.5),
+        ("code example", 3.0),
+        ("help me code", 3.5),
+        ("complete this code", 3.5),
+        ("complete this function", 3.5),
+        ("complete the code", 3.5),
+        ("add a function", 3.0),
+        ("add a method", 3.0),
+        ("give me the code", 3.5),
+        ("show me the code", 3.0),
+        ("codex", 2.0),
         // Language-specific patterns ("write a rust function", "write a typescript function"…)
-        ("rust function", 3.5), ("python function", 3.5), ("typescript function", 3.5),
-        ("javascript function", 3.5), ("go function", 3.0), ("kotlin function", 3.0),
-        ("swift function", 3.0), ("c++ function", 3.0), ("java function", 3.0),
+        ("rust function", 3.5),
+        ("python function", 3.5),
+        ("typescript function", 3.5),
+        ("javascript function", 3.5),
+        ("go function", 3.0),
+        ("kotlin function", 3.0),
+        ("swift function", 3.0),
+        ("c++ function", 3.0),
+        ("java function", 3.0),
         // French
-        ("écris du code", 4.5), ("écris une fonction", 4.5), ("implémente", 3.0),
-        ("crée une fonction", 4.0), ("crée un script", 3.5), ("génère du code", 4.0),
-        ("génère une fonction", 4.5), ("écris un script", 3.5), ("écris moi", 2.5),
+        ("écris du code", 4.5),
+        ("écris une fonction", 4.5),
+        ("implémente", 3.0),
+        ("crée une fonction", 4.0),
+        ("crée un script", 3.5),
+        ("génère du code", 4.0),
+        ("génère une fonction", 4.5),
+        ("écris un script", 3.5),
+        ("écris moi", 2.5),
     ] {
         if lower.contains(kw) {
             *scores.entry("codegen").or_default() += w;
@@ -708,16 +764,32 @@ pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32
 
     // ── Review / improvement ─────────────────────────────────────────────
     for (kw, w) in [
-        ("code review", 5.0), ("pull request", 4.5), ("pr review", 4.5),
-        ("review this", 3.5), ("review the code", 4.0), ("refactor", 4.0),
-        ("diff --git", 4.5), ("diff ", 2.5),
-        ("improve this", 3.0), ("improve the", 2.5), ("optimize this", 3.0),
-        ("optimise this", 3.0), ("optimize the", 2.5), ("optimise the", 2.5),
-        ("make it better", 2.5), ("make this better", 2.5), ("clean up", 2.0),
-        ("simplify this", 2.5), ("restructure", 3.0), ("best practices", 2.5),
+        ("code review", 5.0),
+        ("pull request", 4.5),
+        ("pr review", 4.5),
+        ("review this", 3.5),
+        ("review the code", 4.0),
+        ("refactor", 4.0),
+        ("diff --git", 4.5),
+        ("diff ", 2.5),
+        ("improve this", 3.0),
+        ("improve the", 2.5),
+        ("optimize this", 3.0),
+        ("optimise this", 3.0),
+        ("optimize the", 2.5),
+        ("optimise the", 2.5),
+        ("make it better", 2.5),
+        ("make this better", 2.5),
+        ("clean up", 2.0),
+        ("simplify this", 2.5),
+        ("restructure", 3.0),
+        ("best practices", 2.5),
         // French
-        ("améliore", 2.5), ("optimise le", 3.0), ("revue de code", 5.0),
-        ("refactore", 4.0), ("amélioration de", 2.5),
+        ("améliore", 2.5),
+        ("optimise le", 3.0),
+        ("revue de code", 5.0),
+        ("refactore", 4.0),
+        ("amélioration de", 2.5),
     ] {
         if lower.contains(kw) {
             *scores.entry("review").or_default() += w;
@@ -726,13 +798,24 @@ pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32
 
     // ── Summarize ────────────────────────────────────────────────────────
     for (kw, w) in [
-        ("summarize", 5.0), ("summarise", 5.0), ("tldr", 5.0), ("recap", 4.0),
-        ("explain this", 3.0), ("explain how", 2.5), ("explain the", 2.0),
-        ("what does this do", 3.5), ("what is this", 2.5), ("how does this work", 3.0),
-        ("give me an overview", 3.5), ("walk me through", 3.0),
+        ("summarize", 5.0),
+        ("summarise", 5.0),
+        ("tldr", 5.0),
+        ("recap", 4.0),
+        ("explain this", 3.0),
+        ("explain how", 2.5),
+        ("explain the", 2.0),
+        ("what does this do", 3.5),
+        ("what is this", 2.5),
+        ("how does this work", 3.0),
+        ("give me an overview", 3.5),
+        ("walk me through", 3.0),
         // French
-        ("résume", 4.5), ("résumé de", 4.0), ("explique", 2.5),
-        ("comment ça marche", 3.0), ("c'est quoi", 2.5),
+        ("résume", 4.5),
+        ("résumé de", 4.0),
+        ("explique", 2.5),
+        ("comment ça marche", 3.0),
+        ("c'est quoi", 2.5),
     ] {
         if lower.contains(kw) {
             *scores.entry("summarize").or_default() += w;
@@ -741,11 +824,23 @@ pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32
 
     // ── Translation ──────────────────────────────────────────────────────
     for (kw, w) in [
-        ("translat", 5.0), ("traduire", 5.0), ("traduis", 5.0), ("traduction", 4.5),
-        ("übersetze", 5.0), ("traducir", 5.0), ("traduci", 5.0), ("翻译", 5.0),
-        ("in english", 3.0), ("in french", 3.0), ("in german", 3.0),
-        ("in spanish", 3.0), ("in japanese", 3.0), ("in chinese", 3.0),
-        ("en anglais", 3.0), ("en français", 3.0), ("en allemand", 3.0),
+        ("translat", 5.0),
+        ("traduire", 5.0),
+        ("traduis", 5.0),
+        ("traduction", 4.5),
+        ("übersetze", 5.0),
+        ("traducir", 5.0),
+        ("traduci", 5.0),
+        ("翻译", 5.0),
+        ("in english", 3.0),
+        ("in french", 3.0),
+        ("in german", 3.0),
+        ("in spanish", 3.0),
+        ("in japanese", 3.0),
+        ("in chinese", 3.0),
+        ("en anglais", 3.0),
+        ("en français", 3.0),
+        ("en allemand", 3.0),
     ] {
         if lower.contains(kw) {
             *scores.entry("translate").or_default() += w;
@@ -754,8 +849,12 @@ pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32
 
     // ── OCR ──────────────────────────────────────────────────────────────
     for (kw, w) in [
-        (" ocr ", 5.0), ("scan image", 5.0), ("extract text from", 4.5),
-        ("image to text", 5.0), ("read this image", 4.5), ("text from image", 4.5),
+        (" ocr ", 5.0),
+        ("scan image", 5.0),
+        ("extract text from", 4.5),
+        ("image to text", 5.0),
+        ("read this image", 4.5),
+        ("text from image", 4.5),
     ] {
         if lower.contains(kw) {
             *scores.entry("ocr").or_default() += w;
