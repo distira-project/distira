@@ -575,6 +575,7 @@ const lastRequestCard = computed(() => {
 
 .chart-section {
   margin-top: 20px;
+  max-width: 720px;
 }
 
 .chart-heading {

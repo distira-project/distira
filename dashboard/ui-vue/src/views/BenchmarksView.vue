@@ -199,7 +199,7 @@ const chartSeries = computed(() => {
 .summary-item { display: flex; flex-direction: column; gap: 4px; }
 .summary-item span { font-size: 0.82rem; }
 .summary-item strong { font-size: 1.3rem; color: var(--primary); }
-.chart-section { margin-top: 20px; }
+.chart-section { margin-top: 20px; max-width: 720px; }
 .chart-section h3 { margin: 0 0 16px; font-size: 1rem; }
 .live-badge {
   font-size: 0.82rem;
