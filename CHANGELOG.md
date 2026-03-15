@@ -240,7 +240,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`detect_intent_scored(raw, client_app)`** in `compiler/src/lib.rs` — replaces the first-match if/else chain with a weighted multi-signal scoring system. All intents are scored in parallel; the highest total wins. Confidence ∈ [0.0, 1.0] derived from the raw score.
 - **VS Code Copilot context hint** — when `client_app` contains "copilot" or "vs code", code-adjacent intents (codegen, review, debug) receive a boost so coding prompts classify more accurately.
-- **Structural signals** — presence of code blocks (` ``` `, `fn `, `def `, `impl `, `struct `), diff markers (`diff --git`), and composite patterns (`write a … function`) are independent scoring signals, not fall-through catches.
+- **Structural signals** — presence of code blocks (` ``` `, `fn`, `def`, `impl`, `struct`), diff markers (`diff --git`), and composite patterns (`write a … function`) are independent scoring signals, not fall-through catches.
 - **"improve"/"optimize"/"refactor"/"clean up" keywords** now route to `review` intent (→ `qwen2.5-coder`) instead of falling through to `general`.
 - **French keyword coverage** extended across all intents: `améliore`, `optimise le`, `revue de code`, `résume`, `explique`, `bogue`, `plantage`, etc.
 - **`intent_confidence: f32`** field in `CompileResult` — exposed in `/v1/compile` and `/v1/chat/completions` JSON responses.
@@ -472,8 +472,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ` (e.g., `"foo
 "` → `"foo
 
-"`), breaking `encode(encode(x)) == encode(x)` for any message ending with a newline (ubiquitous in LLM chat messages). Fix: push `
-` *between* segments only (`idx < last_idx`); the trailing-empty segment from `split('
+"`), breaking`encode(encode(x)) == encode(x)` for any message ending with a newline (ubiquitous in LLM chat messages). Fix: push `
+`*between* segments only (`idx < last_idx`); the trailing-empty segment from`split('
 ')` naturally accounts for the final newline.
 - **`core/src/main.rs` (`metrics_stream`)** — Replaced `lock().unwrap()` with `lock().unwrap_or_else(|e| e.into_inner())` so a poisoned mutex (caused by a panic under lock elsewhere) does not permanently kill the SSE stream.
 - **Test suite: 133 tests, 0 failures** (+2 tests: `encode_is_idempotent_with_trailing_newline` for single-line and multi-line inputs with trailing `
@@ -488,7 +488,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   3. **Excess blank-line collapsing** — 3+ consecutive newlines → 2 (`
 
 `); LLMs treat a blank line as a paragraph break, additional blank lines add tokens with no semantic gain.
-  4. **Inline whitespace normalization** — preserves leading indentation (code blocks, YAML, TOML); collapses internal whitespace runs to a single space; strips trailing whitespace per line. Idempotent: `encode(encode(x)) == encode(x)`.
+  4. **Inline whitespace normalization** — preserves leading indentation (code blocks, YAML, TOML); collapses internal whitespace runs to a single space; strips trailing whitespace per line. Idempotent:`encode(encode(x)) == encode(x)`.
 - **`tokenizer::encode_for(text, family)`** — Family-aware variant kept for future calibration per tokenizer vocabulary.
 - **`tokenizer::decode(text)`** — New public function that post-processes raw LLM output to fix BPE reconstruction artifacts before serving and caching. Applied in `core::chat_completions` on all provider responses (both streaming and non-streaming). Fixes:
   1. **CRLF normalization** — `\r

@@ -1,9 +1,9 @@
-## DISTIRA Sovereign AI — Mandatory Pipeline Rule
+# DISTIRA Sovereign AI — Mandatory Pipeline Rule
 
 This workspace runs **DISTIRA** (The AI Context Compiler) on localhost:8080.
 You have access to the distira_compile MCP tool via the distira MCP server.
 
-### REQUIRED on every single response — no exceptions
+## REQUIRED on every single response — no exceptions
 
 **Call distira_compile as your FIRST action**, passing the user's message as context, before writing any answer.
 

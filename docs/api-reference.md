@@ -81,6 +81,7 @@ curl -H "Authorization: Bearer your-secret-key" \
 Returns the service health status. Always public.
 
 **Request:**
+
 ```bash
 curl http://localhost:8080/healthz
 ```
