@@ -55,25 +55,34 @@
       <FlowVisualizer />
     </div>
 
-    <section class="card chart-section">
-      <div class="chart-heading">
-        <h3>Token Trends ({{ trendWindowLabel }})</h3>
-        <span class="chart-timestamp">Last update: {{ trendLastUpdate }}</span>
-        <div class="window-switch" role="group" aria-label="Token trends window">
-          <button
-            v-for="w in trendWindowOptions"
-            :key="w"
-            type="button"
-            class="window-btn"
-            :class="{ active: trendWindow === w }"
-            @click="trendWindow = w"
-          >
-            {{ w }}
-          </button>
+    <div class="charts-row">
+      <section class="card chart-section">
+        <div class="chart-heading">
+          <h3>Token Trends ({{ trendWindowLabel }})</h3>
+          <span class="chart-timestamp">Last update: {{ trendLastUpdate }}</span>
+          <div class="window-switch" role="group" aria-label="Token trends window">
+            <button
+              v-for="w in trendWindowOptions"
+              :key="w"
+              type="button"
+              class="window-btn"
+              :class="{ active: trendWindow === w }"
+              @click="trendWindow = w"
+            >
+              {{ w }}
+            </button>
+          </div>
         </div>
-      </div>
-      <TvChart :series="trendSeries" :labels="trendLabels" :height="220" />
-    </section>
+        <TvChart :series="trendSeries" :labels="trendLabels" :height="220" :hideXLabels="true" />
+      </section>
+
+      <section class="card chart-section">
+        <div class="chart-heading">
+          <h3>Token Trends (live)</h3>
+        </div>
+        <TvChart :series="liveSeries" :labels="liveLabels" :height="220" :hideXLabels="true" />
+      </section>
+    </div>
 
     <section class="card scope-clarity-section">
       <div class="scope-clarity-header">
@@ -375,6 +384,23 @@ const trendSeries = computed(() => [
   },
 ])
 
+// Live per-request chart (moved from BenchmarksView)
+const liveLabels = computed(() =>
+  metrics.historyRaw.length
+    ? metrics.historyRaw.map((_: number, i: number) => `#${i + 1}`)
+    : ['—']
+)
+const liveSeries = computed(() => {
+  const raw = metrics.historyRaw.length ? [...metrics.historyRaw] : [0]
+  const compiled = metrics.historyCompiled.length ? [...metrics.historyCompiled] : [0]
+  const saved = raw.map((r: number, i: number) => r - (compiled[i] ?? 0))
+  return [
+    { name: 'Raw tokens', data: raw, color: '#ffa940' },
+    { name: 'Compiled', data: compiled, color: 'var(--primary)' },
+    { name: 'Saved', data: saved, color: 'var(--accent)' },
+  ]
+})
+
 const TEST_PATTERNS = /^(t|test|unknown-model)$/i
 
 const upstreamRows = computed(() => {
@@ -573,9 +599,15 @@ const lastRequestCard = computed(() => {
   flex-shrink: 0;
 }
 
-.chart-section {
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin-top: 20px;
-  max-width: 720px;
+}
+
+.chart-section {
+  margin-top: 0;
 }
 
 .chart-heading {
@@ -931,6 +963,10 @@ const lastRequestCard = computed(() => {
 }
 
 @media (max-width: 980px) {
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+
   .scope-clarity-grid {
     grid-template-columns: 1fr;
   }

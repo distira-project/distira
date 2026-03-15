@@ -43,7 +43,7 @@
       </g>
     </svg>
     <!-- X labels -->
-    <div v-if="visibleLabels.length" class="tv-labels">
+    <div v-if="!hideXLabels && visibleLabels.length" class="tv-labels">
       <span v-for="(l, i) in visibleLabels" :key="i" class="tv-label">{{ l }}</span>
     </div>
     <!-- Tooltip -->
@@ -69,10 +69,12 @@ const props = withDefaults(defineProps<{
   labels?: string[]
   width?: number
   height?: number
+  hideXLabels?: boolean
 }>(), {
   labels: () => [],
   width: 600,
   height: 200,
+  hideXLabels: false,
 })
 
 const uid = Math.random().toString(36).slice(2, 8)
