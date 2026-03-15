@@ -1,7 +1,7 @@
-//! # RCTIA Prompt Compiler
+//! # RCT2I Prompt Compiler
 //!
-//! Restructures unstructured prompts into the **RCTIA** framework
-//! (Rôle, Contexte, Tâches, Instructions, Amélioration) for more efficient
+//! Restructures unstructured prompts into the **RCT2I** framework
+//! (Role, Context, Tasks, Instructions, Improvement) for more efficient
 //! LLM consumption.
 //!
 //! ## How it saves tokens
@@ -13,31 +13,37 @@
 //!
 //! Applied *after* the BPE optimizer and *before* the convergence loop.
 
-/// RCTIA-structured output.
-pub struct RctiaResult {
+/// RCT2I-structured output.
+pub struct Rct2iResult {
     pub structured: String,
     pub sections_found: u8,
 }
 
-/// Attempt to restructure the prompt into RCTIA format.
+/// Attempt to restructure the prompt into RCT2I format.
 ///
 /// Only restructures if we detect at least a task component (otherwise the
 /// prompt is too short/ambiguous to benefit).  Returns None when the input
 /// doesn't warrant restructuring (≤30 tokens or already structured).
-pub fn restructure(text: &str, intent: &str) -> Option<RctiaResult> {
+pub fn restructure(text: &str, intent: &str) -> Option<Rct2iResult> {
     let trimmed = text.trim();
-    if trimmed.is_empty() || trimmed.split_whitespace().count() <= 12 {
+    // V10.16: lowered from 12→4 words so most real requests get restructured.
+    if trimmed.is_empty() || trimmed.split_whitespace().count() <= 4 {
         return None;
     }
 
-    // Don't restructure OCR, translate, or debug — content must be preserved
-    // verbatim.  Debug text has natural line structure (errors, stack traces)
-    // that the reducer relies on; flattening into [C] destroys that signal.
-    if matches!(intent, "ocr" | "translate" | "debug") {
+    // Don't restructure OCR or translate — content must be preserved verbatim.
+    if matches!(intent, "ocr" | "translate") {
         return None;
     }
 
-    // Already structured? (starts with RCTIA markers or markdown headers)
+    // Skip if the input is a raw technical artifact (stack traces, diffs,
+    // compiler output) — flattening these into RCT2I sections would destroy
+    // the line-level structure that semantic reducers rely on.
+    if is_raw_artifact(trimmed) {
+        return None;
+    }
+
+    // Already structured? (starts with RCT2I markers or markdown headers)
     if looks_structured(trimmed) {
         return None;
     }
@@ -81,16 +87,16 @@ pub fn restructure(text: &str, intent: &str) -> Option<RctiaResult> {
         sections += 1;
     }
 
-    // A — Amélioration (auto-generated quality hint based on intent)
-    let ameli = amelioration_hint(intent);
-    if !ameli.is_empty() {
-        out.push_str("[A] ");
-        out.push_str(ameli);
+    // I — Improvement (auto-generated quality hint based on intent)
+    let improv = improvement_hint(intent);
+    if !improv.is_empty() {
+        out.push_str("[I] ");
+        out.push_str(improv);
         out.push('\n');
         sections += 1;
     }
 
-    Some(RctiaResult {
+    Some(Rct2iResult {
         structured: out.trim_end().to_string(),
         sections_found: sections,
     })
@@ -98,7 +104,7 @@ pub fn restructure(text: &str, intent: &str) -> Option<RctiaResult> {
 
 fn looks_structured(text: &str) -> bool {
     let lower = text.to_lowercase();
-    // Check for existing RCTIA markers or common structured formats.
+    // Check for existing RCT2I markers or common structured formats.
     lower.starts_with("[r]")
         || lower.starts_with("[c]")
         || lower.starts_with("[t]")
@@ -180,9 +186,15 @@ fn classify_lines(text: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
         }
     }
 
-    // If no explicit tasks found, treat the first non-context line as a task.
+    // If no explicit tasks found, promote content to tasks so RCT2I always
+    // produces a [T] section for any non-trivial input.
     if tasks.is_empty() && !context.is_empty() {
         tasks.push(context.remove(0));
+    }
+    // V10.16: last resort — collapse remaining context into a single task
+    // rather than returning None.  Every request deserves structuring.
+    if tasks.is_empty() && !instructions.is_empty() {
+        tasks.push(instructions.remove(0));
     }
 
     (context, tasks, instructions)
@@ -225,6 +237,7 @@ fn is_task_line(lower: &str) -> bool {
         || lower.starts_with("1.")
         || lower.starts_with("2.")
         || lower.starts_with("3.")
+        // EN task verbs
         || lower.contains("implement")
         || lower.contains("create")
         || lower.contains("write")
@@ -234,12 +247,66 @@ fn is_task_line(lower: &str) -> bool {
         || lower.contains("update")
         || lower.contains("refactor")
         || lower.contains("build")
+        || lower.contains("explain")
+        || lower.contains("show")
+        || lower.contains("analyze")
+        || lower.contains("analyse")
+        || lower.contains("find")
+        || lower.contains("check")
+        || lower.contains("test")
+        || lower.contains("describe")
+        || lower.contains("compare")
+        || lower.contains("convert")
+        || lower.contains("migrate")
+        || lower.contains("deploy")
+        || lower.contains("install")
+        || lower.contains("configure")
+        || lower.contains("optimize")
+        || lower.contains("improve")
+        || lower.contains("change")
+        || lower.contains("modify")
+        || lower.contains("debug")
+        || lower.contains("trace")
+        || lower.contains("review")
+        || lower.contains("summarize")
+        || lower.contains("translate")
+        || lower.contains("generate")
+        || lower.contains("design")
+        || lower.contains("delete")
+        || lower.contains("move")
+        || lower.contains("rename")
+        || lower.contains("help")
+        // FR task verbs
         || lower.contains("implémente")
         || lower.contains("crée")
         || lower.contains("écris")
         || lower.contains("corrige")
         || lower.contains("ajoute")
         || lower.contains("supprime")
+        || lower.contains("explique")
+        || lower.contains("montre")
+        || lower.contains("analyse")
+        || lower.contains("vérifie")
+        || lower.contains("teste")
+        || lower.contains("décris")
+        || lower.contains("trouve")
+        || lower.contains("cherche")
+        || lower.contains("résous")
+        || lower.contains("optimise")
+        || lower.contains("améliore")
+        || lower.contains("modifie")
+        || lower.contains("configure")
+        || lower.contains("installe")
+        || lower.contains("déploie")
+        || lower.contains("génère")
+        || lower.contains("conçois")
+        || lower.contains("renomme")
+        || lower.contains("déplace")
+        || lower.contains("aide")
+        || lower.contains("répare")
+        || lower.contains("mets à jour")
+        || lower.contains("fais")
+        || lower.contains("fait")
 }
 
 fn is_instruction_line(lower: &str) -> bool {
@@ -255,25 +322,78 @@ fn is_instruction_line(lower: &str) -> bool {
         || lower.contains("keep ")
         || lower.contains("return ")
         || lower.contains("output ")
+        || lower.contains("only ")
+        || lower.contains("always ")
+        || lower.contains("never ")
+        || lower.contains("prefer ")
+        || lower.contains("instead ")
+        || lower.contains("without ")
         || lower.contains("in json")
         || lower.contains("in typescript")
         || lower.contains("in rust")
         || lower.contains("in python")
+        || lower.contains("in go")
+        || lower.contains("in kotlin")
+        || lower.contains("in java")
+        // FR instruction markers
         || lower.contains("doit ")
         || lower.contains("ne pas ")
         || lower.contains("assure-toi")
         || lower.contains("utilise ")
         || lower.contains("évite ")
+        || lower.contains("il faut")
+        || lower.contains("sans ")
+        || lower.contains("toujours ")
+        || lower.contains("jamais ")
+        || lower.contains("plutôt ")
+        || lower.contains("seulement ")
+        || lower.contains("en json")
+        || lower.contains("en typescript")
+        || lower.contains("en rust")
+        || lower.contains("en python")
 }
 
-fn amelioration_hint(intent: &str) -> &'static str {
+/// Detect raw technical artifacts (stack traces, diffs, compiler output) that
+/// should NOT be restructured — their line structure is meaningful.
+fn is_raw_artifact(text: &str) -> bool {
+    let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
+    if lines.len() < 2 {
+        return false;
+    }
+    let artifact_count = lines
+        .iter()
+        .filter(|l| {
+            let t = l.trim().to_lowercase();
+            t.starts_with("trace:")
+                || t.starts_with("at ")
+                || t.starts_with("panic:")
+                || t.starts_with("error:")
+                || t.starts_with("warning:")
+                || t.starts_with("-->")
+                || t.starts_with("diff ")
+                || t.starts_with("@@")
+                || t.starts_with("+ ")
+                || t.starts_with("- ")
+                || t.starts_with("info ")
+                || t.starts_with("| ")
+                || t.starts_with("fatal:")
+                || t.starts_with("caused by:")
+                || t.starts_with("note:")
+                || t == "|"
+        })
+        .count();
+    // If more than half of lines are artifact markers, skip RCT2I
+    artifact_count * 2 > lines.len()
+}
+
+fn improvement_hint(intent: &str) -> &'static str {
     match intent {
         "debug" => "verify fix correctness, suggest root cause",
         "review" => "check for bugs, performance, security",
         "codegen" => "write idiomatic, tested, minimal code",
         "summarize" | "fast" => "be concise, preserve key facts",
         "quality" => "thorough analysis, best practices",
-        _ => "",
+        _ => "be clear, direct, and actionable",
     }
 }
 
@@ -283,6 +403,7 @@ mod tests {
 
     #[test]
     fn short_prompt_returns_none() {
+        // 3 words: below the 4-word threshold
         assert!(restructure("fix the bug", "debug").is_none());
     }
 
@@ -296,6 +417,17 @@ mod tests {
     fn already_structured_returns_none() {
         let text = "[R] code reviewer\n[C] reviewing a PR\n[T] find bugs";
         assert!(restructure(text, "review").is_none());
+    }
+
+    #[test]
+    fn debug_intent_gets_restructured() {
+        let prompt = "error: mismatched types at line 42 in main.rs. The function expects i32 but received a string. Please explain what is wrong.";
+        let result = restructure(prompt, "debug");
+        assert!(result.is_some(), "debug prompts should be restructured");
+        let r = result.unwrap();
+        assert!(r.structured.contains("[R]"));
+        assert!(r.structured.contains("[I]"));
+        assert!(r.structured.contains("root cause"));
     }
 
     #[test]
@@ -335,13 +467,13 @@ mod tests {
     }
 
     #[test]
-    fn amelioration_added_for_codegen() {
+    fn improvement_added_for_codegen() {
         let prompt = "We need a function to parse CSV files into structs. The CSV has headers name, age, email. \
                        Implement the parser in Rust. Use serde for deserialization.";
         let result = restructure(prompt, "codegen");
         assert!(result.is_some());
         let r = result.unwrap();
-        assert!(r.structured.contains("[A]"));
+        assert!(r.structured.contains("[I]"));
         assert!(r.structured.contains("idiomatic"));
     }
 

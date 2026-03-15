@@ -26,6 +26,8 @@
         <RouterLink :to="{ name: 'insights' }" @click="menuOpen = false"><SvgIcon name="lightbulb" :size="18" /> Insights</RouterLink>
         <RouterLink :to="{ name: 'benchmarks' }" @click="menuOpen = false"><SvgIcon name="trending-up" :size="18" /> Benchmarks</RouterLink>
         <RouterLink :to="{ name: 'audit' }" @click="menuOpen = false"><SvgIcon name="radio" :size="18" /> Runtime Audit</RouterLink>
+        <RouterLink :to="{ name: 'providers' }" @click="menuOpen = false"><SvgIcon name="server" :size="18" /> Providers</RouterLink>
+        <RouterLink :to="{ name: 'guide' }" @click="menuOpen = false"><SvgIcon name="book" :size="18" /> Guide</RouterLink>
       </nav>
       <div class="sidebar-footer">
         <span class="sse-indicator" :class="{ live: metrics.connected }">

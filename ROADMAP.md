@@ -1,4 +1,4 @@
-﻿# DISTIRA Roadmap
+# DISTIRA Roadmap
 
 ## Completed iterations
 
@@ -559,17 +559,17 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - **Compiler pipeline** — Now 3-phase: pre-optimize → semantic reduce → post-optimize with convergence loop.
 - **5 new optimizer tests** — Total 209 workspace tests, all passing.
 
-### V10.11 — RCTIA Prompt Compiler
+### V10.11 — RCT2I Prompt Compiler
 
 **Status:** Delivered (VERSION 10.11.0).
 
-- **RCTIA prompt restructuring** — automatic prompt rewriting applying Rôle, Contexte, Tâches, Instructions, Amélioration (RCTIA) sections before LLM submission.
+- **RCT2I prompt restructuring** — automatic prompt rewriting applying Rôle, Contexte, Tâches, Instructions, Improvement (RCT2I) sections before LLM submission.
 - **Sentence-level segmentation** — single-line prompts split on `. ` boundaries for accurate classification.
 - **Bilingual** — French role/task/instruction keywords detected natively.
 - **Intent-inferred roles** — compiler infers role when not explicitly declared.
-- **Amélioration hints** — per-intent quality improvement hints auto-appended.
-- **8 new RCTIA tests** — 217 total workspace tests, all passing.
-- **Pipeline** — Now 4-phase: pre-optimize → RCTIA restructure → semantic reduce → post-optimize with convergence loop.
+- **Improvement hints** — per-intent quality improvement hints auto-appended.
+- **8 new RCT2I tests** — 217 total workspace tests, all passing.
+- **Pipeline** — Now 4-phase: pre-optimize → RCT2I restructure → semantic reduce → post-optimize with convergence loop.
 
 ### V10.12 — Aggressive Code Review & Codegen Token Reduction
 
@@ -589,15 +589,61 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - **Per-intent reduction targets enforced** — 5 benchmark tests validate ≥ 30 % token reduction for general, debug, review, summarize, codegen intents.
 - **Configurable salience keep ratio** — `reduce_by_salience_pct` with per-intent fractions (35–40 %) replaces the fixed 67 % keep.
 - **Double `shape_by_intent` bug fixed** — Marker now applied once; eliminates double-prefix inflation.
-- **RCTIA excluded for debug intent** — Preserves natural line structure (errors/stack traces) for the debug reducer.
+- **RCT2I excluded for debug intent** — Preserves natural line structure (errors/stack traces) for the debug reducer.
 - **Raised distillation divisors** — debug/review/codegen ÷3, general ÷5. Compile floor lowered to 8. Smart short-input protection (< 32 tokens = no reduction, 32–63 = gentle).
 - **Tighter debug reducer** — Top 5 trace frames (was 10), fallback head/tail 3/6 (was 4/12).
 - **238 tests, clippy clean, fmt clean.**
 
-### V10.14 — (Planned)
+### V10.14 — Auto Efficiency Directives
 
-**Status:** Planned.
+**Status:** Delivered (VERSION 10.14.0).
 
-- Cross-request deduplication (system prompt + conversation history compression)
-- BPE-boundary aware token merging
-- Dashboard RCTIA toggle + structured prompt viewer
+- **Per-intent efficiency directives** — 7 intent-specific LLM instructions auto-injected into every request to reduce output tokens (debug, review, codegen, summarize, translate, ocr, general).
+- **Always-on injection** — Replaces config-gated `concise_mode`; directives inject unconditionally via `inject_efficiency_directive`.
+- **`efficiency_directive` field** exposed in `/v1/compile` response and `CompileResult` struct.
+- **5 new tests** — Directive variation, content checks, compile integration, token overhead cap.
+- **243 tests, clippy clean, fmt clean.**
+
+### V10.15 — Cross-Request Deduplication, BPE-Boundary Truncation & RCT2I Dashboard
+
+**Status:** Delivered (VERSION 10.15.0).
+
+- **BPE-boundary aware truncation** — `truncate_to_token_budget` uses `token_count()` per line/word for accurate budget adherence. Partial lines terminated with `…` (U+2026).
+- **Cross-request deduplication** — `compile_older_turns()` compiles system prompts and older messages through DISTIRA. `dedup_cross_messages()` fingerprint-deduplicates repeated paragraphs across conversation turns.
+- **RCT2I metadata & tracking** — `RCT2I_applied`, `RCT2I_sections` in CompileResult and `/v1/compile` response. `RCT2I_applied_count` counter in MetricsSnapshot and `/v1/metrics`.
+- **Dashboard RCT2I viewer** — "RCT2I Structured" KPI card in OverviewView. Dynamic RCT2I insight card in InsightsView showing activation rate and recommendations.
+- **Short-input threshold raised 32 → 48** — BPE-accurate truncation needs more headroom for symbol-heavy inputs.
+- **Marker cost deduction removed** — Intent marker added by `shape_by_intent` AFTER truncation, body budget no longer reduced.
+- **11 new tests** — 6 compiler (BPE truncation, RCT2I metadata) + 5 core (compile_older_turns, dedup_cross_messages).
+- **254 tests, clippy clean, fmt clean.**
+
+### V10.16 — Advanced Compression & Commvault-Style Deduplication
+
+**Status:** Delivered (VERSION 10.16.0).
+
+- **Non-consecutive line deduplication** (Pass 11) — Commvault-inspired content-addressable dedup removes repeated lines scattered throughout a prompt. Uses HashSet fingerprints (lowercase + collapsed whitespace) to keep first occurrence and remove subsequent duplicates.
+- **Compiled ≤ raw cap** — `compiled_tokens_estimate` capped at `raw_tokens_estimate` to fix marker overhead (`[k:intent]|`) causing negative savings.
+- **Stronger compression** — Short-input threshold 48→40, distillation divisors debug/review/codegen 3→4, keep percentages lowered across all reducers.
+- **Stopwords for review** — Boundary-safe stopword stripping now applies to code review intent.
+- **Dashboard improvements** — 5-column KPI grid, Before/After Pipeline Example section in OverviewView.
+- **RCT2I always-on** — word threshold lowered 12→4, `debug` intent enabled, 65+ EN/FR task/instruction keywords, `general` intent now gets [A] hint, `is_raw_artifact` guard preserves stack traces and diffs.
+- **3 new tests** (compiled cap, dedup, marker absorption). 258 total, clippy clean.
+
+### V10.17 — Provider Health Observatory & Metrics Export
+
+**Status:** Delivered (VERSION 10.17.0).
+
+- **Provider Health Observatory** — New `/providers` dashboard view with per-provider live status (healthy/degraded/down), request counts, error rates, and average latency. Colour-coded status badges, sortable table, responsive layout.
+- **`GET /v1/metrics/export`** — Enterprise metrics export endpoint. Returns structured JSON: cumulative totals, per-provider breakdown (requests, errors, error rate, latency), per-intent breakdown (requests, tokens saved, savings %). Designed for enterprise reporting and observability integration.
+- **`provider_health` in SSE/REST metrics** — Every `/v1/metrics` snapshot and SSE tick includes a `provider_health` array with per-provider health scoring based on error rate (≥50% = down, ≥10% = degraded) and latency (≥5000ms = degraded).
+- **Server icon** in SvgIcon. Dashboard sidebar: 10 views (Overview, Savings, AI Flow, Memory, Insights, Benchmarks, Audit, Providers, Guide).
+- **Metrics export button** — One-click JSON download in ProvidersView for enterprise reporting.
+- **258 tests, clippy clean, fmt clean.**
+
+### V10.18 — (Planned)
+
+- Streaming deduplication for SSE chat responses
+- Dashboard: per-model latency heatmap over time
+- Multi-tenant metrics isolation
+- Prometheus / OpenTelemetry metrics export
+- Dashboard RCT2I toggle + structured prompt viewer

@@ -26,6 +26,7 @@
    - [GET /v1/metrics](#get-v1metrics)
    - [GET /v1/metrics/stream](#get-v1metricsstream)
    - [DELETE /v1/metrics/reset](#delete-v1metricsreset)
+- [GET /v1/metrics/export](#get-v1metricsexport)
 9. [Suggestions](#suggestions)
    - [GET /v1/suggestions](#get-v1suggestions)
 10. [Slash Commands](#slash-commands)
@@ -85,6 +86,7 @@ curl http://localhost:8080/healthz
 ```
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -100,11 +102,13 @@ curl http://localhost:8080/healthz
 Returns the product version.
 
 **Request:**
+
 ```bash
 curl http://localhost:8080/version
 ```
 
 **Response:**
+
 ```json
 {
   "version": "10.13.0",
@@ -164,6 +168,9 @@ curl -X POST http://localhost:8080/v1/compile \
   "summary": "Intent: debug. Reduced estimated context from 38 to 27 tokens.",
   "slash_command": null,
   "force_local": false,
+  "efficiency_directive": "Be a precise debugging assistant. Return ONLY: 1) root cause (1 sentence), 2) fix (code patch or command). No explanations, no background, no alternatives unless asked. If the fix is a code change, show only the minimal diff.",
+  "RCT2I_applied": false,
+  "RCT2I_sections": 0,
   "memory_reused_tokens": 12,
   "context_reuse_ratio": 0.31,
   "provider": "ollama-mistral-7b-instruct",
@@ -195,6 +202,9 @@ curl -X POST http://localhost:8080/v1/compile \
 | `summary` | string | Human-readable summary of the compilation |
 | `slash_command` | string \| null | Detected slash command (e.g. `"/debug"`) or null |
 | `force_local` | boolean | `true` if routing is forced to local providers |
+| `efficiency_directive` | string | Auto-injected LLM instruction tailored to the detected intent (reduces output tokens) |
+| `RCT2I_applied` | boolean | `true` if the prompt was restructured using RCT2I (Role/Context/Task/Intent/Audience) sections |
+| `RCT2I_sections` | integer | Number of RCT2I sections found in the restructured prompt (0–5) |
 | `memory_reused_tokens` | integer | Tokens reused from session memory (prior stable context blocks) |
 | `context_reuse_ratio` | float | Ratio of reused tokens to raw tokens ∈ [0.0, 1.0] |
 | `provider` | string | Provider key the request would be routed to |
@@ -260,6 +270,7 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 ```
 
 **Response** (OpenAI-compatible format with DISTIRA metadata):
+
 ```json
 {
   "id": "chatcmpl-abc123",
@@ -300,7 +311,8 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 ```
 
 **Response** (Server-Sent Events):
-```
+
+```md
 data: {"id":"chatcmpl-abc","object":"chat.completion.chunk","choices":[{"delta":{"content":"Async"},"index":0}]}
 
 data: {"id":"chatcmpl-abc","object":"chat.completion.chunk","choices":[{"delta":{"content":"/await"},"index":0}]}
@@ -332,11 +344,13 @@ When `sensitive: true`, DISTIRA **always** routes to `ollama-llama3` (on-prem) r
 Lists all configured LLM providers with runtime statistics.
 
 **Request:**
+
 ```bash
 curl http://localhost:8080/v1/providers
 ```
 
 **Response:**
+
 ```json
 {
   "providers": [
@@ -419,11 +433,13 @@ curl -X POST http://localhost:8080/v1/runtime/client-context \
 Returns a full snapshot of all DISTIRA metrics since the last reset (or server start).
 
 **Request:**
+
 ```bash
 curl http://localhost:8080/v1/metrics
 ```
 
 **Response:**
+
 ```json
 {
   "ts": 1742054400,
@@ -444,6 +460,7 @@ curl http://localhost:8080/v1/metrics
   "stable_blocks": 12,
   "context_reuse_ratio_pct": 18.2,
   "session_budget_usd": 1.0,
+  "RCT2I_applied_count": 42,
   "intent_stats": {
     "debug": { "requests": 37, "raw_tokens": 12000, "compiled_tokens": 7200 },
     "codegen": { "requests": 45, "raw_tokens": 15000, "compiled_tokens": 9000 },
@@ -489,6 +506,7 @@ curl http://localhost:8080/v1/metrics
 | `stable_blocks` | integer | Number of stable context blocks in memory |
 | `context_reuse_ratio_pct` | float | Session-level context reuse as a percentage |
 | `session_budget_usd` | float | Configured session cost budget (0 = disabled) |
+| `RCT2I_applied_count` | integer | Number of requests where RCT2I prompt structuring was applied |
 | `intent_stats` | object | Per-intent breakdown (see below) |
 | `model_stats` | object | Per-model/provider breakdown |
 | `upstream_stats` | object | Per-upstream-client breakdown |
@@ -505,7 +523,8 @@ curl http://localhost:8080/v1/metrics
 | `compiled_tokens` | integer | Cumulative compiled tokens for this intent |
 
 **Computing reduction rate per intent:**
-```
+
+```md
 reduction_pct = (raw_tokens - compiled_tokens) / raw_tokens × 100
 ```
 
@@ -535,12 +554,14 @@ The `history_raw`, `history_compiled`, and `history_reused` arrays are **rolling
 Server-Sent Events (SSE) endpoint that pushes metrics snapshots every **2 seconds**. Perfect for live dashboards.
 
 **Request:**
+
 ```bash
 curl -N http://localhost:8080/v1/metrics/stream
 ```
 
 **Response** (continuous stream):
-```
+
+```md
 event: metrics
 data: {"ts":1742054400,"total_requests":150,"raw_tokens":45000,...}
 
@@ -573,6 +594,26 @@ curl -X DELETE http://localhost:8080/v1/metrics/reset
 
 ---
 
+### GET /v1/metrics/export
+
+*V10.17* — Export cumulative metrics as structured JSON for enterprise reporting. Returns per-provider breakdown, per-intent breakdown, and cumulative totals.
+
+```bash
+curl http://localhost:8080/v1/metrics/export | jq .
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `exported_at` | integer | Unix epoch timestamp of export |
+| `version` | string | DISTIRA version |
+| `cumulative` | object | Total requests, raw/compiled tokens, savings %, cache stats, routing distribution |
+| `by_provider` | array | Per-provider: requests, errors, error rate, avg latency |
+| `by_intent` | array | Per-intent: requests, raw/compiled tokens, tokens saved, savings % |
+
+---
+
 ## Suggestions
 
 ### GET /v1/suggestions
@@ -580,11 +621,13 @@ curl -X DELETE http://localhost:8080/v1/metrics/reset
 Returns proactive optimization suggestions based on routing config, session metrics, provider error rates, and latency measurements.
 
 **Request:**
+
 ```bash
 curl http://localhost:8080/v1/suggestions
 ```
 
 **Response:**
+
 ```json
 {
   "suggestions": [
@@ -669,7 +712,7 @@ DISTIRA automatically detects the intent of each request and routes to the best 
 
 DISTIRA's primary value is **reducing tokens** before they reach your LLM:
 
-```
+```md
 Tokens saved     = raw_tokens - compiled_tokens
 Reduction %      = tokens_saved / raw_tokens × 100
 Token avoidance  = (tokens_saved + memory_reused) / raw_tokens
@@ -695,7 +738,7 @@ Identical prompts produce the same `fingerprint`. On cache hit:
 
 ### Sovereign Ratio
 
-```
+```md
 local_ratio = routes_local / total_requests × 100
 ```
 
@@ -703,7 +746,7 @@ Measures what percentage of your AI traffic stays **on-prem** (sovereign). Highe
 
 ### Session Cost
 
-```
+```md
 session_cost_usd = Σ cost_usd for all requests
 ```
 
@@ -848,6 +891,7 @@ curl -s http://localhost:8080/v1/providers | jq '.provider_details[] | {
 | `502` | Bad Gateway — upstream LLM provider is unreachable |
 
 All error responses follow the format:
+
 ```json
 {
   "error": "description of the error"

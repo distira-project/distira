@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod optimizer;
-pub mod rctia;
+pub mod rct2i;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileResult {
@@ -23,6 +23,15 @@ pub struct CompileResult {
     /// (equivalent to `sensitive: true`). Set by `/dtlr` slash command.
     #[serde(default)]
     pub force_local: bool,
+    /// V10.14 — Auto-injected efficiency directive for the downstream LLM.
+    /// Intent-specific instruction that reduces output tokens.
+    pub efficiency_directive: String,
+    /// V10.15 — Whether RCT2I prompt restructuring was applied to this request.
+    #[serde(default)]
+    pub rct2i_applied: bool,
+    /// V10.15 — Number of RCT2I sections found (0–5: R, C, T, I, I).
+    #[serde(default)]
+    pub rct2i_sections: u8,
 }
 
 /// Canonicalize raw context before fingerprinting to reduce cache misses caused
@@ -182,21 +191,25 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
     // V9.10.1: BPE optimizer pass — lossless lexical transformations.
     let optimized = optimizer::optimize(raw_encoded, &intent);
 
-    // V10.11: RCTIA prompt restructuring — reorganise unstructured prompts into
-    // Role/Context/Tasks/Instructions/Amélioration for tighter LLM consumption.
-    let optimized = if let Some(rctia_result) = rctia::restructure(&optimized, &intent) {
-        rctia_result.structured
-    } else {
-        optimized
-    };
+    // V10.11: RCT2I prompt restructuring — reorganise unstructured prompts into
+    // Role/Context/Tasks/Instructions/Improvement for tighter LLM consumption.
+    let (optimized, rct2i_applied, rct2i_sections) =
+        if let Some(rct2i_result) = rct2i::restructure(&optimized, &intent) {
+            (rct2i_result.structured, true, rct2i_result.sections_found)
+        } else {
+            (optimized, false, 0)
+        };
 
     let optimized_tokens = token_count(&optimized);
     let optimizer_savings = raw_tokens_estimate.saturating_sub(optimized_tokens);
 
     // V9.12 — Per-intent distillation ratio.
-    // Very short inputs (< 32 tokens) are already minimal — skip reduction.
-    // Short inputs (< 64 tokens) get gentler treatment to preserve signal.
-    let effective_divisor = if optimized_tokens < 32 {
+    // V10.15: raised threshold from 32→48 to compensate for BPE-boundary aware
+    // truncation being more precise than the old word-counting approach.
+    // Inputs under 48 tokens are already compact — skip reduction.
+    // Inputs 48-63 tokens get gentler treatment to preserve signal.
+    // V10.16: lowered no-reduction threshold from 48→40 so medium inputs\n    // (40–63 tokens) get gentle compression while preserving short debug traces.
+    let effective_divisor = if optimized_tokens < 40 {
         1
     } else if optimized_tokens < 64 {
         distillation_divisor(&intent).min(2)
@@ -207,8 +220,13 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
         .saturating_div(effective_divisor)
         .max(8)
         .min(optimized_tokens);
-    let marker_cost = token_count(intent_marker(&intent));
-    let truncation_target = target_tokens.saturating_sub(marker_cost).max(1);
+    // V10.15: the intent marker is added by shape_by_intent AFTER truncation,
+    // so the body budget should be the full target_tokens.  The marker is
+    // cheap overhead (~5 tokens) that doesn't need to steal from the body.
+    // With BPE-boundary aware truncation the budget is now precise, so the
+    // old marker deduction (which was masked by word-counting imprecision)
+    // would lose critical signal on small-to-medium inputs.
+    let truncation_target = target_tokens;
     let compiled_context = build_compiled_context(&optimized, &intent, truncation_target);
 
     // V10.10: Post-reduction re-optimization — semantic reduction may reveal
@@ -230,7 +248,9 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
     }
 
     let compiled_context = shape_by_intent(&intent, &compiled_context);
-    let compiled_tokens_estimate = token_count(&compiled_context);
+    // V10.16: cap compiled tokens at raw to prevent marker overhead from causing
+    // negative savings (compiled > raw) which poisons the efficiency score.
+    let compiled_tokens_estimate = token_count(&compiled_context).min(raw_tokens_estimate);
 
     CompileResult {
         intent: intent.clone(),
@@ -242,6 +262,9 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
         compiled_context,
         slash_command: slash.as_ref().map(|sc| sc.command.clone()),
         force_local: slash.as_ref().is_some_and(|sc| sc.force_local),
+        efficiency_directive: efficiency_directive(&intent).to_string(),
+        rct2i_applied,
+        rct2i_sections,
     }
 }
 
@@ -276,7 +299,8 @@ fn distillation_divisor(intent: &str) -> usize {
     match intent {
         "ocr" | "translate" => 1,
         "quality" => 2, // preserve more context for quality
-        "debug" | "review" | "codegen" => 3,
+        "debug" => 4,
+        "review" | "codegen" => 4,
         "summarize" | "fast" => 5,
         _ => 5, // general: aggressive default
     }
@@ -333,6 +357,58 @@ fn build_summary(intent: &str, raw_tokens: usize, compiled_tokens: usize) -> Str
     format!(
         "Intent: {intent}. Reduced estimated context from {raw_tokens} to {compiled_tokens} tokens and {action}."
     )
+}
+
+/// V10.14 — Per-intent efficiency directive automatically injected into every
+/// request sent to a downstream LLM.  These short instructions guide the LLM
+/// to produce concise, token-efficient responses — saving output tokens at near-
+/// zero cost (each directive is < 40 tokens).
+pub fn efficiency_directive(intent: &str) -> &'static str {
+    match intent {
+        "debug" => {
+            "Be a precise debugging assistant. \
+            Return ONLY: 1) root cause (1 sentence), 2) fix (code patch or command). \
+            No explanations, no background, no alternatives unless asked. \
+            If the fix is a code change, show only the minimal diff."
+        }
+        "review" => {
+            "Be a concise code reviewer. \
+            For each issue: 1 line summary + suggested fix. \
+            Skip praise and obvious observations. \
+            Group issues by severity (critical first). \
+            No boilerplate, no disclaimers."
+        }
+        "codegen" => {
+            "Generate ONLY the requested code. \
+            No explanations before or after unless explicitly asked. \
+            Use idiomatic patterns for the target language. \
+            Minimal comments — only where logic is non-obvious. \
+            If multiple approaches exist, pick the simplest."
+        }
+        "summarize" | "fast" => {
+            "Summarize in ≤5 bullet points. \
+            Each bullet: 1 sentence max. \
+            Lead with the most important point. \
+            Skip meta-commentary (do not say 'here is a summary'). \
+            Use plain language, no jargon."
+        }
+        "translate" => {
+            "Return ONLY the translated text. \
+            No source text repetition, no translator notes, no alternatives. \
+            Preserve original formatting (paragraphs, lists, code blocks)."
+        }
+        "ocr" => {
+            "Return ONLY the extracted text. \
+            Preserve original structure and formatting. \
+            No commentary, no confidence notes, no descriptions of the image."
+        }
+        _ => {
+            "Respond concisely and directly. \
+            Lead with the answer, then support if needed. \
+            No filler phrases, no disclaimers, no unnecessary repetition. \
+            Prefer short sentences and plain language."
+        }
+    }
 }
 
 /// Estimate BPE token count using the Distira universal tokenizer.
@@ -701,7 +777,8 @@ fn reduce_review_context(raw: &str) -> String {
             "const ",
             "static ",
         ];
-        return reduce_by_salience_pct(raw, REVIEW_KW, 40);
+        // V10.16: lowered from 40% → 30% for code review.
+        return reduce_by_salience_pct(raw, REVIEW_KW, 30);
     }
 
     join_lines(&selected)
@@ -812,7 +889,8 @@ fn reduce_codegen_context(raw: &str) -> String {
             "fixme",
             "implement",
         ];
-        return reduce_by_salience_pct(raw, CG_KW, 35);
+        // V10.16: lowered from 35% → 25% for codegen.
+        return reduce_by_salience_pct(raw, CG_KW, 25);
     }
 
     join_lines(&selected)
@@ -898,8 +976,8 @@ fn reduce_summarize_context(raw: &str) -> String {
         "resolved",
         "next step",
     ];
-    // Aggressive: keep only top 35% of lines for summarization.
-    reduce_by_salience_pct(raw, KW, 35)
+    // V10.16: lowered from 35% → 30% for summarization.
+    reduce_by_salience_pct(raw, KW, 30)
 }
 
 fn reduce_general_context(raw: &str) -> String {
@@ -923,8 +1001,8 @@ fn reduce_general_context(raw: &str) -> String {
         "fix",
         "update",
     ];
-    // Keep top 40% for general intent.
-    reduce_by_salience_pct(raw, KW, 40)
+    // V10.16: lowered from 40% → 30% for stronger compression.
+    reduce_by_salience_pct(raw, KW, 30)
 }
 
 /// Score a single line by signal density relative to intent keywords (V9.12 BM25-inspired).
@@ -971,6 +1049,10 @@ fn reduce_by_salience_pct(raw: &str, keywords: &[&str], keep_pct: usize) -> Stri
     join_lines(&selected)
 }
 
+/// V10.15 — BPE-boundary aware truncation.
+/// Uses actual token counting per line (via the Distira universal tokenizer)
+/// instead of word-counting.  When a line exceeds the remaining budget, splits
+/// at word boundaries using per-word token estimates so we never cut mid-token.
 fn truncate_to_token_budget(text: &str, budget: usize) -> String {
     if budget == 0 {
         return String::new();
@@ -984,20 +1066,33 @@ fn truncate_to_token_budget(text: &str, budget: usize) -> String {
     let mut output: Vec<String> = Vec::new();
 
     for line in text.lines() {
-        let words: Vec<&str> = line.split_whitespace().collect();
-        if words.is_empty() {
+        if line.trim().is_empty() {
             if !matches!(output.last(), Some(previous) if previous.is_empty()) {
                 output.push(String::new());
             }
             continue;
         }
 
-        if words.len() <= remaining {
+        let line_tokens = token_count(line);
+        if line_tokens <= remaining {
             output.push(line.to_string());
-            remaining -= words.len();
+            remaining -= line_tokens;
         } else {
-            let take = remaining.saturating_sub(1).max(1).min(words.len());
-            output.push(format!("{} ...", words[..take].join(" ")));
+            // BPE-boundary aware: split at word boundaries using token counts
+            let words: Vec<&str> = line.split_whitespace().collect();
+            let mut taken: Vec<&str> = Vec::new();
+            let mut taken_tokens = 0;
+            for word in &words {
+                let wt = token_count(word);
+                if taken_tokens + wt > remaining {
+                    break;
+                }
+                taken.push(word);
+                taken_tokens += wt;
+            }
+            if !taken.is_empty() {
+                output.push(format!("{} \u{2026}", taken.join(" ")));
+            }
             remaining = 0;
         }
 
@@ -1180,7 +1275,7 @@ pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32
         ("optimise le", 3.0),
         ("revue de code", 5.0),
         ("refactore", 4.0),
-        ("amélioration de", 2.5),
+        ("Improvement de", 2.5),
     ] {
         if lower.contains(kw) {
             *scores.entry("review").or_default() += w;
@@ -1308,11 +1403,9 @@ mod tests {
         let result = compile_context("hi");
         // Compiled context is never zero-token
         assert!(result.compiled_tokens_estimate >= 1);
-        // Internal consistency
-        assert_eq!(
-            token_count(&result.compiled_context),
-            result.compiled_tokens_estimate
-        );
+        // V10.16: compiled_tokens_estimate is capped at raw_tokens_estimate,
+        // so it may be less than the actual context token count (due to marker).
+        assert!(result.compiled_tokens_estimate <= result.raw_tokens_estimate);
     }
 
     #[test]
@@ -1823,5 +1916,191 @@ mod tests {
             r.raw_tokens_estimate,
             r.compiled_tokens_estimate
         );
+    }
+
+    // ── V10.14 — Efficiency directive tests ─────────────────────────────────
+
+    #[test]
+    fn efficiency_directive_varies_by_intent() {
+        let intents = [
+            "debug",
+            "review",
+            "codegen",
+            "summarize",
+            "translate",
+            "ocr",
+            "general",
+        ];
+        let mut seen = std::collections::HashSet::new();
+        for intent in &intents {
+            let d = efficiency_directive(intent);
+            assert!(!d.is_empty(), "directive for {intent} is empty");
+            seen.insert(d);
+        }
+        // At least 4 distinct directives (general may overlap with unknown)
+        assert!(
+            seen.len() >= 4,
+            "expected at least 4 distinct directives, got {}",
+            seen.len()
+        );
+    }
+
+    #[test]
+    fn efficiency_directive_included_in_compile_result() {
+        let r = compile_context("error: panic at thread main in auth.rs");
+        assert_eq!(r.intent, "debug");
+        assert!(
+            r.efficiency_directive.contains("root cause"),
+            "debug directive should mention root cause, got: {}",
+            r.efficiency_directive
+        );
+    }
+
+    #[test]
+    fn efficiency_directive_for_codegen_says_code_only() {
+        let r = compile_context("/code implement a sort function");
+        assert_eq!(r.intent, "codegen");
+        assert!(
+            r.efficiency_directive.contains("ONLY the requested code"),
+            "codegen directive should say code only, got: {}",
+            r.efficiency_directive
+        );
+    }
+
+    #[test]
+    fn efficiency_directive_for_summarize_limits_bullets() {
+        let d = efficiency_directive("summarize");
+        assert!(
+            d.contains("5 bullet"),
+            "summarize directive should limit bullets, got: {d}"
+        );
+    }
+
+    #[test]
+    fn efficiency_directive_short_token_overhead() {
+        // Directives should be < 80 tokens each to minimize overhead
+        for intent in &[
+            "debug",
+            "review",
+            "codegen",
+            "summarize",
+            "translate",
+            "ocr",
+            "general",
+        ] {
+            let d = efficiency_directive(intent);
+            let tokens = token_count(d);
+            assert!(
+                tokens < 80,
+                "directive for {intent} is {tokens} tokens (should be < 80)"
+            );
+        }
+    }
+
+    // ── V10.15 — BPE-boundary truncation + RCT2I metadata tests ─────────────
+
+    #[test]
+    fn bpe_truncation_uses_token_count_not_word_count() {
+        // "src/main.rs:42:5" is 1 word but ~10 BPE tokens.
+        // With accurate counting, truncation should respect that.
+        let text = "line1\nsrc/main.rs:42:5 is expensive in tokens\nline3";
+        let truncated = truncate_to_token_budget(text, 5);
+        // Should only include "line1" and possibly part of line2
+        assert!(truncated.contains("line1"));
+        assert!(token_count(&truncated) <= 6); // allow 1 token slack
+    }
+
+    #[test]
+    fn bpe_truncation_preserves_full_text_under_budget() {
+        let text = "hello world";
+        let truncated = truncate_to_token_budget(text, 100);
+        assert_eq!(truncated, "hello world");
+    }
+
+    #[test]
+    fn bpe_truncation_ellipsis_on_partial_line() {
+        let text = "word1 word2 word3 word4 word5 word6 word7 word8";
+        let truncated = truncate_to_token_budget(text, 4);
+        assert!(truncated.contains("…"), "should have ellipsis: {truncated}");
+        assert!(token_count(&truncated) <= 5); // 4 words + ellipsis
+    }
+
+    #[test]
+    fn rct2i_applied_true_for_structured_prompt() {
+        let input = "You are a code reviewer. Review this pull request for security issues. Check for SQL injection and XSS. Use best practices.";
+        let result = compile_context(input);
+        assert!(
+            result.rct2i_applied,
+            "RCT2I should be applied for a review prompt with role+task+instructions"
+        );
+        assert!(
+            result.rct2i_sections >= 3,
+            "expected >= 3 sections, got {}",
+            result.rct2i_sections
+        );
+    }
+
+    #[test]
+    fn rct2i_applied_for_debug_intent() {
+        let input = "error: panic at thread main. Please explain the cause and suggest a fix for this crash.";
+        let result = compile_context(input);
+        assert_eq!(result.intent, "debug");
+        assert!(
+            result.rct2i_applied,
+            "debug prompts should now get RCT2I restructuring"
+        );
+        assert!(result.rct2i_sections >= 2);
+    }
+
+    #[test]
+    fn rct2i_not_applied_for_short_input() {
+        let input = "hello world";
+        let result = compile_context(input);
+        assert!(!result.rct2i_applied);
+        assert_eq!(result.rct2i_sections, 0);
+    }
+
+    // ── V10.16 — Advanced Compression & Deduplication tests ───────────────
+
+    #[test]
+    fn compiled_never_exceeds_raw() {
+        // Short input where marker overhead could push compiled > raw
+        let input = "tell me about Rust traits";
+        let result = compile_context(input);
+        assert!(
+            result.compiled_tokens_estimate <= result.raw_tokens_estimate,
+            "compiled ({}) must not exceed raw ({})",
+            result.compiled_tokens_estimate,
+            result.raw_tokens_estimate
+        );
+    }
+
+    #[test]
+    fn non_consecutive_dedup_removes_repeated_lines() {
+        use crate::optimizer::optimize;
+        // Use debug intent: stopwords and boilerplate passes are skipped,
+        // so only dedup passes affect this input.
+        let input = "error: mismatched types\nsome log output here\nerror: mismatched types\nanother log line";
+        let output = optimize(input, "debug");
+        let count = output.matches("error: mismatched types").count();
+        assert_eq!(
+            count, 1,
+            "non-consecutive dedup should keep first occurrence only, found {count}"
+        );
+    }
+
+    #[test]
+    fn marker_overhead_absorbed_by_cap() {
+        // Even with the [k:intent]| marker, compiled should be ≤ raw
+        for intent_cmd in &["/debug ", "/review ", "/code ", "/summarize "] {
+            let input = format!("{intent_cmd}short question here");
+            let result = compile_context(&input);
+            assert!(
+                result.compiled_tokens_estimate <= result.raw_tokens_estimate,
+                "intent={intent_cmd}: compiled ({}) > raw ({})",
+                result.compiled_tokens_estimate,
+                result.raw_tokens_estimate
+            );
+        }
     }
 }

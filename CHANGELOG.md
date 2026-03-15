@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -7,8 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **RCT2I 0% bug** — `CacheEntry` now stores `rct2i_applied` and `rct2i_sections` fields so cache hits correctly preserve RCT2I metadata. Previously all cache hits hardcoded `rct2i_applied: false`, causing the counter to never increment. Backward-compatible via `#[serde(default)]`.
+
 ### Added
+- **Provider Health Observatory** (V10.17) — New `/providers` dashboard view showing per-provider live status (healthy/degraded/down), request counts, error rates, and average latency in a sortable table with colour-coded status badges.
+- **`GET /v1/metrics/export`** — Enterprise metrics export endpoint returning structured JSON with cumulative totals, per-provider breakdown (requests, errors, error rate, latency), and per-intent breakdown (requests, tokens saved, savings %).
+- **`provider_health` in SSE/REST metrics** — Every `/v1/metrics` and SSE tick now includes a `provider_health` array with live per-provider health scoring (healthy / degraded / down based on error rate and latency thresholds).
+- **Server icon** added to SvgIcon component for the Providers navigation link.
+- **Metrics export button** in ProvidersView — one-click JSON download of cumulative metrics for enterprise reporting.
+- **Integrated Guide view** — comprehensive in-app documentation accessible from the sidebar. Covers architecture, compilation pipeline (11 passes), RCT2I restructuring, intents & routing, REST API reference with examples, MCP integration, dashboard views, configuration, provider compatibility, and troubleshooting. Smooth-scroll table of contents, responsive layout.
+- **Book icon** added to SvgIcon component for the Guide navigation link.
+- **Per-request AI Flow Pipeline** — FlowVisualizer and FlowView now display per-request metrics (raw→compiled tokens, cache hit/miss, routed provider, intent, tokens saved) instead of cumulative totals. A last-request banner shows intent, routed provider, sensitive flag, and cost. Cumulative metrics remain on the Overview page.
+
+### Changed
+- **RCTIA → RCT2I rename** — Renamed the prompt restructuring framework from RCTIA (Role/Context/Tasks/Instructions/Amélioration) to RCT2I (Role/Context/Tasks/Instructions/Improvement). All Rust source, dashboard views, metrics store, MCP server fields, docs, changelog, and roadmap updated. File `rctia.rs` → `rct2i.rs`. JSON API fields `rctia_applied` / `rctia_sections` → `rct2i_applied` / `rct2i_sections`. Section marker `[A]` → `[I]`.
+
+## [10.16.0] — Advanced Compression & Commvault-Style Deduplication
+
+### Added
+- **Non-consecutive line deduplication** (Pass 11) — Commvault-inspired content-addressable dedup: lines ≥10 chars that appeared earlier in the text are removed on second+ occurrence. Catches scattered duplicate imports, repeated log messages, and copy-pasted blocks.
+- **Before/After Pipeline Example** — OverviewView now shows a real DISTIRA compilation example (raw prompt → compiled output) so users can visualize the AI Flow pipeline in action.
+- **3 new tests** — `compiled_never_exceeds_raw`, `non_consecutive_dedup_removes_repeated_lines`, `marker_overhead_absorbed_by_cap`.
+
+### Fixed
+- **Compiled > raw bug** — `compiled_tokens_estimate` is now capped at `raw_tokens_estimate` to prevent marker overhead (`[k:intent]|`) from causing negative savings that poisoned the efficiency score.
+- **RCT2I stuck at 0%** — RCT2I prompt restructuring never triggered in practice due to 4 compounding gates: (1) word threshold too high (12 → lowered to 4), (2) `debug` intent excluded (now allowed), (3) task keyword list too narrow (expanded from 18 to 65+ EN/FR verbs), (4) `general` intent had no Improvement hint (now has one). Added `is_raw_artifact` guard so pure stack traces and diffs still bypass RCT2I while natural-language prompts always get restructured.
+
+### Changed
+- **Short-input threshold lowered 48 → 40 tokens** — Inputs with 40–63 tokens now enter the gentle reduction zone (divisor ≤ 2) instead of being skipped entirely. Shorter inputs (< 40 tokens) remain protected.
+- **Distillation divisors raised** — `debug`: 3→4, `review`/`codegen`: 3→4. More aggressive compression for medium-to-large inputs.
+- **Reducer keep percentages lowered** — `general`: 40→30%, `review` (non-diff): 40→30%, `codegen` (fallback): 35→25%, `summarize`: 35→30%.
+- **Stopword stripping enabled for `review` intent** — Boundary-safe stopword removal (` the `, ` a `, etc.) now runs on code review prompts.
+- **Dashboard metrics-grid** — 5 KPI cards now use explicit 5-column layout at desktop, 3-column at tablet, 2 at mobile, preventing narrow/squeezed cards.
+- **258 tests, clippy clean, fmt clean.**
+
+## [10.15.0] — Cross-Request Deduplication, BPE-Boundary Truncation & RCT2I Dashboard
+
+### Added
+- **BPE-boundary aware truncation** — `truncate_to_token_budget` now uses `token_count()` per line and per word instead of naive word count, producing tighter budget adherence with BPE-accurate splits. Partial lines end with `…` (U+2026).
+- **Cross-request deduplication** — `compile_older_turns()` compiles system prompts and older assistant/user messages through the DISTIRA pipeline. `dedup_cross_messages()` fingerprints paragraphs across messages and removes duplicates from earlier turns, keeping the latest occurrence.
+- **RCT2I metadata** — `RCT2I_applied` (bool) and `RCT2I_sections` (u8) fields in `CompileResult`, `/v1/compile` API response, and cache. `RCT2I_applied_count` counter in `MetricsSnapshot` and `/v1/metrics`.
+- **Dashboard RCT2I KPI** — "RCT2I Structured" metric card in OverviewView showing count and percentage. Dynamic RCT2I insight card in InsightsView with activation rate and recommendations.
+- **11 new tests** — 6 compiler tests (BPE truncation × 3, RCT2I metadata × 3) + 5 core tests (compile_older_turns × 3, dedup_cross_messages × 2).
+
+### Changed
+- **Short-input threshold raised 32 → 48 tokens** — BPE-accurate truncation consumes budget faster for symbol-heavy inputs; inputs < 48 tokens now bypass reduction.
+- **Marker cost deduction removed** — The intent marker is added by `shape_by_intent` AFTER truncation, so the body budget is now the full `target_tokens`.
+- **Dashboard metrics-grid** — Uses `auto-fill` responsive layout for 5+ KPI cards.
+- **254 tests, clippy clean, fmt clean.**
+
+## [10.14.0] — Auto Efficiency Directives
+
+### Added
+- **Per-intent efficiency directives** — 7 intent-specific LLM instructions (debug, review, codegen, summarize, translate, ocr, general) auto-injected into every request. Each directive guides the downstream LLM to produce concise, on-target output — reducing output tokens without user intervention.
+- **`efficiency_directive` field** in `/v1/compile` response and `CompileResult` struct — consumers can read the directive that will be injected.
+- **5 new tests** — `efficiency_directive_varies_by_intent`, `efficiency_directive_included_in_compile_result`, `efficiency_directive_for_codegen_says_code_only`, `efficiency_directive_for_summarize_limits_bullets`, `efficiency_directive_short_token_overhead`.
 - **Complete REST API Reference** — [`docs/api-reference.md`](docs/api-reference.md): Full documentation covering all 11 endpoints, request/response schemas, metrics glossary, slash commands, intent routing, authentication, 7 integration recipes (curl, PowerShell, Python SSE, OpenAI drop-in), and error handling.
+
+### Changed
+- **Always-on directive injection** — Replaces the old `concise_mode`-gated `inject_conciseness_directive`. Efficiency directives inject unconditionally for every chat request.
+- **243 tests, clippy clean, fmt clean.**
 
 ## [10.13.0] — Minimum 30 % Reduction Across All Intents
 
@@ -18,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Critical double `shape_by_intent` bug** — `build_compiled_context()` was calling `shape_by_intent()`, and `compile_context_with_hint()` called it again after the convergence loop, producing double markers (`[k:debug]|[k:debug]|…`) and inflating compiled token count. Marker is now applied once.
-- **RCTIA destroying debug line structure** — RCTIA flattened 62 debug lines into 3 huge `[R]/[C]/[T]` lines, making the debug reducer's line-based analysis ineffective (17 % → 90 % after fix). Debug intent is now excluded from RCTIA restructuring.
+- **RCT2I destroying debug line structure** — RCT2I flattened 62 debug lines into 3 huge `[R]/[C]/[T]` lines, making the debug reducer's line-based analysis ineffective (17 % → 90 % after fix). Debug intent is now excluded from RCT2I restructuring.
 
 ### Changed
 - **Distillation divisors raised** — debug/review/codegen ÷3 (was ÷2/÷3), general ÷5 (was ÷4), more aggressive compression.
@@ -41,18 +100,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Review distillation divisor** — ÷2 → ÷3 (keeps 33% instead of 50%, more aggressive compression)
 - **Codegen dispatch** — Now routes to dedicated `reduce_codegen_context()` instead of generic `reduce_general_context()`
 
-## [10.11.0] — RCTIA Prompt Compiler
+## [10.11.0] — RCT2I Prompt Compiler
 
 ### Added
-- **RCTIA prompt restructuring** — Unstructured prompts are automatically reorganised into Role/Context/Tasks/Instructions/Amélioration sections for tighter LLM consumption
-- **Sentence-level segmentation** — Single-line prompts are split on sentence boundaries for accurate RCTIA classification
+- **RCT2I prompt restructuring** — Unstructured prompts are automatically reorganised into Role/Context/Tasks/Instructions/Improvement sections for tighter LLM consumption
+- **Sentence-level segmentation** — Single-line prompts are split on sentence boundaries for accurate RCT2I classification
 - **Bilingual support** — French role/task/instruction keywords ("tu es", "implémente", "assure-toi", etc.) detected natively
 - **Intent-inferred roles** — When no explicit role is declared, the compiler infers an appropriate role from the detected intent
-- **Amélioration hints** — Auto-generated quality improvement hints appended per intent (codegen → "write idiomatic, tested, minimal code", etc.)
-- **8 new RCTIA tests** — short prompt bypass, OCR bypass, structured bypass, codegen/review/debug/French restructuring, role extraction
+- **Improvement hints** — Auto-generated quality improvement hints appended per intent (codegen → "write idiomatic, tested, minimal code", etc.)
+- **8 new RCT2I tests** — short prompt bypass, OCR bypass, structured bypass, codegen/review/debug/French restructuring, role extraction
 
 ### Changed
-- **Compiler pipeline** — Now 4-phase: pre-optimize → RCTIA restructure → semantic reduce → post-optimize with convergence loop
+- **Compiler pipeline** — Now 4-phase: pre-optimize → RCT2I restructure → semantic reduce → post-optimize with convergence loop
 - **Verbose phrase substitution** — Extended from 22 to 68 patterns (+46 new: "leverage"→"use", "functionality"→"feature", "consequently"→"so", "nevertheless"→"still", etc.)
 - **Total tests** — 217 workspace tests, all passing
 
@@ -102,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **KPI cards on Savings page** — "Tokens saved by compilation" and "Requests routed on-prem" moved from Runtime Audit to Savings & Impact where they are contextually relevant
-- **RCTIA prompt structuring** documented in ROADMAP as upcoming feature (Rôle, Contexte, Tâches, Instructions, Amélioration)
+- **RCT2I prompt structuring** documented in ROADMAP as upcoming feature (Rôle, Contexte, Tâches, Instructions, Improvement)
 
 ### Changed
 - **Ice Preserved tile** — replaced complex SVG iceberg (gradients, filter, polygon computations, bob animation) with clean 🧊 emoji approach, consistent with 🌳 Tree tile
