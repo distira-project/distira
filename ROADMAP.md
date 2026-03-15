@@ -564,7 +564,7 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 **Status:** Delivered (VERSION 10.11.0).
 
 - **RCT2I prompt restructuring** — automatic prompt rewriting applying Rôle, Contexte, Tâches, Instructions, Improvement (RCT2I) sections before LLM submission.
-- **Sentence-level segmentation** — single-line prompts split on `. ` boundaries for accurate classification.
+- **Sentence-level segmentation** — single-line prompts split on `.` boundaries for accurate classification.
 - **Bilingual** — French role/task/instruction keywords detected natively.
 - **Intent-inferred roles** — compiler infers role when not explicitly declared.
 - **Improvement hints** — per-intent quality improvement hints auto-appended.

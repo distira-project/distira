@@ -1,19 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773600194,
-    "total_requests": 138,
-    "raw_tokens": 4601,
-    "compiled_tokens": 3499,
-    "memory_reused_tokens": 827,
-    "efficiency_score": 53.951317,
-    "local_ratio": 38.405796,
+    "ts": 1773602750,
+    "total_requests": 141,
+    "raw_tokens": 4674,
+    "compiled_tokens": 3572,
+    "memory_reused_tokens": 870,
+    "efficiency_score": 53.577236,
+    "local_ratio": 38.297874,
     "cache_hits": 5,
-    "cache_misses": 133,
+    "cache_misses": 136,
     "cache_saved_tokens": 0,
     "history_raw": [
-      3771,
-      3809,
-      3836,
       3856,
       3886,
       3922,
@@ -34,12 +31,12 @@
       4499,
       4505,
       4523,
-      4601
+      4601,
+      4635,
+      4656,
+      4674
     ],
     "history_compiled": [
-      2851,
-      2878,
-      2899,
       2921,
       2946,
       2975,
@@ -60,12 +57,12 @@
       3441,
       3447,
       3465,
-      3499
+      3499,
+      3533,
+      3554,
+      3572
     ],
     "history_reused": [
-      555,
-      567,
-      576,
       585,
       594,
       603,
@@ -86,10 +83,12 @@
       797,
       801,
       813,
-      827
+      827,
+      844,
+      856,
+      870
     ],
     "history_hour_epochs": [
-      1773514800,
       1773518400,
       1773522000,
       1773525600,
@@ -112,10 +111,10 @@
       1773586800,
       1773590400,
       1773594000,
-      1773597600
+      1773597600,
+      1773601200
     ],
     "history_hour_raw": [
-      199,
       402,
       454,
       211,
@@ -138,10 +137,10 @@
       147,
       105,
       392,
-      248
+      248,
+      73
     ],
     "history_hour_compiled": [
-      133,
       258,
       320,
       154,
@@ -164,10 +163,10 @@
       116,
       85,
       309,
-      184
+      184,
+      73
     ],
     "history_hour_reused": [
-      0,
       0,
       25,
       58,
@@ -190,21 +189,22 @@
       48,
       27,
       124,
-      91
+      91,
+      43
     ],
-    "routes_local": 53,
-    "routes_cloud": 79,
+    "routes_local": 54,
+    "routes_cloud": 81,
     "routes_midtier": 6,
     "intent_stats": {
       "debug": {
-        "requests": 45,
-        "raw_tokens": 1637,
-        "compiled_tokens": 1387
+        "requests": 46,
+        "raw_tokens": 1655,
+        "compiled_tokens": 1405
       },
       "general": {
-        "requests": 79,
-        "raw_tokens": 2660,
-        "compiled_tokens": 1831
+        "requests": 81,
+        "raw_tokens": 2715,
+        "compiled_tokens": 1886
       },
       "summarize": {
         "requests": 6,
@@ -226,12 +226,12 @@
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
         "model": "mistral:7b-instruct",
         "provider": "ollama-mistral-7b-instruct",
-        "requests": 45,
-        "raw_tokens": 1637,
-        "compiled_tokens": 1387,
-        "memory_reused_tokens": 424,
-        "efficiency_score": 45.27184,
-        "sovereign_requests": 45,
+        "requests": 46,
+        "raw_tokens": 1655,
+        "compiled_tokens": 1405,
+        "memory_reused_tokens": 438,
+        "efficiency_score": 45.10574,
+        "sovereign_requests": 46,
         "non_sovereign_requests": 0,
         "sovereign_ratio": 100.0,
         "avg_latency_ms": 0.0,
@@ -256,13 +256,13 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 79,
-        "raw_tokens": 2660,
-        "compiled_tokens": 1831,
-        "memory_reused_tokens": 326,
-        "efficiency_score": 61.165413,
+        "requests": 81,
+        "raw_tokens": 2715,
+        "compiled_tokens": 1886,
+        "memory_reused_tokens": 355,
+        "efficiency_score": 60.534073,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 79,
+        "non_sovereign_requests": 81,
         "sovereign_ratio": 0.0,
         "avg_latency_ms": 0.0,
         "latency_sum_ms": 0.0,
@@ -289,8 +289,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "GitHub Copilot",
         "upstream_model": "Claude Sonnet 4.6",
-        "requests": 36,
-        "last_seen_ts": 1773531621
+        "requests": 37,
+        "last_seen_ts": 1773602750
       },
       "unknown-client|test|test": {
         "client_app": "unknown-client",
@@ -303,8 +303,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "GitHub Copilot",
         "upstream_model": "Claude Opus 4.6",
-        "requests": 55,
-        "last_seen_ts": 1773600194
+        "requests": 57,
+        "last_seen_ts": 1773602503
       },
       "VS Code Copilot Chat|unknown-provider|unknown-model": {
         "client_app": "VS Code Copilot Chat",
@@ -331,7 +331,7 @@
     "last_request": {
       "client_app": "VS Code Copilot Chat",
       "upstream_provider": "GitHub Copilot",
-      "upstream_model": "Claude Opus 4.6",
+      "upstream_model": "Claude Sonnet 4.6",
       "tenant_id": "default-tenant",
       "project_id": "distira-platform",
       "policy_pack": "baseline",
@@ -339,14 +339,14 @@
       "routed_model": "mistral:7b-instruct",
       "intent": "debug",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "1050871010743430220",
+      "semantic_fingerprint": "13812328172281204237",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773600194,
+      "ts": 1773602750,
       "cost_usd": 0.0,
-      "raw_tokens": 78,
-      "compiled_tokens": 34,
-      "tokens_saved": 44
+      "raw_tokens": 18,
+      "compiled_tokens": 18,
+      "tokens_saved": 0
     },
     "request_history": [
       {
@@ -3108,14 +3108,74 @@
         "raw_tokens": 78,
         "compiled_tokens": 34,
         "tokens_saved": 44
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Opus 4.6",
+        "tenant_id": "default-tenant",
+        "project_id": "distira-platform",
+        "policy_pack": "baseline",
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "18252952560351374117",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773601996,
+        "cost_usd": 0.0,
+        "raw_tokens": 34,
+        "compiled_tokens": 34,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Opus 4.6",
+        "tenant_id": "default-tenant",
+        "project_id": "distira-platform",
+        "policy_pack": "baseline",
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "13456669433140934523",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773602503,
+        "cost_usd": 0.0,
+        "raw_tokens": 21,
+        "compiled_tokens": 21,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Sonnet 4.6",
+        "tenant_id": "default-tenant",
+        "project_id": "distira-platform",
+        "policy_pack": "baseline",
+        "routed_provider": "ollama-mistral-7b-instruct",
+        "routed_model": "mistral:7b-instruct",
+        "intent": "debug",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "13812328172281204237",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773602750,
+        "cost_usd": 0.0,
+        "raw_tokens": 18,
+        "compiled_tokens": 18,
+        "tokens_saved": 0
       }
     ],
     "session_cost_usd": 0.0,
     "last_request_cost_usd": 0.0,
     "stable_blocks": 28,
-    "context_reuse_ratio_pct": 17.974354,
+    "context_reuse_ratio_pct": 18.613607,
     "session_budget_usd": 0.0,
-    "rct2i_applied_count": 2
+    "rct2i_applied_count": 5
   },
   "sem_cache_entries": [
     {
@@ -3315,6 +3375,15 @@
       "summary": "Intent: review. Reduced estimated context from 29 to 21 tokens and collapsed the diff to changed hunks and review-relevant lines.",
       "compiled_context": "[k:review]|Optimize token reduction for code review and code generation ...",
       "created_at": 1773586151
+    },
+    {
+      "fingerprint": 13812328172281204237,
+      "intent": "debug",
+      "raw_tokens_estimate": 18,
+      "compiled_tokens_estimate": 18,
+      "summary": "Intent: debug. Reduced estimated context from 18 to 18 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|[R] debugging assistant [T] Run markdownlint strict on all .md files in the â¦",
+      "created_at": 1773602750
     },
     {
       "fingerprint": 9271702967383698034,
@@ -4064,6 +4133,15 @@
       "created_at": 1773531915
     },
     {
+      "fingerprint": 18252952560351374117,
+      "intent": "general",
+      "raw_tokens_estimate": 34,
+      "compiled_tokens_estimate": 34,
+      "summary": "Intent: general. Reduced estimated context from 34 to 34 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|[R] general assistant [C] User asks how to from GitHub UI. [T] How to protect branch on GitHub from â¦",
+      "created_at": 1773601996
+    },
+    {
       "fingerprint": 4344546714815562370,
       "intent": "debug",
       "raw_tokens_estimate": 77,
@@ -4179,6 +4257,15 @@
       "summary": "Intent: debug. Reduced estimated context from 13 to 19 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
       "compiled_context": "[k:debug]|Fix README.md: missing logo image and ...",
       "created_at": 1773535066
+    },
+    {
+      "fingerprint": 13456669433140934523,
+      "intent": "general",
+      "raw_tokens_estimate": 21,
+      "compiled_tokens_estimate": 21,
+      "summary": "Intent: general. Reduced estimated context from 21 to 21 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|[R] general assistant [T] GitHub branch protection rules configuration recommendation for â¦",
+      "created_at": 1773602503
     },
     {
       "fingerprint": 18383918510976273728,
@@ -4347,169 +4434,169 @@
   "context_blocks": [
     {
       "id": "18383918510976273728",
-      "stability": 0.14693329,
+      "stability": 0.11441519,
       "content": "[k:summarize]|Improve token reduction for all intents: debug 15%, ...",
       "intent": "summarize"
     },
     {
       "id": "11419659329491495099",
-      "stability": 0.36766648,
+      "stability": 0.2862975,
       "content": "[k:review]|RCTIA metric stuck at 0% - investigate why RCTIA ...",
       "intent": "review"
     },
     {
       "id": "18043613701556212393",
-      "stability": 0.6063551,
+      "stability": 0.47216144,
       "content": "[k:general]|[R] general assistant [T] Rename RCTIA to RCT2I across entire codebase: Rust source, Vue dashboard, MCP server, docs, â¦",
       "intent": "general"
     },
     {
       "id": "7241193127411990295",
-      "stability": 0.22293644,
+      "stability": 0.17359793,
       "content": "[k:general]|Finalize V10.14: add efficiency directive tests, run clippy/fmt, ...",
       "intent": "general"
     },
     {
       "id": "1624611422984942063",
-      "stability": 0.33825317,
+      "stability": 0.2633937,
       "content": "[k:debug]|Fix favicon/bookmark logo for Distira dashboard - browser shows ...",
       "intent": "debug"
     },
     {
       "id": "5139087293153819820",
-      "stability": 0.55784667,
+      "stability": 0.43438855,
       "content": "[k:general]|[R] general assistant [T] Modify FlowView to show per-request metrics instead â¦",
       "intent": "general"
     },
     {
       "id": "267649878714535434",
-      "stability": 0.716393,
+      "stability": 0.55784667,
       "content": "[k:debug]|[R] debugging assistant [T] Fix undefined NaN% bug in RCT2I dashboard â¦",
       "intent": "debug"
     },
     {
       "id": "4344546714815562370",
-      "stability": 0.2862975,
+      "stability": 0.22293644,
       "content": "[k:debug]|Improve compression scores: General 30.7%, Debug 15.8%, Code Review 0%, Summarize 16.7%, Codegen 0%. Implement advanced deduplication, fix cache misses and negative tokens, add before/after pipeline example, fix dashboard metrics-grid layout ...",
       "intent": "debug"
     },
     {
-      "id": "14642623688832170580",
-      "stability": 0.105261974,
-      "content": "[k:review]|Optimize token reduction for code review and code generation ...",
-      "intent": "review"
-    },
-    {
       "id": "16240663636861577400",
-      "stability": 0.6590816,
+      "stability": 0.51321894,
       "content": "[k:debug]|[R] debugging assistant [T] Fix GuideView: remove \"11-\" prefix from â¦",
       "intent": "debug"
     },
     {
       "id": "9191917639100819070",
-      "stability": 0.92,
+      "stability": 0.716393,
       "content": "[k:debug]|[R] debugging assistant [T] RCT2I Structured shows 0% on dashboard, debug â¦",
       "intent": "debug"
     },
     {
       "id": "12831003081584370494",
-      "stability": 0.43438855,
+      "stability": 0.33825317,
       "content": "[k:summarize]|[R] summarization assistant [T] Explique-moi comment fonctionne le systÃÂ¨me de routing dans â¦",
       "intent": "summarize"
     },
     {
-      "id": "3303988442110112530",
-      "stability": 0.12436434,
-      "content": "[k:general]|Dashboard indicators human-readable formatting, verify USD currency, propose ...",
-      "intent": "general"
-    },
-    {
       "id": "6765663805384846783",
-      "stability": 0.39963746,
+      "stability": 0.31119293,
       "content": "[k:general]|Je ne suis pas sur que la metrique ...",
       "intent": "general"
     },
     {
+      "id": "13812328172281204237",
+      "stability": 1.0,
+      "content": "[k:debug]|[R] debugging assistant [T] Run markdownlint strict on all .md files in the â¦",
+      "intent": "debug"
+    },
+    {
       "id": "1584198044931575147",
-      "stability": 0.2423222,
+      "stability": 0.1886934,
       "content": "[k:general]|Continue iterations: implement V10.15 - Cross-request deduplication (system ...",
       "intent": "general"
     },
     {
       "id": "14816443734758459641",
-      "stability": 0.13517863,
+      "stability": 0.105261974,
       "content": "[k:general]|Change DISTIRA slogan from Sovereign AI Context OS ...",
       "intent": "general"
     },
     {
       "id": "314786769072777312",
-      "stability": 0.1886934,
+      "stability": 0.14693329,
       "content": "[k:general]|Are slash commands used automatically or does DISTIRA ...",
       "intent": "general"
     },
     {
-      "id": "9191298238119943072",
-      "stability": 0.11441519,
-      "content": "[k:general]|Continue V10.12 implementation: run tests, add new tests ...",
-      "intent": "general"
-    },
-    {
       "id": "6961299621443768308",
-      "stability": 0.2633937,
+      "stability": 0.20510152,
       "content": "[k:general]|Continue V10.15 iteration: wire RCTIA counter through metrics ...",
       "intent": "general"
     },
     {
+      "id": "13456669433140934523",
+      "stability": 0.92,
+      "content": "[k:general]|[R] general assistant [T] GitHub branch protection rules configuration recommendation for â¦",
+      "intent": "general"
+    },
+    {
       "id": "4981248101924724676",
-      "stability": 0.47216144,
+      "stability": 0.36766648,
       "content": "[k:general]|[R] general assistant [T] Create integrated guide/documentation view in â¦",
       "intent": "general"
     },
     {
       "id": "1050871010743430220",
-      "stability": 1.0,
+      "stability": 0.778688,
       "content": "[k:debug]|[R] debugging assistant [T] Fix RCT2I 0% bug: added rct2i_applied and rct2i_sections fields â¦",
       "intent": "debug"
     },
     {
+      "id": "18252952560351374117",
+      "stability": 0.8464,
+      "content": "[k:general]|[R] general assistant [C] User asks how to from GitHub UI. [T] How to protect branch on GitHub from â¦",
+      "intent": "general"
+    },
+    {
       "id": "3421149012901459834",
-      "stability": 0.778688,
+      "stability": 0.6063551,
       "content": "[k:general]|[R] general assistant [C] Research competitive â¦",
       "intent": "general"
     },
     {
       "id": "12620776054458889693",
-      "stability": 0.20510152,
+      "stability": 0.1597101,
       "content": "[k:general]|Implement automatic efficiency directives injection into compiled context ...",
       "intent": "general"
     },
     {
       "id": "6916858722145209385",
-      "stability": 0.1597101,
+      "stability": 0.12436434,
       "content": "[k:debug]|Fix debug intent token reduction to achieve 30%+ - need to improve ...",
       "intent": "debug"
     },
     {
       "id": "7537870626165070521",
-      "stability": 0.31119293,
+      "stability": 0.2423222,
       "content": "[k:debug]|Fix last failing test debug_compiler_keeps_file_line_references, then complete V10.16: run full test suite, fix any issues, update dashboard grid layout, add before/after pipeline example, clippy/fmt, VERSION ...",
       "intent": "debug"
     },
     {
       "id": "1329037170887814457",
-      "stability": 0.51321894,
+      "stability": 0.39963746,
       "content": "[k:general]|[R] general assistant [T] Create integrated â¦",
       "intent": "general"
     },
     {
       "id": "11308561837082860488",
-      "stability": 0.17359793,
+      "stability": 0.13517863,
       "content": "[k:general]|Create a complete REST API documentation and guide ...",
       "intent": "general"
     },
     {
       "id": "9040698045977822602",
-      "stability": 0.8464,
+      "stability": 0.6590816,
       "content": "[k:general]|test provider health tracking",
       "intent": "general"
     }
@@ -4520,15 +4607,15 @@
       320,
       25
     ],
+    "1773601200": [
+      73,
+      73,
+      43
+    ],
     "1773586800": [
       147,
       116,
       48
-    ],
-    "1773514800": [
-      199,
-      133,
-      0
     ],
     "1773525600": [
       211,
@@ -4577,8 +4664,8 @@
     ]
   },
   "provider_total": {
-    "openrouter-step-3.5-flash-cloud": 1,
-    "ollama-mistral-7b-instruct": 2
+    "openrouter-step-3.5-flash-cloud": 3,
+    "ollama-mistral-7b-instruct": 3
   },
   "provider_errors": {},
   "provider_latency": {}
