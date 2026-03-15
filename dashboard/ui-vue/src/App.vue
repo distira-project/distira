@@ -20,6 +20,7 @@
       </div>
       <nav>
         <RouterLink :to="{ name: 'overview' }" @click="menuOpen = false"><SvgIcon name="chart-bar" :size="18" /> Overview</RouterLink>
+        <RouterLink :to="{ name: 'savings' }" @click="menuOpen = false"><SvgIcon name="leaf" :size="18" /> Savings &amp; Impact</RouterLink>
         <RouterLink :to="{ name: 'flow' }" @click="menuOpen = false"><SvgIcon name="git-branch" :size="18" /> AI Flow</RouterLink>
         <RouterLink :to="{ name: 'memory' }" @click="menuOpen = false"><SvgIcon name="brain" :size="18" /> Memory</RouterLink>
         <RouterLink :to="{ name: 'insights' }" @click="menuOpen = false"><SvgIcon name="lightbulb" :size="18" /> Insights</RouterLink>

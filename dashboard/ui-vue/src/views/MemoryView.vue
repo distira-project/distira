@@ -145,6 +145,8 @@ const steps = [
 <style scoped>
 .memory-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
 
+.savings-section { margin-top: 20px; }
+
 /* ── Session savings bar ─────────────────────────────────────────────── */
 .savings-section h3 { margin: 0 0 8px; }
 .savings-label { margin: 0 0 14px; font-size: 0.9rem; }

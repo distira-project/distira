@@ -124,7 +124,6 @@ const benchmarks = computed(() => {
         reduction,
       }
     })
-    .filter((r) => r.reduction > 0)
     .sort((a, b) => b.requests - a.requests)
 })
 

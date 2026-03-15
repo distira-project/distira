@@ -108,6 +108,10 @@ const icons: Record<string, { viewBox: string; paths: string }> = {
     viewBox: '0 0 24 24',
     paths: '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><line x1="22" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.8"/><line x1="6" y1="12" x2="2" y2="12" stroke="currentColor" stroke-width="1.8"/><line x1="12" y1="6" x2="12" y2="2" stroke="currentColor" stroke-width="1.8"/><line x1="12" y1="22" x2="12" y2="18" stroke="currentColor" stroke-width="1.8"/>',
   },
+  leaf: {
+    viewBox: '0 0 24 24',
+    paths: '<path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+  },
 }
 
 const meta = computed(() => icons[props.name] ?? { viewBox: '0 0 24 24', paths: '' })

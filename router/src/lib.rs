@@ -356,6 +356,17 @@ impl RouterConfig {
         self.concise_mode
     }
 
+    /// V10.4 — Return a sorted (intent, provider) map for suggestions / display.
+    pub fn task_routing_summary(&self) -> Vec<(String, String)> {
+        let mut entries: Vec<(String, String)> = self
+            .task_routing
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+        entries.sort_by(|a, b| a.0.cmp(&b.0));
+        entries
+    }
+
     /// Latency-aware routing. Like `choose_provider_with_budget` but when
     /// multiple candidates are available (budget not exhausted), the one with
     /// the lowest known average latency is preferred.

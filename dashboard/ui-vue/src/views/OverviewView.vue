@@ -35,25 +35,26 @@
       </MetricCard>
     </div>
 
-    <!-- V10.3 — Session cost budget bar (only shown when budget is configured) -->
-    <div v-if="metrics.sessionBudgetUsd > 0" class="budget-bar-wrap card">
+    <!-- V10.7 — Session Savings bar (estimated $ saved from tokens avoided) -->
+    <div class="budget-bar-wrap card">
       <div class="budget-bar-header">
-        <span class="budget-bar-title">Session Cost Budget</span>
+        <span class="budget-bar-title">Estimated Session Savings</span>
         <span class="budget-bar-amounts">
-          ${{ metrics.sessionCostUsd.toFixed(4) }}
-          <span class="budget-bar-sep">/</span>
-          ${{ metrics.sessionBudgetUsd.toFixed(4) }}
+          {{ savingsData.tokensSaved.toLocaleString() }} tokens saved
+          <span class="budget-bar-sep">·</span>
+          ${{ savingsData.costSaved.toFixed(4) }}
         </span>
-        <span class="budget-bar-pct" :class="budgetPctClass">{{ budgetUsedPct }}%</span>
+        <span class="budget-bar-pct" :class="savingsPctClass">{{ savingsPct }}%</span>
       </div>
       <div class="budget-track">
-        <div class="budget-fill" :class="budgetPctClass" :style="{ width: Math.min(budgetUsedPct, 100) + '%' }"></div>
+        <div class="budget-fill" :class="savingsPctClass" :style="{ width: Math.min(savingsPct, 100) + '%' }"></div>
       </div>
     </div>
     <div class="two-col">
       <EfficiencyGauge :score="metrics.efficiencyScore" />
       <FlowVisualizer />
     </div>
+
     <section class="card chart-section">
       <div class="chart-heading">
         <h3>Token Trends ({{ trendWindowLabel }})</h3>
@@ -133,30 +134,6 @@
       </div>
     </section>
 
-    <section class="card codegen-vs-review-section">
-      <div class="section-heading">
-        <div>
-          <h3>Codegen vs Review</h3>
-          <p class="muted">How much traffic is pure code generation vs review/refactor, and how efficiently Distira trims each intent.</p>
-        </div>
-        <span class="total-badge" v-if="codegenReview.hasData">{{ codegenReview.totalRequests }} req</span>
-      </div>
-      <div v-if="codegenReview.hasData" class="cvr-grid">
-        <div class="cvr-tile">
-          <span class="tile-label">Codegen</span>
-          <strong class="cvr-count">{{ codegenReview.codegenRequests }}</strong>
-          <span class="tile-subtitle">{{ codegenReview.codegenPct }}% of intents</span>
-          <span class="cvr-reduction">{{ codegenReview.codegenReduction }}% avg reduction</span>
-        </div>
-        <div class="cvr-tile">
-          <span class="tile-label">Review</span>
-          <strong class="cvr-count">{{ codegenReview.reviewRequests }}</strong>
-          <span class="tile-subtitle">{{ codegenReview.reviewPct }}% of intents</span>
-          <span class="cvr-reduction">{{ codegenReview.reviewReduction }}% avg reduction</span>
-        </div>
-      </div>
-      <p v-else class="muted">No codegen or review traffic yet. Send a few code requests to see this split.</p>
-    </section>
 
     <section class="card request-lineage-section">
       <div class="request-lineage-header">
@@ -277,58 +254,12 @@
       </div>
     </section>
 
-    <section class="card intent-distribution-section">
-      <div class="section-heading">
-        <div>
-          <h3>Intent Distribution</h3>
-          <p class="muted">How Distira classified incoming requests. Each intent maps to a different routing target and context reduction strategy.</p>
-        </div>
-        <span class="total-badge">{{ metrics.totalRequests }} total</span>
-      </div>
-      <div v-if="intentRows.length" class="intent-grid">
-        <div v-for="entry in intentRows" :key="entry.intent" class="intent-tile" :class="`intent-${entry.intent}`">
-          <span class="intent-label">{{ entry.intent }}</span>
-          <strong class="intent-count">{{ entry.requests }}</strong>
-          <span class="intent-pct">{{ entry.pct }}%</span>
-          <div class="intent-bar-track">
-            <div class="intent-bar-fill" :style="{ width: entry.pct + '%' }"></div>
-          </div>
-          <span class="intent-reduction">{{ entry.avgReduction }}% reduction</span>
-        </div>
-      </div>
-      <p v-else class="muted">No intent data yet. Send a few requests to see the distribution.</p>
-    </section>
 
-    <!-- V10 — Adaptive Optimization Suggestions -->
-    <section class="card suggestions-section">
-      <div class="section-heading">
-        <div>
-          <h3>Optimization Suggestions</h3>
-          <p class="muted">V10 adaptive engine analyzes provider error rates and latency to surface actionable improvements.</p>
-        </div>
-        <button class="refresh-btn" @click="fetchSuggestions">Refresh</button>
-      </div>
-      <div v-if="suggestions.length" class="suggestions-list">
-        <div
-          v-for="(s, idx) in suggestions"
-          :key="idx"
-          class="suggestion-item"
-          :class="s.severity"
-        >
-          <span class="suggestion-icon">{{ s.severity === 'warning' ? '\u26A0' : '\u2139' }}</span>
-          <div class="suggestion-body">
-            <span class="suggestion-message">{{ s.message }}</span>
-            <span class="suggestion-meta">{{ s.provider }} · {{ s.metric }}: {{ s.value }}</span>
-          </div>
-        </div>
-      </div>
-      <p v-else class="muted">No suggestions yet. Suggestions appear after providers accumulate error or latency data.</p>
-    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 import { classifyRoute, friendlyProvider, qualityTier } from '../utils/providers'
 import MetricCard from '../components/MetricCard.vue'
@@ -350,29 +281,16 @@ async function resetMetrics() {
   }
 }
 
-// V10 — Adaptive optimization suggestions
-interface Suggestion {
-  severity: 'warning' | 'info'
-  code: string
-  provider: string
-  metric: string
-  value: number
-  message: string
-}
-const suggestions = ref<Suggestion[]>([])
-async function fetchSuggestions() {
-  try {
-    const res = await fetch('/v1/suggestions')
-    if (res.ok) {
-      const data = await res.json()
-      suggestions.value = data.suggestions ?? []
-    }
-  } catch {
-    // Server not yet available — silently ignore
-  }
-}
-onMounted(fetchSuggestions)
 const configuredAssistantModelLabel = import.meta.env.VITE_ASSISTANT_MODEL_LABEL || 'External assistant or client model'
+
+// ── V10.7 — Savings bar constants ────────────
+const AVG_COST_PER_1K_TOKENS = 0.006
+
+const savingsData = computed(() => {
+  const tokensSaved = Math.max(0, metrics.rawTokens - metrics.compiledTokens) + metrics.cacheSavedTokens
+  const costSaved = (tokensSaved / 1000) * AVG_COST_PER_1K_TOKENS
+  return { tokensSaved, costSaved }
+})
 
 // Sparklines: direct SSE history arrays (reactive)
 const rawHistory = computed(() => metrics.historyRaw.length ? metrics.historyRaw : [0])
@@ -387,16 +305,17 @@ const localHistory = computed(() => {
   )
 })
 
-// V10.3 — Session budget utilisation
-const budgetUsedPct = computed(() => {
-  if (!metrics.sessionBudgetUsd) return 0
-  return Math.round((metrics.sessionCostUsd / metrics.sessionBudgetUsd) * 100)
+// V10.7 — Session savings bar (estimated $ saved from tokens avoided)
+const savingsPct = computed(() => {
+  const target = 10000
+  const tokensSaved = Math.max(0, metrics.rawTokens - metrics.compiledTokens) + metrics.cacheSavedTokens
+  return Math.min(100, Math.round((tokensSaved / target) * 100))
 })
-const budgetPctClass = computed(() => {
-  const pct = budgetUsedPct.value
-  if (pct >= 100) return 'budget-exhausted'
-  if (pct >= 80) return 'budget-warning'
-  return 'budget-ok'
+const savingsPctClass = computed(() => {
+  const pct = savingsPct.value
+  if (pct >= 80) return 'budget-ok'
+  if (pct >= 40) return 'budget-warning'
+  return 'budget-exhausted'
 })
 
 // TvChart: prefer true hourly buckets when available, fallback to legacy history.
@@ -456,6 +375,8 @@ const trendSeries = computed(() => [
   },
 ])
 
+const TEST_PATTERNS = /^(t|test|unknown-model)$/i
+
 const upstreamRows = computed(() => {
   return Object.entries(metrics.upstreamStats)
     .map(([key, stat]) => ({
@@ -466,6 +387,7 @@ const upstreamRows = computed(() => {
       requests: stat.requests,
       lastSeenTs: stat.last_seen_ts,
     }))
+    .filter((r) => !TEST_PATTERNS.test(r.model) && !TEST_PATTERNS.test(r.provider))
     .sort((a, b) => b.requests - a.requests || b.lastSeenTs - a.lastSeenTs)
 })
 
@@ -598,64 +520,6 @@ const lastRequestCard = computed(() => {
     intent: lastRequest.intent,
     seenAt: new Date(lastRequest.ts * 1000).toLocaleTimeString(),
   }
-})
-
-// Codegen vs Review slice, derived from intentStats
-const codegenReview = computed(() => {
-  const stats = metrics.intentStats as Record<string, { requests: number; raw_tokens: number; compiled_tokens: number }>
-  const codegen = stats['codegen']
-  const review = stats['review']
-
-  if (!codegen && !review) {
-    return {
-      hasData: false,
-      totalRequests: 0,
-      codegenRequests: 0,
-      reviewRequests: 0,
-      codegenPct: 0,
-      reviewPct: 0,
-      codegenReduction: 0,
-      reviewReduction: 0,
-    }
-  }
-
-  const totalRequests = (codegen?.requests ?? 0) + (review?.requests ?? 0)
-  const safeTotal = totalRequests || 1
-
-  const calcReduction = (entry: { raw_tokens: number; compiled_tokens: number } | undefined) => {
-    if (!entry || !entry.raw_tokens) return 0
-    const saved = Math.max(0, entry.raw_tokens - entry.compiled_tokens)
-    return Math.round((saved / entry.raw_tokens) * 100)
-  }
-
-  return {
-    hasData: true,
-    totalRequests,
-    codegenRequests: codegen?.requests ?? 0,
-    reviewRequests: review?.requests ?? 0,
-    codegenPct: Math.round(((codegen?.requests ?? 0) / safeTotal) * 100),
-    reviewPct: Math.round(((review?.requests ?? 0) / safeTotal) * 100),
-    codegenReduction: calcReduction(codegen),
-    reviewReduction: calcReduction(review),
-  }
-})
-
-// Intent distribution — aggregated from intentStats with percentage + avg reduction
-const intentRows = computed(() => {
-  const stats = metrics.intentStats as Record<string, { requests: number; raw_tokens: number; compiled_tokens: number }>
-  const total = Object.values(stats).reduce((s, v) => s + v.requests, 0) || 1
-  return Object.entries(stats)
-    .map(([intent, stat]) => {
-      const saved = Math.max(0, stat.raw_tokens - stat.compiled_tokens)
-      const avgReduction = stat.raw_tokens > 0 ? Math.round((saved / stat.raw_tokens) * 100) : 0
-      return {
-        intent,
-        requests: stat.requests,
-        pct: Math.round((stat.requests / total) * 100),
-        avgReduction,
-      }
-    })
-    .sort((a, b) => b.requests - a.requests)
 })
 </script>
 
@@ -1093,205 +957,6 @@ const intentRows = computed(() => {
   }
 }
 
-/* ── Intent Distribution ──────────────────────────────── */
-.intent-distribution-section {
-  margin-top: 20px;
-}
-
-.intent-distribution-section .section-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.total-badge {
-  flex-shrink: 0;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.intent-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.intent-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.intent-tile.intent-debug  { border-color: rgba(255, 104, 104, 0.3); background: linear-gradient(135deg, rgba(255, 104, 104, 0.1), rgba(255, 169, 64, 0.06)); }
-.intent-tile.intent-review { border-color: rgba(96, 156, 255, 0.3);  background: linear-gradient(135deg, rgba(96, 156, 255, 0.1), rgba(0, 214, 143, 0.06)); }
-.intent-tile.intent-summarize { border-color: rgba(0, 214, 143, 0.3); background: linear-gradient(135deg, rgba(0, 214, 143, 0.1), rgba(40, 120, 255, 0.06)); }
-.intent-tile.intent-ocr    { border-color: rgba(187, 134, 252, 0.3); background: linear-gradient(135deg, rgba(187, 134, 252, 0.1), rgba(96, 156, 255, 0.06)); }
-.intent-tile.intent-general { border-color: rgba(255, 255, 255, 0.1); }
-
-.intent-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-}
-
-.intent-count {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.intent-pct {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-
-.intent-bar-track {
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 4px 0 2px;
-  overflow: hidden;
-}
-
-.intent-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--primary);
-  transition: width 0.4s ease;
-}
-
-.intent-reduction {
-  font-size: 0.77rem;
-  color: var(--accent);
-}
-
-/* ── Codegen vs Review ──────────────────────────────── */
-.codegen-vs-review-section {
-  margin-top: 20px;
-}
-
-.codegen-vs-review-section .section-heading h3 {
-  margin: 0 0 6px;
-  font-size: 1rem;
-}
-
-.cvr-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.cvr-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(135deg, rgba(0, 214, 143, 0.12), rgba(40, 120, 255, 0.08));
-}
-
-.cvr-count {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.cvr-reduction {
-  font-size: 0.8rem;
-  color: var(--accent);
-}
-
-@media (max-width: 640px) {
-  .cvr-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── V10 Optimization Suggestions ─────────────────────── */
-.suggestions-section .section-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.refresh-btn {
-  padding: 5px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--muted);
-  font-size: 0.82rem;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-.refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.10);
-}
-
-.suggestions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.suggestion-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid;
-  font-size: 0.87rem;
-}
-.suggestion-item.warning {
-  background: rgba(255, 169, 64, 0.08);
-  border-color: rgba(255, 169, 64, 0.28);
-}
-.suggestion-item.info {
-  background: rgba(40, 120, 255, 0.07);
-  border-color: rgba(40, 120, 255, 0.22);
-}
-
-.suggestion-icon {
-  font-size: 1rem;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.suggestion-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.suggestion-message {
-  color: var(--foreground);
-  line-height: 1.4;
-}
-
-.suggestion-meta {
-  font-size: 0.77rem;
-  color: var(--muted);
-  font-family: monospace;
-}
-
 /* ── V10.3 Session Cost Budget bar ────────────────────── */
 .budget-bar-wrap {
   padding: 16px 20px;
@@ -1345,4 +1010,5 @@ const intentRows = computed(() => {
 .budget-bar-pct.budget-ok        { color: var(--accent); }
 .budget-bar-pct.budget-warning   { color: #ffa940; }
 .budget-bar-pct.budget-exhausted { color: #ff6060; }
+
 </style>

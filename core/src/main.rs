@@ -715,6 +715,7 @@ type SharedState = Arc<AppState>;
 fn compile_result_from_cache(entry: &cache::CacheEntry) -> compiler::CompileResult {
     compiler::CompileResult {
         intent: entry.intent.clone(),
+        intent_confidence: 0.0, // reconstructed from cache — confidence not re-derived
         raw_tokens_estimate: entry.raw_tokens_estimate,
         compiled_tokens_estimate: entry.compiled_tokens_estimate,
         optimizer_savings: 0, // not stored in cache; conservative default
@@ -744,6 +745,7 @@ fn cache_entry_from_compile_result(
 fn compile_with_semantic_cache(
     collector: &mut MetricsCollector,
     raw: &str,
+    client_app: Option<&str>,
 ) -> (u64, compiler::CompileResult, bool) {
     let canonical = compiler::canonicalize_context(raw);
     let fingerprint = fingerprint::fingerprint(&canonical);
@@ -751,7 +753,7 @@ fn compile_with_semantic_cache(
         return (fingerprint, compile_result_from_cache(entry), true);
     }
 
-    let result = compiler::compile_context(raw);
+    let result = compiler::compile_context_with_hint(raw, client_app);
     collector
         .sem_cache
         .insert(cache_entry_from_compile_result(fingerprint, &result));
@@ -1393,7 +1395,11 @@ async fn compile(
     };
 
     let mut collector = state.collector.lock().unwrap();
-    let (fp, result, cache_hit) = compile_with_semantic_cache(&mut collector, &context_input);
+    let (fp, result, cache_hit) = compile_with_semantic_cache(
+        &mut collector,
+        &context_input,
+        payload.client_app.as_deref(),
+    );
     let mem = if cache_hit {
         // Exact semantic cache hit → full block reuse.
         collector
@@ -1470,6 +1476,7 @@ async fn compile(
         "fingerprint": fp.to_string(),
         "cache_hit": cache_hit,
         "intent": result.intent,
+        "intent_confidence": result.intent_confidence,
         "raw_tokens": result.raw_tokens_estimate,
         "compiled_tokens": result.compiled_tokens_estimate,
         "optimizer_savings": result.optimizer_savings,
@@ -1554,7 +1561,7 @@ async fn chat_completions(
 
     let (semantic_fp, result, semantic_cache_hit) = {
         let mut collector = state.collector.lock().unwrap();
-        compile_with_semantic_cache(&mut collector, &compile_input)
+        compile_with_semantic_cache(&mut collector, &compile_input, payload.client_app.as_deref())
     };
 
     // ── 2. Compile latest user message for clean LLM injection ───────────────
@@ -2015,20 +2022,103 @@ async fn chat_completions(
     }
 }
 
-/// V10 — Return adaptive optimization suggestions based on real-time provider
-/// error rates and latency measurements.
+/// V10 — Return adaptive optimization suggestions based on routing config,
+/// session metrics, provider error rates and latency measurements.
+/// Always returns at least informational suggestions so the panel is never empty.
 async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::Value> {
-    let (latency_map, error_map) = {
+    let (latency_map, error_map, snapshot) = {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
+        let snap = collector.snapshot().clone();
         (
             collector.avg_latency_by_provider(),
             collector.error_rate_by_provider(),
+            snap,
         )
     };
 
     let mut suggestions: Vec<serde_json::Value> = Vec::new();
 
-    // High error rate: >= 5% is noteworthy.
+    // ── 1. Always: active routing map ───────────────────────────────────────
+    let routing = state.router_config.task_routing_summary();
+    if !routing.is_empty() {
+        let routing_desc = routing
+            .iter()
+            .map(|(intent, prov)| format!("{intent}→{prov}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        suggestions.push(json!({
+            "severity": "info",
+            "code": "routing_active",
+            "provider": "",
+            "metric": "task_routing",
+            "value": routing.len(),
+            "message": format!(
+                "{} intent routes active: {}",
+                routing.len(),
+                routing_desc
+            )
+        }));
+    }
+
+    // ── 2. Always: session efficiency (once there are requests) ─────────────
+    if snapshot.total_requests > 0 {
+        let saved = snapshot.raw_tokens.saturating_sub(snapshot.compiled_tokens) as u64;
+        let pct = if snapshot.raw_tokens > 0 {
+            (saved as f64 / snapshot.raw_tokens as f64 * 100.0).round() as u64
+        } else {
+            0
+        };
+        let total_local = snapshot.routes_local;
+        let total_cloud = snapshot.routes_cloud;
+        let local_pct = if snapshot.total_requests > 0 {
+            (total_local as f64 / snapshot.total_requests as f64 * 100.0).round() as u64
+        } else {
+            0
+        };
+        suggestions.push(json!({
+            "severity": "info",
+            "code": "session_efficiency",
+            "provider": "",
+            "metric": "token_reduction_pct",
+            "value": pct,
+            "message": format!(
+                "Session: {} requests processed — {}% token reduction, {}% on-prem ({} local / {} cloud)",
+                snapshot.total_requests, pct, local_pct, total_local, total_cloud
+            )
+        }));
+    }
+
+    // ── 3. Cache performance (once there are hits) ──────────────────────────
+    let total_cache = snapshot.cache_hits + snapshot.cache_misses;
+    if total_cache > 0 {
+        let hit_pct = (snapshot.cache_hits as f64 / total_cache as f64 * 100.0).round() as u64;
+        let severity = if hit_pct >= 30 { "info" } else { "info" };
+        suggestions.push(json!({
+            "severity": severity,
+            "code": "cache_performance",
+            "provider": "",
+            "metric": "cache_hit_pct",
+            "value": hit_pct,
+            "message": format!(
+                "Semantic cache: {}% hit rate ({}/{} requests) — {} tokens avoided via cache",
+                hit_pct, snapshot.cache_hits, total_cache, snapshot.cache_saved_tokens
+            )
+        }));
+    }
+
+    // ── 4. Concise mode status ───────────────────────────────────────────────
+    if state.router_config.concise_mode() {
+        suggestions.push(json!({
+            "severity": "info",
+            "code": "concise_mode_active",
+            "provider": "",
+            "metric": "concise_mode",
+            "value": 1,
+            "message": "Concise mode is ON — DISTIRA injects a brevity directive into every LLM request, reducing output token usage across all providers."
+        }));
+    }
+
+    // ── 5. Reactive: high error rate ≥ 5 % ──────────────────────────────────
     for (provider, error_rate) in &error_map {
         if *error_rate >= 0.05 {
             suggestions.push(json!({
@@ -2045,7 +2135,7 @@ async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::V
         }
     }
 
-    // High latency: >= 3 000 ms.
+    // ── 6. Reactive: high latency ≥ 3 000 ms ────────────────────────────────
     for (provider, avg_ms) in &latency_map {
         if *avg_ms >= 3000.0 {
             let severity = if *avg_ms >= 6000.0 { "warning" } else { "info" };
@@ -2063,7 +2153,7 @@ async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::V
         }
     }
 
-    // Sort: warnings first, then by value descending.
+    // Sort: warnings first, then info; within each level preserve insertion order.
     suggestions.sort_by(|a, b| {
         let sa = a.get("severity").and_then(|v| v.as_str()).unwrap_or("info");
         let sb = b.get("severity").and_then(|v| v.as_str()).unwrap_or("info");
@@ -2212,9 +2302,9 @@ mod tests {
         let mut collector = MetricsCollector::new();
 
         let (first_fp, first_result, first_hit) =
-            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace");
+            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace", None);
         let (second_fp, second_result, second_hit) =
-            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace");
+            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace", None);
 
         assert!(!first_hit);
         assert!(second_hit);

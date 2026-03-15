@@ -481,3 +481,43 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - `build_full_snapshot()` injects `session_budget_usd` into every SSE and REST metrics snapshot.
 - Dashboard store: `sessionBudgetUsd` reactive ref bound via `applySnapshot`.
 - **OverviewView**: Session Cost Budget utilisation bar — shows current cost / budget with colour-coded fill (green/amber/red) and percentage. Hidden when budget is `0` (disabled)., `cost_usd`.
+### V10.6 — Savings & Environmental Impact Dashboard + Audit Cleanup
+
+**Status:** Delivered (VERSION 10.6.0).
+
+- **Overview: Savings & Environmental Impact** — 4 tiles: estimated cost saved, energy avoided (kWh), tree-equivalent CO₂, animated 3D ice cube representing ice-melt litres avoided. Constants: $0.006/1K tokens, 0.0005 kWh/1K tokens, 0.4 kg CO₂/kWh, 22 kg CO₂/tree/year, 5 L ice/kg CO₂.
+- **Runtime Audit cleaned** — pure security/routing audit: cost column and cost KPIs removed; 6-column table, sensitive badge in tokens column.
+- **Upstream table filtered** — test entries (`t`, `test`, `unknown-model`) excluded.
+
+### V10.5 — Always-On Optimization Suggestions & Brand Refresh
+
+**Status:** Delivered (VERSION 10.5.0).
+
+- **`get_suggestions` redesigned** — always returns 4 proactive informational suggestions (routing map, session efficiency, cache performance, concise mode) on every load; reactive alerts (error rate, latency) fire on top. Panel never shows empty on fresh server start.
+- **`RouterConfig::task_routing_summary()`** — new public method returning sorted (intent, provider) pairs for the suggestions backend.
+- **OverviewView auto-refresh** — suggestions panel polls every 30 s via `setInterval`, cleaned up on `onUnmounted`. Per-suggestion icon map added (⇌ ⚡ ◈ ✦ ⚠ ℹ).
+- **Brand coherence pass** — `public/distira_app_icon.svg` and `favicon-32.png` synced from `brand/`; orphaned `katara-mark.svg` removed.
+
+### V10.4 — Semantic Intent Engine
+
+**Status:** Delivered (2026-03-14 — VERSION 10.4.0).
+
+- **`detect_intent_scored(raw, client_app)`** — replaces first-match if/else with weighted multi-signal scoring. All intents scored in parallel; highest total wins. Confidence ∈ [0.0, 1.0].
+- **VS Code Copilot context hint** — `client_app` containing "copilot"/"vs code" boosts code-adjacent intents (codegen, review, debug) for more accurate routing.
+- **Structural signals** — code blocks, `diff --git`, composite `write a … function` pattern, language tags (rust/typescript/python function) all contribute independent scores.
+- **"improve"/"optimize"/"refactor"/"clean up"** keywords now route to `review` (→ `qwen2.5-coder`) instead of falling through to `general`.
+- **French keywords** extended across all intents: améliore, revue de code, résume, bogue, etc.
+- **`intent_confidence: f32`** in `CompileResult` + all compile/chat JSON responses.
+- **`compile_context_with_hint(raw, client_app)`** public API; `compile_context()` is a backward-compatible wrapper.
+- **AuditView**: confidence badge beside intent label — `XX%` pill, colour-coded
+
+### V10.7 — Savings & Impact Page + Dashboard Slimming
+
+**Status:** Delivered (VERSION 10.7.0).
+
+- **New SavingsView page** (`/savings`) — dedicated page for economic and environmental impact
+- **SVG iceberg** widget replacing 3D CSS cube (translucent gradient, bob animation, glow filter)
+- **Estimated Session Savings** progress bar — shows live $ saved from tokens avoided (replaces broken budget bar)
+- **Leaf icon** in sidebar nav, new route between Overview and AI Flow
+- **Overview slimmed** — moved 5 sections (savings tiles, ice cube, codegen vs review, intent distribution, suggestions) to SavingsView
+- **Loading states** for suggestions (spinner, disabled button, loading/empty/populated states) green/amber/grey.

@@ -7,6 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.7.0] — Savings & Impact Page + Dashboard Slimming
+
+### Added
+- **SavingsView** — new dedicated "Savings & Impact" page (`/savings`) with:
+  - Estimated Session Savings progress bar (tokens saved → $ estimate)
+  - Environmental Impact tiles (cost, energy, tree equivalent, ice preserved)
+  - **SVG iceberg** widget replacing the 3D CSS cube (translucent gradient, bob animation, glow filter)
+  - Codegen vs Review section (moved from Overview)
+  - Intent Distribution section (moved from Overview)
+  - Optimization Suggestions with loading state + auto-refresh (moved from Overview)
+- **Leaf icon** added to SvgIcon component for Savings nav link
+- **Savings & Impact** nav link in sidebar (between Overview and AI Flow)
+- `/savings` route registered in Vue router
+
+### Changed
+- **OverviewView** slimmed from ~1400 lines to ~1000 lines — moved 5 sections to SavingsView
+- **Budget bar** repurposed: was "Session Cost Budget" (always $0) → now "Estimated Session Savings" showing live $ saved from tokens avoided
+- Suggestions, Codegen vs Review, Intent Distribution, Savings tiles, ice widget all moved to SavingsView
+
+### Fixed
+- **Budget bar always shows 0** — replaced `sessionCostUsd / sessionBudgetUsd` (never populated) with live savings estimate from tokens saved
+- **Ice cube rendered as black box** — replaced 3D CSS `preserve-3d` cube (broken rendering) with beautiful inline SVG iceberg
+- **Suggestions not loading on refresh** — added explicit loading state with spinner, improved empty/loading/populated states
+
+### Fixed (prior — included in build)
+- **BenchmarksView** — shows all intents (removed >0% filter)
+- **FlowView** — all 6 stats now live from metrics store
+- **Ice cube rotation** — CSS custom properties fix
+
+## [10.6.0] — Savings & Environmental Impact Dashboard + Audit Cleanup
+
+### Added
+- **Savings & Environmental Impact** section on Overview — 4-tile panel showing:
+  - Estimated cost saved ($) based on tokens avoided at blended $0.006/1K rate.
+  - Energy avoided (kWh) and CO₂ not emitted (kg).
+  - Tree-equivalent: fraction of a mature tree’s yearly CO₂ absorption.
+  - **Animated 3D ice cube**: CSS-only rotating/bobbing ice crystal whose opacity and scale grow with savings. Represents litres of ice-melt-equivalent avoided.
+- Upstream Client Models table now filters out test entries (`t`, `test`, `unknown-model`) automatically.
+
+### Changed
+- **Runtime Audit** is now a pure security/routing audit:
+  - Removed “Cost / Security” column — table is 6 columns (Time, Scope, Client, Routed, Intent, Tokens).
+  - Removed "Cloud cost (session)" and "Cloud cost avoided" KPI cards.
+  - Kept: Tokens saved, Requests forced on-prem KPI cards.
+  - Sensitive-route badge (🔒 On-prem) moved into Tokens column.
+  - CSV export no longer includes `cost_usd`.
+- Subtitle updated: “Every routing decision and optimisation” (no cost mention).
+
+## [10.5.0] — Always-On Optimization Suggestions & Brand Refresh
+
+### Added
+- `get_suggestions` endpoint rewritten: always returns proactive informational suggestions on every load/refresh — no longer requires accumulated error or latency data to produce output.
+- 4 always-on suggestion types: `routing_active` (full intent→provider map), `session_efficiency` (token reduction % + on-prem %, once requests > 0), `cache_performance` (hit rate + tokens avoided), `concise_mode_active` (when enabled).
+- 2 reactive suggestion types retained: `high_error_rate` (triggers at ≥5% error rate) and `high_latency` (triggers at ≥3000 ms average).
+- Per-suggestion icon map in OverviewView: ⇌ routing, ⚡ efficiency, ◈ cache, ✦ concise, ⚠ warning, ℹ latency.
+- `RouterConfig::task_routing_summary()` — public method returning sorted `(intent, provider)` pairs, used by the suggestions backend.
+- OverviewView suggestions panel auto-refreshes every 30 seconds via `setInterval` / `onUnmounted` cleanup; subtitle updated to reflect live refresh cadence.
+- Empty state message updated to "Loading suggestions…" instead of static "No suggestions yet".
+
+### Fixed (Brand)
+- `public/distira_app_icon.svg` synced from `brand/` (310 KB real brand graphic; was 3.4 KB placeholder SVG).
+- `public/favicon-32.png` synced from `brand/`.
+- `src/assets/katara-mark.svg` removed (orphaned logo from previous project name, unreferenced).
+
+## [10.4.0] — Semantic Intent Engine
+
+### Added
+- **`detect_intent_scored(raw, client_app)`** in `compiler/src/lib.rs` — replaces the first-match if/else chain with a weighted multi-signal scoring system. All intents are scored in parallel; the highest total wins. Confidence ∈ [0.0, 1.0] derived from the raw score.
+- **VS Code Copilot context hint** — when `client_app` contains "copilot" or "vs code", code-adjacent intents (codegen, review, debug) receive a boost so coding prompts classify more accurately.
+- **Structural signals** — presence of code blocks (` ``` `, `fn `, `def `, `impl `, `struct `), diff markers (`diff --git`), and composite patterns (`write a … function`) are independent scoring signals, not fall-through catches.
+- **"improve"/"optimize"/"refactor"/"clean up" keywords** now route to `review` intent (→ `qwen2.5-coder`) instead of falling through to `general`.
+- **French keyword coverage** extended across all intents: `améliore`, `optimise le`, `revue de code`, `résume`, `explique`, `bogue`, `plantage`, etc.
+- **`intent_confidence: f32`** field in `CompileResult` — exposed in `/v1/compile` and `/v1/chat/completions` JSON responses.
+- **`compile_context_with_hint(raw, client_app)`** public API in `compiler` crate — backward-compatible; `compile_context()` wraps it with `None`.
+- **AuditView confidence badge** — intent column now shows a coloured `XX%` confidence pill beside the intent label (green ≥60%, amber ≥35%, grey otherwise).
+
+### Fixed
+- `detect_intent("fix this panic in main")` previously returned `general` instead of `debug` due to first-match ordering; scoring now returns `debug` correctly.
+- `detect_intent("write a typescript function …")` previously returned `general`; composite `write a … function` pattern now scores as `codegen`.
+- `detect_intent("diff --git …")` previously relied on bare `"diff"` keyword; dedicated `diff --git` signal added to review.
+
 ## [10.3.0] — Session Cost Budget & Alerts
 
 ### Added

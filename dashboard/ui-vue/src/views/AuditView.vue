@@ -3,18 +3,14 @@
     <header class="view-header">
       <div>
         <h2>Runtime Audit</h2>
-        <p class="muted">Every routing decision, cost, and optimisation — traceable and exportable.</p>
+        <p class="muted">Every routing decision and optimisation — traceable and exportable.</p>
       </div>
       <span v-if="metrics.connected" class="live-badge">● Live</span>
       <span v-else class="live-badge offline">○ Offline</span>
     </header>
 
-    <!-- Security + cost KPIs -->
+    <!-- Security KPIs -->
     <div class="audit-kpis">
-      <div class="kpi-card">
-        <div class="kpi-value">${{ totalCostUsd.toFixed(4) }}</div>
-        <div class="kpi-label">Cloud cost (session)</div>
-      </div>
       <div class="kpi-card accent">
         <div class="kpi-value">{{ totalTokensSaved.toLocaleString() }}</div>
         <div class="kpi-label">Tokens saved by compilation</div>
@@ -22,10 +18,6 @@
       <div class="kpi-card secure">
         <div class="kpi-value">{{ sensitiveCount }}</div>
         <div class="kpi-label">Requests forced on-prem</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${{ cloudCostAvoided.toFixed(4) }}</div>
-        <div class="kpi-label">Cloud cost avoided (secure)</div>
       </div>
     </div>
 
@@ -72,7 +64,6 @@
           <span>Routed</span>
           <span>Intent</span>
           <span>Tokens</span>
-          <span>Cost / Security</span>
         </div>
         <div v-for="row in auditRows" :key="row.key" class="audit-row">
           <span>{{ row.time }}</span>
@@ -92,6 +83,12 @@
           </span>
           <span>
             <span class="intent-pill">{{ row.intent }}</span>
+            <span
+              v-if="row.intentConfidence > 0"
+              class="confidence-badge"
+              :class="row.intentConfidence >= 0.6 ? 'conf-high' : row.intentConfidence >= 0.35 ? 'conf-mid' : 'conf-low'"
+              :title="'Intent confidence: ' + (row.intentConfidence * 100).toFixed(0) + '%'"
+            >{{ (row.intentConfidence * 100).toFixed(0) }}%</span>
             <small>
               <span class="status-pill" :class="row.cacheClass">{{ row.cacheLabel }}</span>
             </small>
@@ -100,10 +97,7 @@
             <span class="token-saved" v-if="row.tokensSaved > 0">-{{ row.tokensSaved }}</span>
             <span class="token-saved zero" v-else>—</span>
             <small class="muted" v-if="row.rawTokens > 0">{{ row.rawTokens }}→{{ row.compiledTokens }}</small>
-          </span>
-          <span class="cost-col">
-            <span v-if="row.sensitive" class="status-pill warn" title="Forced on-prem — zero cloud cost">🔒 Secured</span>
-            <span v-else class="cost-value">${{ row.costUsd }}</span>
+            <span v-if="row.sensitive" class="status-pill warn" title="Forced on-prem">🔒 On-prem</span>
           </span>
         </div>
       </div>
@@ -248,6 +242,7 @@ const auditRows = computed(() => {
         routedProvider: entry.routed_provider,
         routedModel: entry.routed_model,
         intent: entry.intent,
+        intentConfidence: entry.intent_confidence ?? 0,
         tenantId: entry.tenant_id || 'default-tenant',
         projectId: entry.project_id || 'default-project',
         routeLabel: route.routeLabel,
@@ -257,7 +252,6 @@ const auditRows = computed(() => {
         sensitive: !!entry.sensitive,
         sensitiveLabel: entry.sensitive ? 'Sensitive override' : 'Standard routing',
         sensitiveClass: entry.sensitive ? 'warn' : 'neutral',
-        costUsd: (entry.cost_usd ?? 0).toFixed(5),
         rawTokens: entry.raw_tokens ?? 0,
         compiledTokens: entry.compiled_tokens ?? 0,
         tokensSaved: entry.tokens_saved ?? 0,
@@ -265,24 +259,12 @@ const auditRows = computed(() => {
     })
 })
 
-const totalCostUsd = computed(() =>
-  filteredHistory.value.reduce((acc, e) => acc + (e.cost_usd ?? 0), 0)
-)
 const totalTokensSaved = computed(() =>
   filteredHistory.value.reduce((acc, e) => acc + (e.tokens_saved ?? 0), 0)
 )
 const sensitiveCount = computed(() =>
   filteredHistory.value.filter((e) => e.sensitive).length
 )
-// Estimate cloud cost avoided: sensitive requests were served on-prem at $0.
-// We use the average cost of non-sensitive requests as the counterfactual.
-const cloudCostAvoided = computed(() => {
-  const nonSensitive = filteredHistory.value.filter((e) => !e.sensitive && (e.cost_usd ?? 0) > 0)
-  if (nonSensitive.length === 0 || sensitiveCount.value === 0) return 0
-  const avgCost = nonSensitive.reduce((acc, e) => acc + (e.cost_usd ?? 0), 0) / nonSensitive.length
-  return avgCost * sensitiveCount.value
-})
-
 function exportScopedCsv() {
   const rows = [...filteredHistory.value].reverse()
   if (!rows.length) return
@@ -309,7 +291,6 @@ function exportScopedCsv() {
     'raw_tokens',
     'compiled_tokens',
     'tokens_saved',
-    'cost_usd',
   ]
 
   const lines = [header.join(',')]
@@ -331,7 +312,6 @@ function exportScopedCsv() {
         entry.raw_tokens ?? 0,
         entry.compiled_tokens ?? 0,
         entry.tokens_saved ?? 0,
-        (entry.cost_usd ?? 0).toFixed(6),
       ]
         .map(esc)
         .join(',')
@@ -404,7 +384,7 @@ function exportScopedCsv() {
 
 .audit-row {
   display: grid;
-  grid-template-columns: 0.8fr 1fr 1fr 1.1fr 1.1fr 0.9fr 1.1fr;
+  grid-template-columns: 0.8fr 1fr 1fr 1.1fr 1.1fr 1fr;
   gap: 12px;
   align-items: start;
   padding: 14px 16px;
@@ -441,7 +421,7 @@ function exportScopedCsv() {
 /* ── KPI bar ── */
 .audit-kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -471,9 +451,8 @@ function exportScopedCsv() {
   margin-top: 4px;
 }
 
-/* ── Tokens & Cost columns ── */
-.tokens-col,
-.cost-col {
+/* ── Tokens column ── */
+.tokens-col {
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -487,11 +466,6 @@ function exportScopedCsv() {
 
 .token-saved.zero { color: var(--muted); }
 
-.cost-value {
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
 .intent-pill {
   display: inline-flex;
   align-items: center;
@@ -503,6 +477,20 @@ function exportScopedCsv() {
   color: var(--text);
   text-transform: capitalize;
 }
+
+/* V10.4 — Intent confidence badge */
+.confidence-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.conf-high { background: rgba(0,255,136,0.12); color: #00ff88; }
+.conf-mid  { background: rgba(255,169,64,0.12); color: #ffa940; }
+.conf-low  { background: rgba(180,180,180,0.10); color: var(--muted); }
 
 @media (max-width: 1280px) {
   .audit-kpis {

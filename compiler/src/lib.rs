@@ -5,6 +5,9 @@ pub mod optimizer;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileResult {
     pub intent: String,
+    /// V10.4 — Confidence score for the detected intent, ∈ [0.0, 1.0].
+    /// 0.0 when reconstructed from cache (confidence not re-derived).
+    pub intent_confidence: f32,
     pub raw_tokens_estimate: usize,
     pub compiled_tokens_estimate: usize,
     /// Tokens saved by the BPE optimizer pass alone (before semantic compilation).
@@ -87,28 +90,28 @@ fn is_long_number(token: &str) -> bool {
     t.len() >= 6 && t.chars().all(|c| c.is_ascii_digit())
 }
 
-pub fn compile_context(raw: &str) -> CompileResult {
-    // V9.5: encode input for optimal tokenization (Unicode normalization,
-    // invisible char removal, whitespace collapsing) before any measurement.
+/// Compile context with an optional `client_app` hint for smarter intent scoring.
+/// When `client_app` is "VS Code Copilot" (or similar), code-adjacent intents
+/// receive a signal boost so the correct LLM is selected more reliably.
+pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> CompileResult {
+    // V9.5: encode input for optimal tokenization.
     let encoded = tokenizer::encode(raw);
     let raw_encoded = encoded.as_str();
     let raw_tokens_estimate = token_count(raw_encoded);
 
-    // V9.10.1: BPE optimizer pass — lossless lexical transformations that
-    // reduce token count before semantic compilation.
-    let intent = detect_intent(raw_encoded);
+    // V10.4: multi-signal scored intent detection.
+    let (intent, intent_confidence) = detect_intent_scored(raw_encoded, client_app);
+
+    // V9.10.1: BPE optimizer pass — lossless lexical transformations.
     let optimized = optimizer::optimize(raw_encoded, &intent);
     let optimized_tokens = token_count(&optimized);
     let optimizer_savings = raw_tokens_estimate.saturating_sub(optimized_tokens);
 
-    // V9.12 — Per-intent distillation ratio: aggressive for summarize,
-    // conservative for debug/review where structure must be preserved.
+    // V9.12 — Per-intent distillation ratio.
     let target_tokens = optimized_tokens
         .saturating_div(distillation_divisor(&intent))
         .max(16)
         .min(optimized_tokens);
-    // Reserve budget for the intent marker that shape_by_intent prepends so the
-    // final compiled_context never exceeds target_tokens due to marker overhead.
     let marker_cost = token_count(intent_marker(&intent));
     let truncation_target = target_tokens.saturating_sub(marker_cost).max(1);
     let compiled_context = build_compiled_context(&optimized, &intent, truncation_target);
@@ -116,12 +119,18 @@ pub fn compile_context(raw: &str) -> CompileResult {
 
     CompileResult {
         intent: intent.clone(),
+        intent_confidence,
         raw_tokens_estimate,
         compiled_tokens_estimate,
         optimizer_savings,
         summary: build_summary(&intent, raw_tokens_estimate, compiled_tokens_estimate),
         compiled_context,
     }
+}
+
+/// Compile context with no client-app hint (backward-compatible wrapper).
+pub fn compile_context(raw: &str) -> CompileResult {
+    compile_context_with_hint(raw, None)
 }
 
 /// Returns the intent marker prefix used by [`shape_by_intent`].
@@ -609,100 +618,176 @@ fn truncate_to_token_budget(text: &str, budget: usize) -> String {
     output.join("\n").trim().to_string()
 }
 
+/// V10.4 — Thin backward-compatible wrapper around the scored detector.
 pub fn detect_intent(raw: &str) -> String {
+    detect_intent_scored(raw, None).0
+}
+
+/// V10.4 — Weighted multi-signal intent detection.
+///
+/// Returns `(intent, confidence)` where confidence ∈ [0.0, 1.0].
+/// Multiple signals are scored in parallel; the highest total wins.
+/// `client_app` hint (e.g. "VS Code Copilot") boosts code-adjacent intents
+/// so coding contexts are classified more accurately.
+pub fn detect_intent_scored(raw: &str, client_app: Option<&str>) -> (String, f32) {
+    use std::collections::HashMap;
     let lower = raw.to_lowercase();
-    if lower.contains("error")
-        || lower.contains("trace")
-        || lower.contains("debug")
-        || lower.contains("segfault")
-        || lower.contains("panic")
-        || lower.contains("crash")
-        || lower.contains("bug")
-        || lower.contains("fix")
-    {
-        "debug".into()
-    } else if lower.contains("diff")
-        || lower.contains("pull request")
-        || lower.contains("code review")
-        || lower.contains("refactor")
-        || lower.contains("review")
-    {
-        "review".into()
-    } else if lower.contains("write a function")
-        || lower.contains("write function")
-        || lower.contains("write a rust function")
-        || lower.contains("write a python function")
-        || lower.contains("write a typescript")
-        || lower.contains("write a javascript")
-        || lower.contains("write a go function")
-        || lower.contains("write a kotlin")
-        || lower.contains("write a swift")
-        || lower.contains("write code")
-        || lower.contains("write me a")
-        || lower.contains("implement this in")
-        || lower.contains("implement in rust")
-        || lower.contains("implement in python")
-        || lower.contains("implement in typescript")
-        || lower.contains("implement in javascript")
-        || lower.contains("implement in go")
-        || lower.contains("generate code")
-        || lower.contains("generate a function")
-        || lower.contains("create a function")
-        || lower.contains("create a class")
-        || lower.contains("create a script")
-        || lower.contains("code example in")
-        || lower.contains("code snippet in")
-        || lower.contains("snippet in rust")
-        || lower.contains("snippet in python")
-        || lower.contains("snippet in typescript")
-        || lower.contains("snippet in javascript")
-        || lower.contains("codex")
-        || lower.contains("help me code")
-        || lower.contains("complete this code")
-        || lower.contains("complete the code")
-        || lower.contains("complete this function")
+
+    // VS Code / Copilot context → slight boost for code intents.
+    let is_code_context = client_app
+        .map(|a| {
+            let al = a.to_lowercase();
+            al.contains("copilot") || al.contains("vscode") || al.contains("vs code")
+        })
+        .unwrap_or(false);
+
+    // Structural signals — independent of intent.
+    let has_code_block = lower.contains("```")
+        || lower.contains("fn ")
+        || lower.contains("def ")
+        || (lower.contains("class ") && !lower.contains("class of"))
+        || lower.contains("impl ")
+        || lower.contains("struct ");
+
+    let mut scores: HashMap<&str, f32> = HashMap::new();
+
+    // ── Debug ────────────────────────────────────────────────────────────
+    for (kw, w) in [
+        ("error:", 3.0), ("panic:", 3.5), ("panicked at", 4.0),
+        ("exception", 2.5), ("traceback", 3.5), ("segfault", 4.0),
+        ("stack trace", 3.5), ("stack overflow", 4.0), ("at line ", 2.0),
+        ("thread 'main'", 3.0), ("fatal:", 3.0), ("undefined behavior", 3.5),
+        ("core dumped", 4.0), ("null pointer", 3.0), ("out of memory", 3.5),
         // French
-        || lower.contains("écris du code")
-        || lower.contains("écris une fonction")
-        || lower.contains("implémente en")
-        || lower.contains("crée une fonction")
-        || lower.contains("génère du code")
-        || lower.contains("génère une fonction")
-        || lower.contains("écris un script")
-    {
-        "codegen".into()
-    } else if lower.contains(" ocr")
-        || lower.starts_with("ocr")
-        || lower.contains("scan image")
-        || lower.contains("extract text from")
-        || lower.contains("image to text")
-        || lower.contains("read this image")
-    {
-        "ocr".into()
-    } else if lower.contains("translat")
-        || lower.contains("traduire")
-        || lower.contains("traduis")
-        || lower.contains("traduction")
-        || lower.contains("übersetze")
-        || lower.contains("traducir")
-        || lower.contains("traduci")
-        || lower.contains("翻译")
-        || lower.contains("in english")
-        || lower.contains("in french")
-        || lower.contains("in german")
-        || lower.contains("in spanish")
-        || lower.contains("in japanese")
-        || lower.contains("in chinese")
-    {
-        "translate".into()
-    } else if lower.contains("summar")
-        || lower.contains("explain")
-        || lower.contains("tldr")
-        || lower.contains("recap")
-    {
-        "summarize".into()
-    } else {
-        "general".into()
+        ("erreur:", 2.5), ("plantage", 3.0), ("bogue", 2.5),
+    ] {
+        if lower.contains(kw) {
+            *scores.entry("debug").or_default() += w;
+        }
+    }
+    // Single-word signals — present in old detector, lower weight when alone.
+    if lower.contains("panic") { *scores.entry("debug").or_default() += 2.0; }
+    if lower.contains("trace") { *scores.entry("debug").or_default() += 1.0; }
+    if lower.contains("debug") { *scores.entry("debug").or_default() += 1.5; }
+    // "bug" / "crash" / "fix" — weak alone, combined stronger.
+    if lower.contains("bug") { *scores.entry("debug").or_default() += 1.2; }
+    if lower.contains("crash") { *scores.entry("debug").or_default() += 2.0; }
+    if lower.contains("fix") {
+        let bonus: f32 = if lower.contains("bug") || lower.contains("error") ||
+            lower.contains("crash") || lower.contains("broken") { 2.5 } else { 0.6 };
+        *scores.entry("debug").or_default() += bonus;
+    }
+
+    // ── Code generation ──────────────────────────────────────────────────
+    for (kw, w) in [
+        ("write a function", 4.5), ("write a method", 4.0), ("write code", 3.5),
+        ("write a script", 3.5), ("write me a", 3.0), ("implement this", 3.5),
+        ("implement in", 3.0), ("generate code", 4.0), ("generate a function", 4.5),
+        ("create a function", 4.0), ("create a class", 4.0), ("create a script", 3.5),
+        ("code snippet", 3.5), ("code example", 3.0), ("help me code", 3.5),
+        ("complete this code", 3.5), ("complete this function", 3.5),
+        ("complete the code", 3.5), ("add a function", 3.0), ("add a method", 3.0),
+        ("give me the code", 3.5), ("show me the code", 3.0), ("codex", 2.0),
+        // Language-specific patterns ("write a rust function", "write a typescript function"…)
+        ("rust function", 3.5), ("python function", 3.5), ("typescript function", 3.5),
+        ("javascript function", 3.5), ("go function", 3.0), ("kotlin function", 3.0),
+        ("swift function", 3.0), ("c++ function", 3.0), ("java function", 3.0),
+        // French
+        ("écris du code", 4.5), ("écris une fonction", 4.5), ("implémente", 3.0),
+        ("crée une fonction", 4.0), ("crée un script", 3.5), ("génère du code", 4.0),
+        ("génère une fonction", 4.5), ("écris un script", 3.5), ("écris moi", 2.5),
+    ] {
+        if lower.contains(kw) {
+            *scores.entry("codegen").or_default() += w;
+        }
+    }
+    // Composite: "write a … function" covers "write a rust function", etc.
+    if lower.contains("write a") && lower.contains("function") {
+        *scores.entry("codegen").or_default() += 3.5;
+    }
+
+    // ── Review / improvement ─────────────────────────────────────────────
+    for (kw, w) in [
+        ("code review", 5.0), ("pull request", 4.5), ("pr review", 4.5),
+        ("review this", 3.5), ("review the code", 4.0), ("refactor", 4.0),
+        ("diff --git", 4.5), ("diff ", 2.5),
+        ("improve this", 3.0), ("improve the", 2.5), ("optimize this", 3.0),
+        ("optimise this", 3.0), ("optimize the", 2.5), ("optimise the", 2.5),
+        ("make it better", 2.5), ("make this better", 2.5), ("clean up", 2.0),
+        ("simplify this", 2.5), ("restructure", 3.0), ("best practices", 2.5),
+        // French
+        ("améliore", 2.5), ("optimise le", 3.0), ("revue de code", 5.0),
+        ("refactore", 4.0), ("amélioration de", 2.5),
+    ] {
+        if lower.contains(kw) {
+            *scores.entry("review").or_default() += w;
+        }
+    }
+
+    // ── Summarize ────────────────────────────────────────────────────────
+    for (kw, w) in [
+        ("summarize", 5.0), ("summarise", 5.0), ("tldr", 5.0), ("recap", 4.0),
+        ("explain this", 3.0), ("explain how", 2.5), ("explain the", 2.0),
+        ("what does this do", 3.5), ("what is this", 2.5), ("how does this work", 3.0),
+        ("give me an overview", 3.5), ("walk me through", 3.0),
+        // French
+        ("résume", 4.5), ("résumé de", 4.0), ("explique", 2.5),
+        ("comment ça marche", 3.0), ("c'est quoi", 2.5),
+    ] {
+        if lower.contains(kw) {
+            *scores.entry("summarize").or_default() += w;
+        }
+    }
+
+    // ── Translation ──────────────────────────────────────────────────────
+    for (kw, w) in [
+        ("translat", 5.0), ("traduire", 5.0), ("traduis", 5.0), ("traduction", 4.5),
+        ("übersetze", 5.0), ("traducir", 5.0), ("traduci", 5.0), ("翻译", 5.0),
+        ("in english", 3.0), ("in french", 3.0), ("in german", 3.0),
+        ("in spanish", 3.0), ("in japanese", 3.0), ("in chinese", 3.0),
+        ("en anglais", 3.0), ("en français", 3.0), ("en allemand", 3.0),
+    ] {
+        if lower.contains(kw) {
+            *scores.entry("translate").or_default() += w;
+        }
+    }
+
+    // ── OCR ──────────────────────────────────────────────────────────────
+    for (kw, w) in [
+        (" ocr ", 5.0), ("scan image", 5.0), ("extract text from", 4.5),
+        ("image to text", 5.0), ("read this image", 4.5), ("text from image", 4.5),
+    ] {
+        if lower.contains(kw) {
+            *scores.entry("ocr").or_default() += w;
+        }
+    }
+    if lower.starts_with("ocr") {
+        *scores.entry("ocr").or_default() += 5.0;
+    }
+
+    // ── Structural boosts ────────────────────────────────────────────────
+    if has_code_block {
+        *scores.entry("codegen").or_default() += 1.0;
+        *scores.entry("review").or_default() += 1.0;
+    }
+    if is_code_context {
+        *scores.entry("codegen").or_default() += 0.8;
+        *scores.entry("review").or_default() += 0.5;
+        *scores.entry("debug").or_default() += 0.5;
+    }
+
+    // ── Pick winner ──────────────────────────────────────────────────────
+    let best = scores
+        .iter()
+        .filter(|(_, &s)| s >= 1.0)
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    match best {
+        Some((&intent, &score)) => {
+            let confidence = (score / 10.0_f32).min(1.0);
+            (intent.to_string(), confidence)
+        }
+        None => ("general".to_string(), 0.3),
     }
 }
 
