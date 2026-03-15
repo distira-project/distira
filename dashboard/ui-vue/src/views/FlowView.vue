@@ -22,10 +22,37 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import FlowVisualizer from '../components/FlowVisualizer.vue'
 import SvgIcon from '../components/SvgIcon.vue'
+import { useMetricsStore } from '../store/metrics'
 
-const details = [
+const metrics = useMetricsStore()
+
+const cacheHitRate = computed(() => {
+  const total = metrics.cacheHits + metrics.cacheMisses
+  return total > 0 ? Math.round((metrics.cacheHits / total) * 100) : 0
+})
+
+const tokenReduction = computed(() => {
+  return metrics.rawTokens > 0
+    ? Math.round(((metrics.rawTokens - metrics.compiledTokens) / metrics.rawTokens) * 1000) / 10
+    : 0
+})
+
+const localRoutingPct = computed(() => {
+  const total = metrics.routesLocal + metrics.routesCloud + metrics.routesMidtier
+  return total > 0 ? Math.round((metrics.routesLocal / total) * 100) : 0
+})
+
+const activeProviderCount = computed(() => {
+  const providers = new Set(
+    Object.values(metrics.modelStats).map((s: any) => s.provider ?? s.routed_provider)
+  )
+  return Math.max(providers.size, 1)
+})
+
+const details = computed(() => [
   {
     icon: 'fingerprint',
     title: 'Fingerprinting',
@@ -37,38 +64,38 @@ const details = [
     icon: 'zap',
     title: 'Semantic Cache',
     description: 'Identical or near-duplicate prompts served from in-memory cache, skipping redundant LLM calls.',
-    stat: '42%',
+    stat: cacheHitRate.value + '%',
     statLabel: 'cache hit rate',
   },
   {
     icon: 'wrench',
     title: 'Context Compiler',
     description: 'Deduplicates, compresses, and reduces context to the minimal useful token set for the detected intent.',
-    stat: '71.7%',
+    stat: tokenReduction.value + '%',
     statLabel: 'token reduction',
   },
   {
     icon: 'brain',
     title: 'Memory Lens',
     description: 'Identifies stable context blocks from prior turns and reuses them, sending only delta tokens.',
-    stat: '6,030',
+    stat: metrics.memoryReusedTokens.toLocaleString(),
     statLabel: 'reused tokens',
   },
   {
     icon: 'shield',
     title: 'Sovereign Router',
     description: 'Sensitive data routes to local Ollama; general tasks go to cloud; debug to mid-tier — respecting data residency.',
-    stat: '61%',
+    stat: localRoutingPct.value + '%',
     statLabel: 'local routing',
   },
   {
     icon: 'radio',
     title: 'Provider Dispatch',
     description: 'Routes to Ollama, OpenAI-compatible, or Mistral endpoints with automatic fallback and retry.',
-    stat: '3',
+    stat: String(activeProviderCount.value),
     statLabel: 'active providers',
   },
-]
+])
 </script>
 
 <style scoped>

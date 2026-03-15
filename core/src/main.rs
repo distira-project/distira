@@ -81,6 +81,15 @@ struct RequestLineage {
     /// Estimated cost of this request in USD (0.0 for on-prem).
     #[serde(default)]
     cost_usd: f64,
+    /// Raw token count before compilation (context size the user submitted).
+    #[serde(default)]
+    raw_tokens: usize,
+    /// Compiled token count after DISTIRA optimisation.
+    #[serde(default)]
+    compiled_tokens: usize,
+    /// Tokens saved by compilation (raw − compiled).
+    #[serde(default)]
+    tokens_saved: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,6 +107,9 @@ struct WorkspaceContext {
     tenant_id: Option<String>,
     project_id: Option<String>,
     policy_pack: Option<String>,
+    /// V10.3 — Session cost budget in USD (0 = disabled).
+    #[serde(default)]
+    session_budget_usd: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -159,6 +171,9 @@ struct MetricsSnapshot {
     /// V10 — Session-level context reuse ratio in percent (memory_reused / raw * 100).
     #[serde(default)]
     context_reuse_ratio_pct: f32,
+    /// V10.3 — Configured session cost budget in USD (0 = disabled).
+    #[serde(default)]
+    session_budget_usd: f64,
 }
 
 #[derive(Debug)]
@@ -269,6 +284,7 @@ impl MetricsCollector {
                 last_request_cost_usd: 0.0,
                 stable_blocks: 0,
                 context_reuse_ratio_pct: 0.0,
+                session_budget_usd: 0.0,
             },
             sem_cache: cache::SemanticCache::new(),
             chat_cache: HashMap::new(),
@@ -518,6 +534,7 @@ impl MetricsCollector {
             0.0
         };
 
+        let tokens_saved = raw.saturating_sub(compiled);
         let lineage = RequestLineage {
             client_app: upstream.client_app,
             upstream_provider: upstream.provider,
@@ -534,6 +551,9 @@ impl MetricsCollector {
             sensitive,
             ts,
             cost_usd,
+            raw_tokens: raw,
+            compiled_tokens: compiled,
+            tokens_saved,
         };
 
         s.last_request = Some(lineage.clone());
@@ -624,6 +644,7 @@ impl MetricsCollector {
             last_request_cost_usd: 0.0,
             stable_blocks: 0,
             context_reuse_ratio_pct: 0.0,
+            session_budget_usd: 0.0,
         };
         self.hour_buckets.clear();
     }
@@ -694,6 +715,7 @@ type SharedState = Arc<AppState>;
 fn compile_result_from_cache(entry: &cache::CacheEntry) -> compiler::CompileResult {
     compiler::CompileResult {
         intent: entry.intent.clone(),
+        intent_confidence: 0.0, // reconstructed from cache — confidence not re-derived
         raw_tokens_estimate: entry.raw_tokens_estimate,
         compiled_tokens_estimate: entry.compiled_tokens_estimate,
         optimizer_savings: 0, // not stored in cache; conservative default
@@ -723,6 +745,7 @@ fn cache_entry_from_compile_result(
 fn compile_with_semantic_cache(
     collector: &mut MetricsCollector,
     raw: &str,
+    client_app: Option<&str>,
 ) -> (u64, compiler::CompileResult, bool) {
     let canonical = compiler::canonicalize_context(raw);
     let fingerprint = fingerprint::fingerprint(&canonical);
@@ -730,7 +753,7 @@ fn compile_with_semantic_cache(
         return (fingerprint, compile_result_from_cache(entry), true);
     }
 
-    let result = compiler::compile_context(raw);
+    let result = compiler::compile_context_with_hint(raw, client_app);
     collector
         .sem_cache
         .insert(cache_entry_from_compile_result(fingerprint, &result));
@@ -857,11 +880,13 @@ fn workspace_context_path() -> Option<PathBuf> {
 fn load_workspace_context() -> WorkspaceContext {
     if let Some(path) = workspace_context_path() {
         if let Ok(raw) = std::fs::read_to_string(&path) {
-            if let Ok(context) = serde_yaml::from_str::<WorkspaceContext>(&raw) {
-                return context;
-            }
+            // Try wrapped form first (`workspace:` key) — most yaml configs use this.
             if let Ok(wrapped) = serde_yaml::from_str::<WorkspaceContextFile>(&raw) {
                 return wrapped.workspace;
+            }
+            // Fallback: flat form (no wrapper key).
+            if let Ok(context) = serde_yaml::from_str::<WorkspaceContext>(&raw) {
+                return context;
             }
         }
     }
@@ -870,6 +895,7 @@ fn load_workspace_context() -> WorkspaceContext {
         tenant_id: None,
         project_id: None,
         policy_pack: None,
+        session_budget_usd: 0.0,
     }
 }
 
@@ -1369,7 +1395,11 @@ async fn compile(
     };
 
     let mut collector = state.collector.lock().unwrap();
-    let (fp, result, cache_hit) = compile_with_semantic_cache(&mut collector, &context_input);
+    let (fp, result, cache_hit) = compile_with_semantic_cache(
+        &mut collector,
+        &context_input,
+        payload.client_app.as_deref(),
+    );
     let mem = if cache_hit {
         // Exact semantic cache hit → full block reuse.
         collector
@@ -1446,6 +1476,7 @@ async fn compile(
         "fingerprint": fp.to_string(),
         "cache_hit": cache_hit,
         "intent": result.intent,
+        "intent_confidence": result.intent_confidence,
         "raw_tokens": result.raw_tokens_estimate,
         "compiled_tokens": result.compiled_tokens_estimate,
         "optimizer_savings": result.optimizer_savings,
@@ -1530,7 +1561,11 @@ async fn chat_completions(
 
     let (semantic_fp, result, semantic_cache_hit) = {
         let mut collector = state.collector.lock().unwrap();
-        compile_with_semantic_cache(&mut collector, &compile_input)
+        compile_with_semantic_cache(
+            &mut collector,
+            &compile_input,
+            payload.client_app.as_deref(),
+        )
     };
 
     // ── 2. Compile latest user message for clean LLM injection ───────────────
@@ -1991,20 +2026,103 @@ async fn chat_completions(
     }
 }
 
-/// V10 — Return adaptive optimization suggestions based on real-time provider
-/// error rates and latency measurements.
+/// V10 — Return adaptive optimization suggestions based on routing config,
+/// session metrics, provider error rates and latency measurements.
+/// Always returns at least informational suggestions so the panel is never empty.
 async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::Value> {
-    let (latency_map, error_map) = {
+    let (latency_map, error_map, snapshot) = {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
+        let snap = collector.snapshot().clone();
         (
             collector.avg_latency_by_provider(),
             collector.error_rate_by_provider(),
+            snap,
         )
     };
 
     let mut suggestions: Vec<serde_json::Value> = Vec::new();
 
-    // High error rate: >= 5% is noteworthy.
+    // ── 1. Always: active routing map ───────────────────────────────────────
+    let routing = state.router_config.task_routing_summary();
+    if !routing.is_empty() {
+        let routing_desc = routing
+            .iter()
+            .map(|(intent, prov)| format!("{intent}→{prov}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        suggestions.push(json!({
+            "severity": "info",
+            "code": "routing_active",
+            "provider": "",
+            "metric": "task_routing",
+            "value": routing.len(),
+            "message": format!(
+                "{} intent routes active: {}",
+                routing.len(),
+                routing_desc
+            )
+        }));
+    }
+
+    // ── 2. Always: session efficiency (once there are requests) ─────────────
+    if snapshot.total_requests > 0 {
+        let saved = snapshot.raw_tokens.saturating_sub(snapshot.compiled_tokens) as u64;
+        let pct = if snapshot.raw_tokens > 0 {
+            (saved as f64 / snapshot.raw_tokens as f64 * 100.0).round() as u64
+        } else {
+            0
+        };
+        let total_local = snapshot.routes_local;
+        let total_cloud = snapshot.routes_cloud;
+        let local_pct = if snapshot.total_requests > 0 {
+            (total_local as f64 / snapshot.total_requests as f64 * 100.0).round() as u64
+        } else {
+            0
+        };
+        suggestions.push(json!({
+            "severity": "info",
+            "code": "session_efficiency",
+            "provider": "",
+            "metric": "token_reduction_pct",
+            "value": pct,
+            "message": format!(
+                "Session: {} requests processed — {}% token reduction, {}% on-prem ({} local / {} cloud)",
+                snapshot.total_requests, pct, local_pct, total_local, total_cloud
+            )
+        }));
+    }
+
+    // ── 3. Cache performance (once there are hits) ──────────────────────────
+    let total_cache = snapshot.cache_hits + snapshot.cache_misses;
+    if total_cache > 0 {
+        let hit_pct = (snapshot.cache_hits as f64 / total_cache as f64 * 100.0).round() as u64;
+        let severity = if hit_pct >= 30 { "info" } else { "warning" };
+        suggestions.push(json!({
+            "severity": severity,
+            "code": "cache_performance",
+            "provider": "",
+            "metric": "cache_hit_pct",
+            "value": hit_pct,
+            "message": format!(
+                "Semantic cache: {}% hit rate ({}/{} requests) — {} tokens avoided via cache",
+                hit_pct, snapshot.cache_hits, total_cache, snapshot.cache_saved_tokens
+            )
+        }));
+    }
+
+    // ── 4. Concise mode status ───────────────────────────────────────────────
+    if state.router_config.concise_mode() {
+        suggestions.push(json!({
+            "severity": "info",
+            "code": "concise_mode_active",
+            "provider": "",
+            "metric": "concise_mode",
+            "value": 1,
+            "message": "Concise mode is ON — DISTIRA injects a brevity directive into every LLM request, reducing output token usage across all providers."
+        }));
+    }
+
+    // ── 5. Reactive: high error rate ≥ 5 % ──────────────────────────────────
     for (provider, error_rate) in &error_map {
         if *error_rate >= 0.05 {
             suggestions.push(json!({
@@ -2021,7 +2139,7 @@ async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::V
         }
     }
 
-    // High latency: >= 3 000 ms.
+    // ── 6. Reactive: high latency ≥ 3 000 ms ────────────────────────────────
     for (provider, avg_ms) in &latency_map {
         if *avg_ms >= 3000.0 {
             let severity = if *avg_ms >= 6000.0 { "warning" } else { "info" };
@@ -2039,7 +2157,7 @@ async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::V
         }
     }
 
-    // Sort: warnings first, then by value descending.
+    // Sort: warnings first, then info; within each level preserve insertion order.
     suggestions.sort_by(|a, b| {
         let sa = a.get("severity").and_then(|v| v.as_str()).unwrap_or("info");
         let sb = b.get("severity").and_then(|v| v.as_str()).unwrap_or("info");
@@ -2188,9 +2306,9 @@ mod tests {
         let mut collector = MetricsCollector::new();
 
         let (first_fp, first_result, first_hit) =
-            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace");
+            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace", None);
         let (second_fp, second_result, second_hit) =
-            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace");
+            compile_with_semantic_cache(&mut collector, "panic: duplicated stack trace", None);
 
         assert!(!first_hit);
         assert!(second_hit);
@@ -2251,6 +2369,9 @@ mod tests {
                 cache_hit: false,
                 sensitive: false,
                 cost_usd: 0.0,
+                raw_tokens: 100,
+                compiled_tokens: 60,
+                tokens_saved: 40,
                 ts: 100,
             },
             RequestLineage {
@@ -2268,6 +2389,9 @@ mod tests {
                 cache_hit: false,
                 sensitive: false,
                 cost_usd: 0.0,
+                raw_tokens: 80,
+                compiled_tokens: 50,
+                tokens_saved: 30,
                 ts: 200,
             },
             RequestLineage {
@@ -2285,6 +2409,9 @@ mod tests {
                 cache_hit: false,
                 sensitive: false,
                 cost_usd: 0.0,
+                raw_tokens: 90,
+                compiled_tokens: 55,
+                tokens_saved: 35,
                 ts: 300,
             },
         ];
@@ -2340,8 +2467,10 @@ mod tests {
 fn budget_alerts(
     daily_counts: &HashMap<String, u64>,
     router: &router::RouterConfig,
+    session_cost_usd: f64,
+    session_budget_usd: f64,
 ) -> Vec<serde_json::Value> {
-    router
+    let mut alerts: Vec<serde_json::Value> = router
         .list_provider_summaries()
         .into_iter()
         .filter_map(|ps| {
@@ -2375,14 +2504,38 @@ fn budget_alerts(
                 None
             }
         })
-        .collect()
+        .collect();
+
+    // V10.3 — Session cost budget alerts.
+    if session_budget_usd > 0.0 {
+        if session_cost_usd >= session_budget_usd {
+            alerts.push(serde_json::json!({
+                "type": "budget_exhausted",
+                "message": format!(
+                    "Session cost budget exhausted: ${:.4} / ${:.4} USD.",
+                    session_cost_usd, session_budget_usd
+                )
+            }));
+        } else if session_cost_usd >= session_budget_usd * 0.8 {
+            let pct = (session_cost_usd / session_budget_usd * 100.0).round() as u64;
+            alerts.push(serde_json::json!({
+                "type": "budget_warning",
+                "message": format!(
+                    "Session cost at {}% of budget: ${:.4} / ${:.4} USD.",
+                    pct, session_cost_usd, session_budget_usd
+                )
+            }));
+        }
+    }
+
+    alerts
 }
 
 /// Build a full metrics JSON value with all context-memory fields derived live
 /// from the current `ContextStore` state — not from the cached snapshot fields.
 /// Used by both the REST endpoint and the SSE stream so every consumer always
 /// sees the true real-time picture regardless of how recently `record()` ran.
-fn build_full_snapshot(collector: &MetricsCollector) -> serde_json::Value {
+fn build_full_snapshot(collector: &MetricsCollector, session_budget_usd: f64) -> serde_json::Value {
     let mut val = serde_json::to_value(collector.snapshot()).unwrap_or_default();
 
     // Live context blocks — stability, token count, and intent come straight
@@ -2420,12 +2573,28 @@ fn build_full_snapshot(collector: &MetricsCollector) -> serde_json::Value {
     });
 
     val["context_blocks_summary"] = serde_json::Value::Array(blocks_summary);
+
+    // V10.3 — Inject configured session budget so the dashboard can render utilisation.
+    val["session_budget_usd"] = serde_json::json!(session_budget_usd);
+
     val
 }
 
 async fn metrics_snapshot(State(state): State<SharedState>) -> Json<serde_json::Value> {
     let collector = state.collector.lock().unwrap();
-    Json(build_full_snapshot(&collector))
+    let session_cost = collector.snapshot().session_cost_usd;
+    let budget = state.workspace_context.session_budget_usd;
+    let mut snapshot_val = build_full_snapshot(&collector, budget);
+    let alerts = budget_alerts(
+        &collector.daily_provider_counts,
+        &state.router_config,
+        session_cost,
+        budget,
+    );
+    if !alerts.is_empty() {
+        snapshot_val["alerts"] = serde_json::Value::Array(alerts);
+    }
+    Json(snapshot_val)
 }
 
 async fn metrics_reset(State(state): State<SharedState>) -> impl IntoResponse {
@@ -2440,8 +2609,15 @@ async fn metrics_stream(
     let interval = tokio::time::interval(std::time::Duration::from_secs(2));
     let stream = tokio_stream::StreamExt::map(IntervalStream::new(interval), move |_| {
         let collector = state.collector.lock().unwrap_or_else(|e| e.into_inner());
-        let mut snapshot_val = build_full_snapshot(&collector);
-        let alerts = budget_alerts(&collector.daily_provider_counts, &state.router_config);
+        let mut snapshot_val =
+            build_full_snapshot(&collector, state.workspace_context.session_budget_usd);
+        let session_cost = collector.snapshot().session_cost_usd;
+        let alerts = budget_alerts(
+            &collector.daily_provider_counts,
+            &state.router_config,
+            session_cost,
+            state.workspace_context.session_budget_usd,
+        );
         if !alerts.is_empty() {
             snapshot_val["alerts"] = serde_json::Value::Array(alerts);
         }

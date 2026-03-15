@@ -208,6 +208,12 @@ a {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
+.card + .card,
+.card + section.card,
+section.card + section.card {
+  margin-top: 20px;
+}
+
 /* ── Metrics Grid ────────────────────────────────────── */
 
 .metrics-grid {
@@ -239,6 +245,8 @@ a {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 16px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 /* ── Gauge ───────────────────────────────────────────── */

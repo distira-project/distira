@@ -1,74 +1,39 @@
-# Distira — Brand Guide
+# Distira brand guide
 
-## Brand idea
+## Core positioning
+**Distira**  
+Sovereign AI Context Operating System
 
-Distira is a **Sovereign AI Context Operating System** — it compiles the smallest useful context before every LLM call.
-The visual system uses a **compression frame / vice** metaphor to make that idea immediately recognizable.
+## Visual source
+Derived from the provided Sora-generated logo image and adapted into a reusable brand pack.
 
-## Core symbol
-
-A premium compression frame with a central stack of compressed blue layers.
-
-## Positioning
-
-- **Simple**
-- **Technical**
-- **Premium**
-- **Immediately functional**
-
-## Primary assets
-
-- `distira_symbol.svg`
-- `distira_logo_horizontal_dark.svg`
-- `distira_logo_horizontal_light.svg`
-- `distira_app_icon.svg`
+## Included assets
+- Transparent horizontal logo
+- Transparent symbol
+- Transparent wordmark
+- App icon
+- Favicon set
+- Social and presentation banners
+- SVG wrappers for design/system use
 
 ## Recommended usage
+- Use `distira_logo_horizontal_transparent.png` on dark UI and websites
+- Use `distira_app_icon_1024.png` for app icon, avatar and launcher artwork
+- Use `distira_symbol_transparent.png` for favicon derivations and compact placements
+- Use banner assets for GitHub, LinkedIn, X, docs, decks and website hero sections
 
-Use the **symbol only** for:
-- app icon
-- GitHub avatar
-- favicon
-- terminal splash
-- compact dashboard brand mark
+## Suggested palette
+- Background navy: `#08101F`
+- Deep navy: `#071427`
+- Cyan accent: `#2EDBFF`
+- Bright blue: `#08A3FF`
+- Aqua accent: `#50F5D5`
+- Violet accent: `#8C4BFF`
+- White text: `#F4F7FB`
 
-Use the **horizontal logo** for:
+## Typography direction
+- Primary: Inter / SF Pro Display / Manrope
+- Monospace: JetBrains Mono / SF Mono
 
-- website hero
-- GitHub README header
-- docs cover
-- social banners
-
-## Palette
-
-- Deep Slate: `#0A0F17`
-- Ice White: `#EAF1FF`
-- Core Blue: `#0B4DFF`
-- Signal Cyan: `#11B9FF`
-- Mist Glow: `#7EE7FF`
-
-## Tone
-
-Distira should feel:
-- precise
-- premium
-- controlled
-- calm
-- powerful
-
-Avoid:
-- loud gradients everywhere
-- overly glossy 3D renders in product UI
-- generic “AI swirl” marks
-- playful mascot styles
-
-## Taglines
-
-- Distira is a Sovereign AI Context Operating System
-- Compile the smallest useful context before every LLM call
-- Reduce tokens. Keep intelligence. Stay sovereign.
-
-## Note
-
-SVG assets are clean vector brand assets built from the chosen compression-frame direction.
-Concept boards are included separately for inspiration and presentation.
+## Notes
+SVG files are embedded-image wrappers generated from the source artwork, not hand-drawn vectors.

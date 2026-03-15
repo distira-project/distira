@@ -82,18 +82,12 @@
         </div>
       </section>
     </div>
-
-    <section class="card chart-section">
-      <h3>Token Trends (live)</h3>
-      <TvChart :series="chartSeries" :labels="chartLabels" :height="220" />
-    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMetricsStore } from '../store/metrics'
-import TvChart from '../components/TvChart.vue'
 
 const metrics = useMetricsStore()
 
@@ -101,8 +95,10 @@ const INTENT_LABELS: Record<string, string> = {
   debug: 'Debug / Trace',
   summarize: 'Summarization',
   review: 'Code Review',
+  codegen: 'Code Generation',
   general: 'General',
   ocr: 'OCR',
+  translate: 'Translation',
 }
 
 const benchmarks = computed(() => {
@@ -140,21 +136,6 @@ const totalSaved = computed(() =>
   benchmarks.value.reduce((acc, r) => acc + r.saved, 0)
 )
 
-const chartLabels = computed(() =>
-  metrics.historyRaw.length
-    ? metrics.historyRaw.map((_: number, i: number) => `#${i + 1}`)
-    : ['—']
-)
-const chartSeries = computed(() => {
-  const raw = metrics.historyRaw.length ? [...metrics.historyRaw] : [0]
-  const compiled = metrics.historyCompiled.length ? [...metrics.historyCompiled] : [0]
-  const saved = raw.map((r: number, i: number) => r - (compiled[i] ?? 0))
-  return [
-    { name: 'Raw tokens', data: raw, color: '#ffa940' },
-    { name: 'Compiled', data: compiled, color: 'var(--primary)' },
-    { name: 'Saved', data: saved, color: 'var(--accent)' },
-  ]
-})
 </script>
 
 <style scoped>
@@ -197,7 +178,7 @@ const chartSeries = computed(() => {
 .summary-item { display: flex; flex-direction: column; gap: 4px; }
 .summary-item span { font-size: 0.82rem; }
 .summary-item strong { font-size: 1.3rem; color: var(--primary); }
-.chart-section { margin-top: 20px; }
+
 .chart-section h3 { margin: 0 0 16px; font-size: 1rem; }
 .live-badge {
   font-size: 0.82rem;

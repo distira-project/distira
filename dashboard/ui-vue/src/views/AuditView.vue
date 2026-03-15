@@ -3,14 +3,14 @@
     <header class="view-header">
       <div>
         <h2>Runtime Audit</h2>
-        <p class="muted">Rolling audit trail of the latest routed requests, including upstream lineage, routed target, cache behavior, and sensitive overrides.</p>
+        <p class="muted">Every routing decision and optimisation — traceable and exportable.</p>
       </div>
       <span v-if="metrics.connected" class="live-badge">● Live</span>
       <span v-else class="live-badge offline">○ Offline</span>
     </header>
 
     <section class="card" v-if="auditRows.length">
-      <h3>Recent Request History</h3>
+      <h3>Request History</h3>
       <div class="audit-controls">
         <label class="control-field">
           <span>Time window</span>
@@ -49,10 +49,9 @@
           <span>Time</span>
           <span>Scope</span>
           <span>Client</span>
-          <span>Upstream</span>
           <span>Routed</span>
           <span>Intent</span>
-          <span>Flags</span>
+          <span>Tokens</span>
         </div>
         <div v-for="row in auditRows" :key="row.key" class="audit-row">
           <span>{{ row.time }}</span>
@@ -62,28 +61,38 @@
           </span>
           <span>
             <strong>{{ row.clientApp }}</strong>
-            <small>{{ row.upstreamProvider }}</small>
-          </span>
-          <span>
-            <strong>{{ row.upstreamModel }}</strong>
-            <small>reported by client</small>
+            <small>{{ row.upstreamModel }}</small>
           </span>
           <span>
             <strong>{{ row.routedModel }}</strong>
-            <small>{{ row.routedProvider }}</small>
+            <small>
+              <span class="route-pill" :class="row.routeClass">{{ row.routeLabel }}</span>
+            </small>
           </span>
-          <span>{{ row.intent }}</span>
-          <span class="flag-stack">
-            <span class="route-pill" :class="row.routeClass">{{ row.routeLabel }}</span>
-            <span class="status-pill" :class="row.cacheClass">{{ row.cacheLabel }}</span>
-            <span class="status-pill" :class="row.sensitiveClass">{{ row.sensitiveLabel }}</span>
+          <span>
+            <span class="intent-pill">{{ row.intent }}</span>
+            <span
+              v-if="row.intentConfidence > 0"
+              class="confidence-badge"
+              :class="row.intentConfidence >= 0.6 ? 'conf-high' : row.intentConfidence >= 0.35 ? 'conf-mid' : 'conf-low'"
+              :title="'Intent confidence: ' + (row.intentConfidence * 100).toFixed(0) + '%'"
+            >{{ (row.intentConfidence * 100).toFixed(0) }}%</span>
+            <small>
+              <span class="status-pill" :class="row.cacheClass">{{ row.cacheLabel }}</span>
+            </small>
+          </span>
+          <span class="tokens-col">
+            <span class="token-saved" v-if="row.tokensSaved > 0">-{{ row.tokensSaved }}</span>
+            <span class="token-saved zero" v-else>—</span>
+            <small class="muted" v-if="row.rawTokens > 0">{{ row.rawTokens }}→{{ row.compiledTokens }}</small>
+            <span v-if="row.sensitive" class="status-pill warn" title="Forced on-prem">🔒 On-prem</span>
           </span>
         </div>
       </div>
     </section>
 
     <section class="card" v-else>
-      <h3>Recent Request History</h3>
+      <h3>Request History</h3>
       <p class="muted">No routed requests yet. Send a few compile or chat requests to populate the runtime audit trail.</p>
     </section>
   </div>
@@ -215,23 +224,29 @@ const auditRows = computed(() => {
       return {
         key: `${entry.ts}-${index}`,
         time: new Date(entry.ts * 1000).toLocaleTimeString(),
-        clientApp: entry.client_app || 'Unknown client app',
+        clientApp: entry.client_app || 'Unknown client',
         upstreamProvider: entry.upstream_provider || 'Not supplied',
-        upstreamModel: entry.upstream_model || 'Unknown upstream model',
+        upstreamModel: entry.upstream_model || 'Unknown model',
         routedProvider: entry.routed_provider,
         routedModel: entry.routed_model,
         intent: entry.intent,
+        intentConfidence: entry.intent_confidence ?? 0,
         tenantId: entry.tenant_id || 'default-tenant',
         projectId: entry.project_id || 'default-project',
         routeLabel: route.routeLabel,
         routeClass: route.routeClass,
         cacheLabel: entry.cache_hit ? 'Cache hit' : 'Cache miss',
         cacheClass: entry.cache_hit ? 'hit' : 'miss',
+        sensitive: !!entry.sensitive,
         sensitiveLabel: entry.sensitive ? 'Sensitive override' : 'Standard routing',
         sensitiveClass: entry.sensitive ? 'warn' : 'neutral',
+        rawTokens: entry.raw_tokens ?? 0,
+        compiledTokens: entry.compiled_tokens ?? 0,
+        tokensSaved: entry.tokens_saved ?? 0,
       }
     })
 })
+
 
 function exportScopedCsv() {
   const rows = [...filteredHistory.value].reverse()
@@ -256,6 +271,9 @@ function exportScopedCsv() {
     'intent',
     'cache_hit',
     'sensitive',
+    'raw_tokens',
+    'compiled_tokens',
+    'tokens_saved',
   ]
 
   const lines = [header.join(',')]
@@ -274,6 +292,9 @@ function exportScopedCsv() {
         entry.intent,
         entry.cache_hit,
         entry.sensitive,
+        entry.raw_tokens ?? 0,
+        entry.compiled_tokens ?? 0,
+        entry.tokens_saved ?? 0,
       ]
         .map(esc)
         .join(',')
@@ -284,7 +305,7 @@ function exportScopedCsv() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `distira-runtime-audit-${timeFilter.value}-${tenantFilter.value}-${projectFilter.value}.csv`
+  a.download = `distira-audit-${timeFilter.value}-${tenantFilter.value}-${projectFilter.value}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -346,7 +367,7 @@ function exportScopedCsv() {
 
 .audit-row {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr 1.1fr 1.2fr 1.2fr 0.8fr 1.4fr;
+  grid-template-columns: 0.8fr 1fr 1fr 1.1fr 1.1fr 1fr;
   gap: 12px;
   align-items: start;
   padding: 14px 16px;
@@ -378,6 +399,55 @@ function exportScopedCsv() {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+
+
+/* ── Tokens column ── */
+.tokens-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.token-saved {
+  font-weight: 700;
+  color: var(--accent, #2cffb3);
+  font-size: 0.9rem;
+}
+
+.token-saved.zero { color: var(--muted); }
+
+.intent-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+/* V10.4 — Intent confidence badge */
+.confidence-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.conf-high { background: rgba(0,255,136,0.12); color: #00ff88; }
+.conf-mid  { background: rgba(255,169,64,0.12); color: #ffa940; }
+.conf-low  { background: rgba(180,180,180,0.10); color: var(--muted); }
+
+@media (max-width: 1280px) {
+  .audit-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .live-badge {

@@ -449,3 +449,93 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - Router suite: 11 → 14 tests (3 new adaptive tests). All 202+ workspace tests pass.
 
 *Multi-tenant isolation, native VS Code extension dedicated build, and cluster mode are scoped for V11+.*
+
+### V10.1 — Live Memory Reuse Estimation
+
+**Status:** Delivered (2026-03-14).
+
+- `ContextStore::estimate_coverage()` in `memory/src/lib.rs` — lexical word-set intersection (compiled context ∩ prior stable blocks of same intent); replaces hard-coded `reused=0` on cache miss.
+- Compile handler: `estimate_coverage()` called on every cache miss so `memory_reused_tokens` grows proportionally to real session memory overlap.
+- `MemoryView.vue` fully redesigned: user-friendly labels, Session Savings progress bar, per-intent topic groups with health bars, no hex block IDs.
+- +4 memory unit tests. Memory crate: 13 → 17 tests. Total workspace: **206 tests**.
+
+### V10.2 — Dynamic Audit & Security-Cost Transparency
+
+**Status:** Delivered (2026-03-14 — VERSION 10.2.0).
+
+- `RequestLineage` struct extended with `raw_tokens`, `compiled_tokens`, `tokens_saved` (all `#[serde(default)]`); written on every compile/chat request.
+- `AuditView.vue` redesigned:
+  - 4 KPI cards: session cloud cost, tokens saved, on-prem-forced request count, cloud cost avoided.
+  - Table: Time / Scope / Client / Routed / Intent / Tokens (saved + raw→compiled) / Cost or Security badge.
+  - **🔒 Secured badge** makes `sensitive=true` routing visible as a cost optimization, not just a security decision.
+  - Cloud cost avoided estimator: counterfactual savings from on-prem routing using session average cost.
+  - CSV export enriched with `raw_tokens`, `compiled_tokens`, `tokens_saved`.
+
+### V10.3 — Session Cost Budget & Alerts
+
+**Status:** Delivered (2026-03-14 — VERSION 10.3.0).
+
+- `session_budget_usd` field in `configs/workspace/workspace.yaml` — configures a USD cap for the session. Set to `0` to disable.
+- `WorkspaceContext` and `MetricsSnapshot` carry `session_budget_usd: f64` (`#[serde(default)]`).
+- `budget_alerts()` extended with session-cost threshold logic: **Warning** fires when session cost ≥ 80 % of budget; **Exhausted** fires at 100 %. Both surface in the existing dashboard alerts banner.
+- `build_full_snapshot()` injects `session_budget_usd` into every SSE and REST metrics snapshot.
+- Dashboard store: `sessionBudgetUsd` reactive ref bound via `applySnapshot`.
+- **OverviewView**: Session Cost Budget utilisation bar — shows current cost / budget with colour-coded fill (green/amber/red) and percentage. Hidden when budget is `0` (disabled)., `cost_usd`.
+
+### V10.6 — Savings & Environmental Impact Dashboard + Audit Cleanup
+
+**Status:** Delivered (VERSION 10.6.0).
+
+- **Overview: Savings & Environmental Impact** — 4 tiles: estimated cost saved, energy avoided (kWh), tree-equivalent CO₂, animated 3D ice cube representing ice-melt litres avoided. Constants: $0.006/1K tokens, 0.0005 kWh/1K tokens, 0.4 kg CO₂/kWh, 22 kg CO₂/tree/year, 5 L ice/kg CO₂.
+- **Runtime Audit cleaned** — pure security/routing audit: cost column and cost KPIs removed; 6-column table, sensitive badge in tokens column.
+- **Upstream table filtered** — test entries (`t`, `test`, `unknown-model`) excluded.
+
+### V10.5 — Always-On Optimization Suggestions & Brand Refresh
+
+**Status:** Delivered (VERSION 10.5.0).
+
+- **`get_suggestions` redesigned** — always returns 4 proactive informational suggestions (routing map, session efficiency, cache performance, concise mode) on every load; reactive alerts (error rate, latency) fire on top. Panel never shows empty on fresh server start.
+- **`RouterConfig::task_routing_summary()`** — new public method returning sorted (intent, provider) pairs for the suggestions backend.
+- **OverviewView auto-refresh** — suggestions panel polls every 30 s via `setInterval`, cleaned up on `onUnmounted`. Per-suggestion icon map added (⇌ ⚡ ◈ ✦ ⚠ ℹ).
+- **Brand coherence pass** — `public/distira_app_icon.svg` and `favicon-32.png` synced from `brand/`; orphaned `katara-mark.svg` removed.
+
+### V10.4 — Semantic Intent Engine
+
+**Status:** Delivered (2026-03-14 — VERSION 10.4.0).
+
+- **`detect_intent_scored(raw, client_app)`** — replaces first-match if/else with weighted multi-signal scoring. All intents scored in parallel; highest total wins. Confidence ∈ [0.0, 1.0].
+- **VS Code Copilot context hint** — `client_app` containing "copilot"/"vs code" boosts code-adjacent intents (codegen, review, debug) for more accurate routing.
+- **Structural signals** — code blocks, `diff --git`, composite `write a … function` pattern, language tags (rust/typescript/python function) all contribute independent scores.
+- **"improve"/"optimize"/"refactor"/"clean up"** keywords now route to `review` (→ `qwen2.5-coder`) instead of falling through to `general`.
+- **French keywords** extended across all intents: améliore, revue de code, résume, bogue, etc.
+- **`intent_confidence: f32`** in `CompileResult` + all compile/chat JSON responses.
+- **`compile_context_with_hint(raw, client_app)`** public API; `compile_context()` is a backward-compatible wrapper.
+- **AuditView**: confidence badge beside intent label — `XX%` pill, colour-coded
+
+### V10.7 — Savings & Impact Page + Dashboard Slimming
+
+**Status:** Delivered (VERSION 10.7.0).
+
+- **New SavingsView page** (`/savings`) — dedicated page for economic and environmental impact
+- **SVG iceberg** widget replacing 3D CSS cube (translucent gradient, bob animation, glow filter)
+- **Estimated Session Savings** progress bar — shows live $ saved from tokens avoided (replaces broken budget bar)
+- **Leaf icon** in sidebar nav, new route between Overview and AI Flow
+- **Overview slimmed** — moved 5 sections (savings tiles, ice cube, codegen vs review, intent distribution, suggestions) to SavingsView
+- **Loading states** for suggestions (spinner, disabled button, loading/empty/populated states) green/amber/grey.
+
+### V10.8 — Savings KPIs, Simplified Ice Widget & Live Data
+
+**Status:** Delivered (VERSION 10.8.0).
+
+- **KPI cards relocated** — "Tokens saved by compilation" and "Requests routed on-prem" moved from Runtime Audit to Savings & Impact page
+- **Ice Preserved simplified** — complex SVG iceberg (gradients, filters, 4 computed polygon properties, bob animation) replaced with clean 🧊 emoji, consistent with 🌳 Tree tile
+- **Live transitions** — CSS transitions on all savings values and KPI cards for visible reactivity
+- **AuditView cleaned** — removed misplaced KPI bar, unused computed properties and CSS
+
+### V10.9 — RCTIA Prompt Compiler (Planned)
+
+**Status:** Planned.
+
+- **RCTIA prompt structuring** — automatic prompt rewriting applying Rôle, Contexte, Tâches, Instructions, Amélioration (RCTIA) rules before LLM submission
+- Goal: reduce token waste and improve prompt quality by enforcing structured thought patterns
+- Scope: compiler crate enhancement + optional dashboard toggle

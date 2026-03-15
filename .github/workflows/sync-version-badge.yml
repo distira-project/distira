@@ -1,0 +1,40 @@
+---
+name: Sync version badge
+
+on:
+  push:
+    paths:
+      - VERSION
+    branches:
+      - '**'
+
+jobs:
+  update-badge:
+    name: Update README version badge
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Read VERSION
+        id: ver
+        run: echo "value=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Patch badge in README
+        run: |
+          sed -i 's|img\.shields\.io/badge/version-[^-]*-brightgreen|img.shields.io/badge/version-${{ steps.ver.outputs.value }}-brightgreen|g' README.md
+
+      - name: Commit if README changed
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          if git diff --quiet README.md; then
+            echo "Badge already up to date."
+          else
+            git add README.md
+            git commit -m "chore: sync version badge -> ${{ steps.ver.outputs.value }} [skip ci]"
+            git push
+          fi

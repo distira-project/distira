@@ -39,7 +39,10 @@
       <div v-if="topicGroups.length" class="topic-list">
         <div v-for="group in topicGroups" :key="group.intent" class="topic-row">
           <div class="topic-meta">
-            <span class="topic-label">{{ group.label }}</span>
+            <span class="topic-label">
+              <SvgIcon :name="group.icon" :size="15" class="topic-icon" />
+              {{ group.label }}
+            </span>
             <span class="topic-stat">{{ group.count }} block{{ group.count !== 1 ? 's' : '' }} · {{ group.tokens }} tokens</span>
           </div>
           <div class="topic-bar-bg">
@@ -70,18 +73,30 @@
 import { computed } from 'vue'
 import { useMetricsStore } from '../store/metrics'
 import MetricCard from '../components/MetricCard.vue'
+import SvgIcon from '../components/SvgIcon.vue'
 
 const metrics = useMetricsStore()
 
 const INTENT_LABELS: Record<string, string> = {
-  codegen: '💻 Code generation',
-  debug: '🐛 Debugging',
-  review: '🔍 Code review',
-  summarize: '📝 Summarisation',
-  translate: '🌍 Translation',
-  ocr: '🖼️ OCR / Image',
-  general: '💬 General questions',
-  '': '💬 General questions',
+  codegen:   'Code generation',
+  debug:     'Debugging',
+  review:    'Code review',
+  summarize: 'Summarisation',
+  translate: 'Translation',
+  ocr:       'OCR / Image',
+  general:   'General questions',
+  '':        'General questions',
+}
+
+const INTENT_ICONS: Record<string, string> = {
+  codegen:   'zap',
+  debug:     'wrench',
+  review:    'layers',
+  summarize: 'inbox',
+  translate: 'globe',
+  ocr:       'download',
+  general:   'radio',
+  '':        'radio',
 }
 
 const reuseRatioPct = computed(() => {
@@ -109,6 +124,7 @@ const topicGroups = computed(() => {
       return {
         intent,
         label: INTENT_LABELS[intent] ?? intent,
+        icon: INTENT_ICONS[intent] ?? 'radio',
         count: g.count,
         tokens: g.tokens,
         healthPct,
@@ -128,6 +144,8 @@ const steps = [
 
 <style scoped>
 .memory-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+
+.savings-section { margin-top: 20px; }
 
 /* ── Session savings bar ─────────────────────────────────────────────── */
 .savings-section h3 { margin: 0 0 8px; }
@@ -153,7 +171,8 @@ const steps = [
 .topic-list { display: flex; flex-direction: column; gap: 14px; }
 .topic-row { display: flex; flex-direction: column; gap: 6px; }
 .topic-meta { display: flex; justify-content: space-between; align-items: baseline; }
-.topic-label { font-weight: 600; font-size: 0.92rem; }
+.topic-label { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 0.92rem; }
+.topic-icon { opacity: 0.8; flex-shrink: 0; color: var(--primary); }
 .topic-stat { font-size: 0.8rem; color: var(--muted); }
 .topic-bar-bg {
   height: 8px;

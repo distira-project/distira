@@ -7,6 +7,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.8.0] — Savings KPIs, Simplified Ice Widget & Live Data
+
+### Added
+- **KPI cards on Savings page** — "Tokens saved by compilation" and "Requests routed on-prem" moved from Runtime Audit to Savings & Impact where they are contextually relevant
+- **RCTIA prompt structuring** documented in ROADMAP as upcoming feature (Rôle, Contexte, Tâches, Instructions, Amélioration)
+
+### Changed
+- **Ice Preserved tile** — replaced complex SVG iceberg (gradients, filter, polygon computations, bob animation) with clean 🧊 emoji approach, consistent with 🌳 Tree tile
+- **Savings values** — added CSS transitions for live update feel on all savings tiles and KPI cards
+
+### Removed
+- **Audit page KPI cards** — "Tokens saved by compilation" and "Requests forced on-prem" removed from Runtime Audit (misplaced context); now on Savings page
+- **Iceberg SVG** — removed 30+ lines of SVG defs, gradients, filters, and 4 computed properties (`iceOpacity`, `iceScale`, `aboveWaterPoints`, `underwaterPoints`)
+
+## [10.7.0] — Savings & Impact Page + Dashboard Slimming
+
+### Added
+- **SavingsView** — new dedicated "Savings & Impact" page (`/savings`) with:
+  - Estimated Session Savings progress bar (tokens saved → $ estimate)
+  - Environmental Impact tiles (cost, energy, tree equivalent, ice preserved)
+  - **SVG iceberg** widget replacing the 3D CSS cube (translucent gradient, bob animation, glow filter)
+  - Codegen vs Review section (moved from Overview)
+  - Intent Distribution section (moved from Overview)
+  - Optimization Suggestions with loading state + auto-refresh (moved from Overview)
+- **Leaf icon** added to SvgIcon component for Savings nav link
+- **Savings & Impact** nav link in sidebar (between Overview and AI Flow)
+- `/savings` route registered in Vue router
+
+### Changed
+- **OverviewView** slimmed from ~1400 lines to ~1000 lines — moved 5 sections to SavingsView
+- **Budget bar** repurposed: was "Session Cost Budget" (always $0) → now "Estimated Session Savings" showing live $ saved from tokens avoided
+- Suggestions, Codegen vs Review, Intent Distribution, Savings tiles, ice widget all moved to SavingsView
+
+### Fixed
+- **Budget bar always shows 0** — replaced `sessionCostUsd / sessionBudgetUsd` (never populated) with live savings estimate from tokens saved
+- **Ice cube rendered as black box** — replaced 3D CSS `preserve-3d` cube (broken rendering) with beautiful inline SVG iceberg
+- **Suggestions not loading on refresh** — added explicit loading state with spinner, improved empty/loading/populated states
+
+### Fixed (prior — included in build)
+- **BenchmarksView** — shows all intents (removed >0% filter)
+- **FlowView** — all 6 stats now live from metrics store
+- **Ice cube rotation** — CSS custom properties fix
+
+## [10.6.0] — Savings & Environmental Impact Dashboard + Audit Cleanup
+
+### Added
+- **Savings & Environmental Impact** section on Overview — 4-tile panel showing:
+  - Estimated cost saved ($) based on tokens avoided at blended $0.006/1K rate.
+  - Energy avoided (kWh) and CO₂ not emitted (kg).
+  - Tree-equivalent: fraction of a mature tree’s yearly CO₂ absorption.
+  - **Animated 3D ice cube**: CSS-only rotating/bobbing ice crystal whose opacity and scale grow with savings. Represents litres of ice-melt-equivalent avoided.
+- Upstream Client Models table now filters out test entries (`t`, `test`, `unknown-model`) automatically.
+
+### Changed
+- **Runtime Audit** is now a pure security/routing audit:
+  - Removed “Cost / Security” column — table is 6 columns (Time, Scope, Client, Routed, Intent, Tokens).
+  - Removed "Cloud cost (session)" and "Cloud cost avoided" KPI cards.
+  - Kept: Tokens saved, Requests forced on-prem KPI cards.
+  - Sensitive-route badge (🔒 On-prem) moved into Tokens column.
+  - CSV export no longer includes `cost_usd`.
+- Subtitle updated: “Every routing decision and optimisation” (no cost mention).
+
+## [10.5.0] — Always-On Optimization Suggestions & Brand Refresh
+
+### Added
+- `get_suggestions` endpoint rewritten: always returns proactive informational suggestions on every load/refresh — no longer requires accumulated error or latency data to produce output.
+- 4 always-on suggestion types: `routing_active` (full intent→provider map), `session_efficiency` (token reduction % + on-prem %, once requests > 0), `cache_performance` (hit rate + tokens avoided), `concise_mode_active` (when enabled).
+- 2 reactive suggestion types retained: `high_error_rate` (triggers at ≥5% error rate) and `high_latency` (triggers at ≥3000 ms average).
+- Per-suggestion icon map in OverviewView: ⇌ routing, ⚡ efficiency, ◈ cache, ✦ concise, ⚠ warning, ℹ latency.
+- `RouterConfig::task_routing_summary()` — public method returning sorted `(intent, provider)` pairs, used by the suggestions backend.
+- OverviewView suggestions panel auto-refreshes every 30 seconds via `setInterval` / `onUnmounted` cleanup; subtitle updated to reflect live refresh cadence.
+- Empty state message updated to "Loading suggestions…" instead of static "No suggestions yet".
+
+### Fixed (Brand)
+- `public/distira_app_icon.svg` synced from `brand/` (310 KB real brand graphic; was 3.4 KB placeholder SVG).
+- `public/favicon-32.png` synced from `brand/`.
+- `src/assets/katara-mark.svg` removed (orphaned logo from previous project name, unreferenced).
+
+## [10.4.0] — Semantic Intent Engine
+
+### Added
+- **`detect_intent_scored(raw, client_app)`** in `compiler/src/lib.rs` — replaces the first-match if/else chain with a weighted multi-signal scoring system. All intents are scored in parallel; the highest total wins. Confidence ∈ [0.0, 1.0] derived from the raw score.
+- **VS Code Copilot context hint** — when `client_app` contains "copilot" or "vs code", code-adjacent intents (codegen, review, debug) receive a boost so coding prompts classify more accurately.
+- **Structural signals** — presence of code blocks (` ``` `, `fn `, `def `, `impl `, `struct `), diff markers (`diff --git`), and composite patterns (`write a … function`) are independent scoring signals, not fall-through catches.
+- **"improve"/"optimize"/"refactor"/"clean up" keywords** now route to `review` intent (→ `qwen2.5-coder`) instead of falling through to `general`.
+- **French keyword coverage** extended across all intents: `améliore`, `optimise le`, `revue de code`, `résume`, `explique`, `bogue`, `plantage`, etc.
+- **`intent_confidence: f32`** field in `CompileResult` — exposed in `/v1/compile` and `/v1/chat/completions` JSON responses.
+- **`compile_context_with_hint(raw, client_app)`** public API in `compiler` crate — backward-compatible; `compile_context()` wraps it with `None`.
+- **AuditView confidence badge** — intent column now shows a coloured `XX%` confidence pill beside the intent label (green ≥60%, amber ≥35%, grey otherwise).
+
+### Fixed
+- `detect_intent("fix this panic in main")` previously returned `general` instead of `debug` due to first-match ordering; scoring now returns `debug` correctly.
+- `detect_intent("write a typescript function …")` previously returned `general`; composite `write a … function` pattern now scores as `codegen`.
+- `detect_intent("diff --git …")` previously relied on bare `"diff"` keyword; dedicated `diff --git` signal added to review.
+
+## [10.3.0] — Session Cost Budget & Alerts
+
+### Added
+- `session_budget_usd` field in `configs/workspace/workspace.yaml` (default `1.0`); set to `0` to disable.
+- `WorkspaceContext` and `MetricsSnapshot` carry `session_budget_usd: f64`.
+- `budget_alerts()` extended: fires **Warning** at 80 % of session budget, **Exhausted** at 100 % — surfaced in the existing alerts banner.
+- `build_full_snapshot()` injects `session_budget_usd` into every metrics snapshot.
+- Dashboard store exposes `sessionBudgetUsd` ref (bound to SSE `applySnapshot`).
+- OverviewView: **Session Cost Budget** utilisation bar visible when budget > 0 — fills green / amber / red based on usage %, with current cost / budget amounts.
+
+### Fixed — Benchmarks & version badge (2026-03-14)
+
+- **`BenchmarksView.vue`** — Intent rows with 0% token reduction (codegen, summarize when compiler yields no gain) are now filtered out; only intents that produce measurable savings appear in the table. Added `codegen: 'Code Generation'` and `translate: 'Translation'` to `INTENT_LABELS`.
+- **README version badge** — Hardcoded badge version updated to `10.2.0` and a new GitHub Actions workflow (`.github/workflows/sync-version-badge.yml`) auto-patches the badge whenever `VERSION` is pushed — uses `[skip ci]` on the commit so it does not trigger a CI loop.
+
+### Added — V10.2 Dynamic Audit & Security-Cost Transparency (2026-03-14)
+
+- **`core/src/main.rs` `RequestLineage`** — 3 new fields with `#[serde(default)]`: `raw_tokens: usize`, `compiled_tokens: usize`, `tokens_saved: usize`. Written on every compile/chat request via `record()`.
+- **`dashboard/store/metrics.ts` `RequestHistoryEntry`** — added `raw_tokens?`, `compiled_tokens?`, `tokens_saved?` optional fields.
+- **`dashboard/AuditView.vue`** — complete redesign:
+  - **4 KPI cards**: Session cloud cost, Tokens saved by compilation, Requests forced on-prem, Cloud cost avoided (security-driven savings).
+  - **Table** condensed to 7 semantic columns: Time, Scope, Client, Routed, Intent, Tokens (saved / raw→compiled), Cost/Security.
+  - **🔒 Secured badge** on `sensitive=true` rows — replaces the generic "Sensitive override" pill; makes security decisions visible as cost optimizations.
+  - **Cost column** shows formatted `$0.00000` per request or "Secured" badge when on-prem-forced.
+  - **Cloud cost avoided estimator** — computes counterfactual savings from on-prem routing using session average cost of non-sensitive requests.
+  - **CSV export** enriched with `raw_tokens`, `compiled_tokens`, `tokens_saved`, `cost_usd` columns.
+
+### Added — V10.1 Live Memory Reuse Estimation (2026-03-14)
+
+- **`memory/src/lib.rs` `ContextStore::estimate_coverage()`** — lexical word-set intersection between compiled context and prior stable blocks of same intent. Returns `MemorySummary { reused_tokens, delta_tokens }` even on cache miss, replacing hard-coded `reused=0`.
+- **Compile handler** — on cache miss, calls `estimate_coverage()` so `memory_reused_tokens` grows proportionally to real overlap with session memory.
+- **`MemoryView.vue`** — full UX redesign: user-friendly labels ("Tokens Saved by Memory", "Memory Efficiency", "Topics in Memory"), Session Savings progress bar, per-intent topic groups with health bars (strong/mid/weak), no hex IDs.
+- **+4 memory tests**: `estimate_coverage_empty_store_returns_zero`, `estimate_coverage_full_overlap_returns_all`, `estimate_coverage_partial_overlap`, `estimate_coverage_intent_mismatch_ignored`. Memory crate: 13 → 17 tests. Total: **206 tests**.
+
 ### Fixed — Context Memory live metrics (2026-03-14)
 
 - **`MetricsSnapshot`** — added `stable_blocks: usize` and `context_reuse_ratio_pct: f32` fields (serde default = 0); updated in `record()` from `context_store.len()` and `memory_reused_tokens / raw_tokens`.
