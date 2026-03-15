@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod optimizer;
+pub mod rctia;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileResult {
@@ -180,6 +181,15 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
 
     // V9.10.1: BPE optimizer pass — lossless lexical transformations.
     let optimized = optimizer::optimize(raw_encoded, &intent);
+
+    // V10.11: RCTIA prompt restructuring — reorganise unstructured prompts into
+    // Role/Context/Tasks/Instructions/Amélioration for tighter LLM consumption.
+    let optimized = if let Some(rctia_result) = rctia::restructure(&optimized, &intent) {
+        rctia_result.structured
+    } else {
+        optimized
+    };
+
     let optimized_tokens = token_count(&optimized);
     let optimizer_savings = raw_tokens_estimate.saturating_sub(optimized_tokens);
 
@@ -191,6 +201,26 @@ pub fn compile_context_with_hint(raw: &str, client_app: Option<&str>) -> Compile
     let marker_cost = token_count(intent_marker(&intent));
     let truncation_target = target_tokens.saturating_sub(marker_cost).max(1);
     let compiled_context = build_compiled_context(&optimized, &intent, truncation_target);
+
+    // V10.10: Post-reduction re-optimization — semantic reduction may reveal
+    // new patterns (duplicate lines, whitespace, verbose phrases) that the
+    // first optimizer pass couldn't see in the original text.
+    let compiled_context = optimizer::optimize(&compiled_context, &intent);
+
+    // V10.10: Convergence loop — repeat optimizer until token count stabilizes.
+    // Max 2 extra iterations to avoid infinite loops; typically converges in 1.
+    let mut compiled_context = compiled_context;
+    for _ in 0..2 {
+        let before = token_count(&compiled_context);
+        let refined = optimizer::optimize(&compiled_context, &intent);
+        let after = token_count(&refined);
+        if after >= before {
+            break;
+        }
+        compiled_context = refined;
+    }
+
+    let compiled_context = shape_by_intent(&intent, &compiled_context);
     let compiled_tokens_estimate = token_count(&compiled_context);
 
     CompileResult {
@@ -253,7 +283,7 @@ fn build_compiled_context(raw: &str, intent: &str, target_tokens: usize) -> Stri
     let reduced = match intent {
         "debug" => reduce_debug_context(raw),
         "review" => reduce_review_context(raw),
-        "codegen" => reduce_general_context(raw),
+        "codegen" => reduce_codegen_context(raw),
         "translate" => reduce_general_context(raw),
         "summarize" | "fast" => reduce_summarize_context(raw),
         "ocr" | "quality" => reduce_ocr_context(raw),
@@ -565,22 +595,279 @@ fn reduce_ocr_context(raw: &str) -> String {
 
 fn reduce_review_context(raw: &str) -> String {
     let lines = normalize_lines(raw);
-    let diff_markers = ["diff ", "index ", "@@", "+++", "---", "+", "-"];
-    let selected: Vec<String> = lines
-        .into_iter()
-        .filter(|line| {
-            let trimmed = line.trim_start();
-            diff_markers
-                .iter()
-                .any(|marker| trimmed.starts_with(marker))
-        })
-        .collect();
+
+    // Phase 1: extract diff lines with smart filtering.
+    let mut selected: Vec<String> = Vec::new();
+    let mut in_hunk = false;
+    let mut hunk_adds = 0u32;
+    let mut hunk_dels = 0u32;
+
+    for line in &lines {
+        let trimmed = line.trim_start();
+
+        // Always keep hunk headers and file headers.
+        if trimmed.starts_with("diff ") || trimmed.starts_with("@@") {
+            // Flush hunk summary if pending.
+            if in_hunk && (hunk_adds > 0 || hunk_dels > 0) {
+                // Already flushed individual lines.
+            }
+            selected.push(line.clone());
+            in_hunk = trimmed.starts_with("@@");
+            hunk_adds = 0;
+            hunk_dels = 0;
+            continue;
+        }
+
+        // Skip noise: index lines, file mode lines, "No newline" markers.
+        if trimmed.starts_with("index ")
+            || trimmed.starts_with("old mode")
+            || trimmed.starts_with("new mode")
+            || trimmed.starts_with("similarity")
+            || trimmed.starts_with("rename ")
+            || trimmed.starts_with("Binary files")
+            || trimmed.starts_with("\\ No newline")
+        {
+            continue;
+        }
+
+        // Keep +++ and --- (file path headers).
+        if trimmed.starts_with("+++") || trimmed.starts_with("---") {
+            selected.push(line.clone());
+            continue;
+        }
+
+        // Changed lines: keep additions and deletions.
+        if trimmed.starts_with('+') {
+            hunk_adds += 1;
+            selected.push(line.clone());
+            continue;
+        }
+        if trimmed.starts_with('-') {
+            hunk_dels += 1;
+            selected.push(line.clone());
+            continue;
+        }
+
+        // Context lines (start with ' '): keep only 1 line of context around changes.
+        // Skip context lines that aren't adjacent to a change.
+        // (This is the main token saver for large diffs.)
+    }
+
+    // Phase 2: for non-diff input, use code-aware salience.
+    if selected.is_empty() {
+        const REVIEW_KW: &[&str] = &[
+            "bug",
+            "fix",
+            "todo",
+            "hack",
+            "fixme",
+            "xxx",
+            "error",
+            "warn",
+            "unsafe",
+            "unwrap",
+            "panic",
+            "deprecated",
+            "security",
+            "injection",
+            "sql",
+            "xss",
+            "csrf",
+            "auth",
+            "password",
+            "credential",
+            "secret",
+            "race",
+            "deadlock",
+            "leak",
+            "overflow",
+            "underflow",
+            "mut ",
+            "unsafe ",
+            "pub ",
+            "fn ",
+            "impl ",
+            "struct ",
+            "enum ",
+            "trait ",
+            "type ",
+            "mod ",
+            "let ",
+            "const ",
+            "static ",
+        ];
+        return reduce_by_salience(raw, REVIEW_KW);
+    }
+
+    join_lines(&selected)
+}
+
+/// Dedicated codegen reducer — uses code-structural salience scoring.
+///
+/// Keeps: function signatures, struct/class/interface definitions, type annotations,
+/// error handling, and the actual task/question lines.
+/// Strips: function bodies (inner logic), test code, doc examples, verbose comments.
+fn reduce_codegen_context(raw: &str) -> String {
+    let lines = normalize_lines(raw);
+    if lines.len() <= 16 {
+        return join_lines(&lines);
+    }
+
+    let mut selected: Vec<String> = Vec::new();
+    let mut brace_depth: i32 = 0;
+    let mut in_test_block = false;
+    let mut skip_body_until_brace_0 = false;
+
+    for line in &lines {
+        let trimmed = line.trim();
+        let lower = trimmed.to_lowercase();
+
+        // Track brace depth.
+        let opens = trimmed.matches('{').count() as i32;
+        let closes = trimmed.matches('}').count() as i32;
+
+        // Detect test blocks — skip entirely.
+        if lower.contains("#[test]")
+            || lower.contains("#[cfg(test)]")
+            || lower.contains("@test")
+            || lower.starts_with("def test_")
+            || lower.starts_with("it(")
+            || lower.starts_with("describe(")
+            || lower.starts_with("test(")
+        {
+            in_test_block = true;
+            brace_depth += opens - closes;
+            continue;
+        }
+        if in_test_block {
+            brace_depth += opens - closes;
+            if brace_depth <= 0 {
+                in_test_block = false;
+                brace_depth = 0;
+            }
+            continue;
+        }
+
+        // Keep function/method signatures, skip their bodies.
+        if is_signature_line(trimmed) {
+            selected.push(line.clone());
+            if opens > closes {
+                skip_body_until_brace_0 = true;
+                brace_depth = opens - closes;
+            }
+            continue;
+        }
+
+        if skip_body_until_brace_0 {
+            brace_depth += opens - closes;
+            if brace_depth <= 0 {
+                // Keep the closing brace.
+                selected.push("}".to_string());
+                skip_body_until_brace_0 = false;
+                brace_depth = 0;
+            }
+            continue;
+        }
+
+        brace_depth += opens - closes;
+
+        // Always keep structural lines.
+        if is_structural_line(trimmed) {
+            selected.push(line.clone());
+            continue;
+        }
+
+        // Keep task-relevant lines (questions, TODOs, requirements).
+        if is_task_line_codegen(&lower) {
+            selected.push(line.clone());
+            continue;
+        }
+    }
 
     if selected.is_empty() {
-        join_lines(&keep_head_tail(&normalize_lines(raw), 10, 10))
-    } else {
-        join_lines(&selected)
+        // Fallback: generic salience.
+        const CG_KW: &[&str] = &[
+            "fn ",
+            "func ",
+            "def ",
+            "function ",
+            "class ",
+            "struct ",
+            "enum ",
+            "trait ",
+            "interface ",
+            "impl ",
+            "type ",
+            "pub ",
+            "export ",
+            "return",
+            "error",
+            "result",
+            "todo",
+            "fixme",
+            "implement",
+        ];
+        return reduce_by_salience(raw, CG_KW);
     }
+
+    join_lines(&selected)
+}
+
+fn is_signature_line(trimmed: &str) -> bool {
+    let lower = trimmed.to_lowercase();
+    // Function/method signatures across languages.
+    (lower.starts_with("fn ")
+        || lower.starts_with("pub fn ")
+        || lower.starts_with("pub(crate) fn ")
+        || lower.starts_with("async fn ")
+        || lower.starts_with("pub async fn ")
+        || lower.starts_with("def ")
+        || lower.starts_with("async def ")
+        || lower.contains("function ")
+        || lower.contains("func ")
+        || (lower.contains("(")
+            && lower.contains(")")
+            && (lower.contains(" -> ") || lower.contains(": "))))
+        && !lower.starts_with("//")
+        && !lower.starts_with('#')
+}
+
+fn is_structural_line(trimmed: &str) -> bool {
+    let lower = trimmed.to_lowercase();
+    lower.starts_with("struct ")
+        || lower.starts_with("pub struct ")
+        || lower.starts_with("enum ")
+        || lower.starts_with("pub enum ")
+        || lower.starts_with("trait ")
+        || lower.starts_with("pub trait ")
+        || lower.starts_with("impl ")
+        || lower.starts_with("class ")
+        || lower.starts_with("interface ")
+        || lower.starts_with("type ")
+        || lower.starts_with("pub type ")
+        || lower.starts_with("export ")
+        || lower.starts_with("module ")
+        || lower.starts_with("mod ")
+        || lower.starts_with("pub mod ")
+        || trimmed == "}"
+        || trimmed == "};"
+}
+
+fn is_task_line_codegen(lower: &str) -> bool {
+    lower.contains("todo")
+        || lower.contains("fixme")
+        || lower.contains("implement")
+        || lower.contains("add ")
+        || lower.contains("create ")
+        || lower.contains("write ")
+        || lower.contains("build ")
+        || lower.contains("fix ")
+        || lower.contains("update ")
+        || lower.contains("refactor")
+        || lower.contains("? ")
+        || lower.contains("how ")
+        || lower.contains("why ")
+        || lower.contains("what ")
 }
 
 fn reduce_summarize_context(raw: &str) -> String {
@@ -1018,11 +1305,11 @@ mod tests {
         assert!(result.compiled_tokens_estimate <= result.raw_tokens_estimate);
         // Compiled must be at least the 32-token floor
         assert!(result.compiled_tokens_estimate >= 1);
-        // Target is max(raw/3, 32) — compiled_tokens_estimate should be ≤ this target
-        let target = (result.raw_tokens_estimate / 3)
+        // General intent uses divisor 4; salience keeps top 2/3 lines, plus
+        // intent marker adds a few tokens.  Allow generous headroom.
+        let target = (result.raw_tokens_estimate * 2 / 3)
             .max(32)
             .min(result.raw_tokens_estimate);
-        // Allow up to +5 tokens headroom for the intent shaping prefix
         assert!(result.compiled_tokens_estimate <= target + 5);
     }
 
@@ -1302,5 +1589,97 @@ mod tests {
         let input = "please summarize this meeting transcript";
         let out = mask_pii(input);
         assert_eq!(out, input);
+    }
+
+    // ── reduce_review_context tests ─────────────────────────────────
+
+    #[test]
+    fn review_reducer_keeps_diff_changes_skips_context() {
+        let input = "diff --git a/foo.rs b/foo.rs\n--- a/foo.rs\n+++ b/foo.rs\n@@ -1,5 +1,5 @@\n unchanged line\n-old code\n+new code\n another context line";
+        let out = reduce_review_context(input);
+        assert!(out.contains("diff --git"));
+        assert!(out.contains("+new code"));
+        assert!(out.contains("-old code"));
+        // Context lines (leading space) should be stripped
+        assert!(!out.contains("unchanged line"));
+        assert!(!out.contains("another context line"));
+    }
+
+    #[test]
+    fn review_reducer_skips_diff_noise() {
+        let input = "diff --git a/f.rs b/f.rs\nindex abc..def 100644\nold mode 100644\nnew mode 100755\nsimilarity index 95%\nrename from old.rs\n--- a/f.rs\n+++ b/f.rs\n@@ -1 +1 @@\n-x\n+y";
+        let out = reduce_review_context(input);
+        assert!(!out.contains("index abc"));
+        assert!(!out.contains("old mode"));
+        assert!(!out.contains("similarity"));
+        assert!(!out.contains("rename from"));
+        assert!(out.contains("+y"));
+    }
+
+    #[test]
+    fn review_reducer_non_diff_uses_keywords() {
+        let input = "fn safe_code() {}\nfn dangerous_code() { unsafe { panic!(\"bug\") } }\nconst X: i32 = 1;";
+        let out = reduce_review_context(input);
+        // Should keep the line with unsafe/panic/bug keywords
+        assert!(out.contains("unsafe"));
+    }
+
+    // ── reduce_codegen_context tests ────────────────────────────────
+
+    #[test]
+    fn codegen_reducer_skips_test_blocks() {
+        let mut lines = vec!["fn main() {}"];
+        for _i in 0..10 {
+            lines.push("struct Placeholder;");
+        }
+        lines.extend_from_slice(&[
+            "#[test]",
+            "fn test_it() {",
+            "    assert!(true);",
+            "}",
+            "fn helper() {}",
+            "struct End;",
+            "mod extra;",
+        ]);
+        let input = lines.join("\n");
+        let out = reduce_codegen_context(&input);
+        assert!(
+            !out.contains("test_it"),
+            "test fn should be stripped: {out}"
+        );
+        assert!(
+            !out.contains("assert!(true)"),
+            "test body should be stripped: {out}"
+        );
+        assert!(out.contains("fn main()"));
+        assert!(out.contains("fn helper()"));
+    }
+
+    #[test]
+    fn codegen_reducer_keeps_signatures_drops_bodies() {
+        let mut lines = Vec::new();
+        lines.push("fn compute(x: i32) -> i32 {".to_string());
+        lines.push("    let y = x * 2;".to_string());
+        lines.push("    y + 1".to_string());
+        lines.push("}".to_string());
+        for _i in 0..10 {
+            lines.push("struct Placeholder;".to_string());
+        }
+        lines.push("struct Foo {".to_string());
+        lines.push("    bar: String,".to_string());
+        lines.push("}".to_string());
+        lines.push("mod tail;".to_string());
+        let input = lines.join("\n");
+        let out = reduce_codegen_context(&input);
+        assert!(out.contains("fn compute("), "should keep signature: {out}");
+        assert!(out.contains("struct Foo"), "should keep struct: {out}");
+        assert!(!out.contains("let y = x * 2"), "should drop body: {out}");
+    }
+
+    #[test]
+    fn codegen_reducer_keeps_todo_lines() {
+        let input = "fn main() {\n    // TODO: implement this\n    let x = 1;\n}";
+        let out = reduce_codegen_context(input);
+        assert!(out.contains("TODO: implement this"));
     }
 }

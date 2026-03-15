@@ -2662,7 +2662,7 @@ async fn require_api_key(
 }
 #[tokio::main]
 async fn main() {
-    println!("DISTIRA v{} — Sovereign AI Context OS", runtime_version());
+    println!("DISTIRA v{} — The AI Context Compiler", runtime_version());
     println!("────────────────────────────────────────");
 
     let router_config = load_config();

@@ -547,10 +547,45 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - **MCP crash fix** — literal `\n` syntax error on line 326 fixed (Node.js v24).
 - **GitHub Actions** — `actions/checkout@v5`, `node-version: 22`.
 
-### V10.10 — RCTIA Prompt Compiler (Planned)
+### V10.10 — Multi-Pass Token Optimization
+
+**Status:** Delivered (VERSION 10.10.0).
+
+- **Post-reduction re-optimization** — Second optimizer pass runs after semantic reduction to catch patterns revealed by context trimming.
+- **Convergence loop** — Optimizer iterates up to 3 total passes until token count stabilizes, squeezing maximum savings.
+- **Stopword removal (Pass 7)** — 37 low-information stopwords stripped for codegen/summarize/general/fast intents.
+- **URL & file-path compression (Pass 8)** — Long URLs (>40 chars) compressed to `domain/…/last-segment`.
+- **Combined optimizer savings** — Increased from +10–30% to **+15–40%** on top of semantic passes.
+- **Compiler pipeline** — Now 3-phase: pre-optimize → semantic reduce → post-optimize with convergence loop.
+- **5 new optimizer tests** — Total 209 workspace tests, all passing.
+
+### V10.11 — RCTIA Prompt Compiler
+
+**Status:** Delivered (VERSION 10.11.0).
+
+- **RCTIA prompt restructuring** — automatic prompt rewriting applying Rôle, Contexte, Tâches, Instructions, Amélioration (RCTIA) sections before LLM submission.
+- **Sentence-level segmentation** — single-line prompts split on `. ` boundaries for accurate classification.
+- **Bilingual** — French role/task/instruction keywords detected natively.
+- **Intent-inferred roles** — compiler infers role when not explicitly declared.
+- **Amélioration hints** — per-intent quality improvement hints auto-appended.
+- **8 new RCTIA tests** — 217 total workspace tests, all passing.
+- **Pipeline** — Now 4-phase: pre-optimize → RCTIA restructure → semantic reduce → post-optimize with convergence loop.
+
+### V10.12 — Aggressive Code Review & Codegen Token Reduction
+
+**Status:** Delivered (VERSION 10.12.0).
+
+- **Optimizer Pass 9** — Code boilerplate stripping: import/use collapse, license header removal, annotation stripping (codegen + review intents, 10–30% savings)
+- **Optimizer Pass 10** — Code keyword abbreviation: 39 pattern replacements for codegen intent (5–12% savings)
+- **Dedicated codegen reducer** — Structural code analysis: test block skipping, signature-only extraction (body dropped), structural line preservation, TODO/task line detection
+- **Enhanced review reducer** — Smart diff extraction: keeps only change lines (+/-) and hunk headers, strips context lines and diff noise. Non-diff: 26 code-aware review keywords
+- **Review distillation** — ÷2 → ÷3 (33% target instead of 50%)
+- **16 new tests** — Covering all new passes and reducers (233 total workspace tests)
+
+### V10.13 — (Planned)
 
 **Status:** Planned.
 
-- **RCTIA prompt structuring** — automatic prompt rewriting applying Rôle, Contexte, Tâches, Instructions, Amélioration (RCTIA) rules before LLM submission
-- Goal: reduce token waste and improve prompt quality by enforcing structured thought patterns
-- Scope: compiler crate enhancement + optional dashboard toggle
+- Cross-request deduplication (system prompt + conversation history compression)
+- BPE-boundary aware token merging
+- Dashboard RCTIA toggle + structured prompt viewer

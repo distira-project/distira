@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.12.0] — Aggressive Code Review & Codegen Token Reduction
+
+### Added
+- **Optimizer Pass 9: Code boilerplate stripping** — Collapses import/use blocks (keeps first + `[+N imports]`), strips license/copyright headers, removes annotation-only lines (`@Override`, `#[derive(...)]`). Active for codegen and review intents (10–30% savings on code)
+- **Optimizer Pass 10: Code keyword abbreviation** — 39 abbreviations (`function`→`fn`, `return`→`ret`, `console.log`→`log`, `Vec<`→`V<`, `Result<`→`R<`, `Option<`→`O<`, `.unwrap()`→`.u!()`, etc.). Active for codegen intent only (5–12% savings)
+- **Dedicated `reduce_codegen_context()`** — Structural code analysis: skips test blocks, keeps function signatures while dropping bodies, preserves structural lines (struct/enum/trait/impl/class), keeps TODO/FIXME/task-relevant lines
+- **Enhanced `reduce_review_context()`** — Smart diff extraction: keeps only `+`/`-` change lines and hunk headers, strips context lines and diff noise (`index`, `old mode`, `similarity`, `rename`). Non-diff fallback uses 26 code-aware review keywords
+- **16 new tests** — Pass 9 (import collapse, license stripping, annotation removal, no-op), Pass 10 (abbreviation, Rust types, console.log, no-op on prose), combined code intent optimization, codegen reducer (test block skipping, signature keeping, TODO preservation), review reducer (diff changes, noise, non-diff fallback)
+
+### Changed
+- **Review distillation divisor** — ÷2 → ÷3 (keeps 33% instead of 50%, more aggressive compression)
+- **Codegen dispatch** — Now routes to dedicated `reduce_codegen_context()` instead of generic `reduce_general_context()`
+
+## [10.11.0] — RCTIA Prompt Compiler
+
+### Added
+- **RCTIA prompt restructuring** — Unstructured prompts are automatically reorganised into Role/Context/Tasks/Instructions/Amélioration sections for tighter LLM consumption
+- **Sentence-level segmentation** — Single-line prompts are split on sentence boundaries for accurate RCTIA classification
+- **Bilingual support** — French role/task/instruction keywords ("tu es", "implémente", "assure-toi", etc.) detected natively
+- **Intent-inferred roles** — When no explicit role is declared, the compiler infers an appropriate role from the detected intent
+- **Amélioration hints** — Auto-generated quality improvement hints appended per intent (codegen → "write idiomatic, tested, minimal code", etc.)
+- **8 new RCTIA tests** — short prompt bypass, OCR bypass, structured bypass, codegen/review/debug/French restructuring, role extraction
+
+### Changed
+- **Compiler pipeline** — Now 4-phase: pre-optimize → RCTIA restructure → semantic reduce → post-optimize with convergence loop
+- **Verbose phrase substitution** — Extended from 22 to 68 patterns (+46 new: "leverage"→"use", "functionality"→"feature", "consequently"→"so", "nevertheless"→"still", etc.)
+- **Total tests** — 217 workspace tests, all passing
+
+## [10.10.0] — Multi-Pass Token Optimization
+
+### Added
+- **Post-reduction re-optimization** — A second optimizer pass runs after semantic reduction to catch patterns revealed by context trimming (duplicate lines, whitespace, verbose phrases that only appear after reduction)
+- **Convergence loop** — Optimizer iterates up to 3 total passes until token count stabilizes, squeezing maximum savings from each request
+- **Stopword removal (Pass 7)** — Strips 37 low-information stopwords (`the`, `a`, `is`, `very`, `basically`, `essentially`, etc.) for codegen/summarize/general/fast intents; skipped for translate/review/ocr/debug to preserve meaning
+- **URL & path compression (Pass 8)** — Long URLs (>40 chars) compressed to `domain/…/last-segment`, saving 5–10 tokens per URL occurrence
+- **5 new optimizer tests** — stopword removal, code identifier preservation, translate intent preservation, URL compression, short URL passthrough
+
+### Changed
+- **Optimizer savings** — Combined realistic gain increased from +10–30% to **+15–40%** on top of semantic passes
+- **Compiler pipeline** — Now 3-phase: pre-optimize → semantic reduce → post-optimize with convergence loop
+
 ## [10.9.0] — Slash Commands & Intent Override
 
 ### Added

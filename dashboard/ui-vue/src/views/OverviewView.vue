@@ -42,7 +42,7 @@
         <span class="budget-bar-amounts">
           {{ savingsData.tokensSaved.toLocaleString() }} tokens saved
           <span class="budget-bar-sep">·</span>
-          ${{ savingsData.costSaved.toFixed(4) }}
+          {{ formatCost(savingsData.costSaved) }} USD
         </span>
         <span class="budget-bar-pct" :class="savingsPctClass">{{ savingsPct }}%</span>
       </div>
@@ -294,6 +294,14 @@ const configuredAssistantModelLabel = import.meta.env.VITE_ASSISTANT_MODEL_LABEL
 
 // ── V10.7 — Savings bar constants ────────────
 const AVG_COST_PER_1K_TOKENS = 0.006
+function formatCost(v: number): string {
+  if (v === 0) return '$0.00'
+  if (v >= 1) return '$' + v.toFixed(2)
+  const cents = v * 100
+  if (cents >= 1) return cents.toFixed(1) + '¢'
+  if (cents >= 0.01) return cents.toFixed(2) + '¢'
+  return '< 0.01¢'
+}
 
 const savingsData = computed(() => {
   const tokensSaved = Math.max(0, metrics.rawTokens - metrics.compiledTokens) + metrics.cacheSavedTokens
@@ -608,6 +616,8 @@ const lastRequestCard = computed(() => {
 
 .chart-section {
   margin-top: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .chart-heading {

@@ -4,7 +4,7 @@
   <img src="brand/distira_logo_horizontal.svg" alt="DISTIRA" width="480" />
 </p>
 
-> **Distira is a Sovereign AI Context Operating System.**
+> **Distira is The AI Context Compiler.**
 > It compiles, minimizes, and governs context before every LLM call.
 
 [![CI](https://github.com/katara-project/katara/actions/workflows/ci.yml/badge.svg?branch=wip-chf)](https://github.com/katara-project/katara/actions/workflows/ci.yml)

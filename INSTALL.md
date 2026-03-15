@@ -1,6 +1,6 @@
 # Installation & Configuration Guide
 
-> **DISTIRA v7.7.1** — Sovereign AI Context Operating System
+> **DISTIRA v7.7.1** — The AI Context Compiler
 
 ---
 
@@ -324,7 +324,7 @@ cargo run -p core
 You will see:
 
 ```md
-DISTIRA vx.y.z — Sovereign AI Context OS
+DISTIRA vx.y.z — The AI Context Compiler
 ────────────────────────────────────────
   Config loaded from configs/
     provider: ollama-llama3

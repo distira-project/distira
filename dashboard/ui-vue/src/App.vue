@@ -15,7 +15,7 @@
         <div class="brand-icon"><img src="/distira_app_icon.svg" alt="Distira" class="brand-logo" /></div>
         <div>
           <h1>DISTIRA</h1>
-          <p class="brand-sub">Sovereign AI Context OS</p>
+          <p class="brand-sub">The AI Context Compiler</p>
         </div>
       </div>
       <nav>

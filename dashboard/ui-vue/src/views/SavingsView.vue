@@ -36,8 +36,8 @@
           <span class="impact-label">tokens saved</span>
         </div>
         <div class="impact-tile">
-          <span class="impact-value accent-text">${{ lastImpact.costSaved }}</span>
-          <span class="impact-label">cost avoided</span>
+          <span class="impact-value accent-text">{{ lastImpact.costSaved }}</span>
+          <span class="impact-label">cost avoided (USD)</span>
         </div>
         <div class="impact-tile">
           <span class="impact-value">{{ lastImpact.intent }}</span>
@@ -51,20 +51,22 @@
     </section>
 
     <!-- Savings bar + sparkline -->
-    <div class="savings-bar-wrap card">
+    <div class="savings-bar-wrap card savings-bar-compact">
       <div class="savings-bar-header">
         <span class="savings-bar-title">Estimated Session Savings</span>
         <span class="savings-bar-amounts">
-          {{ savingsData.tokensSaved.toLocaleString() }} tokens saved
+          {{ savingsData.tokensSaved.toLocaleString() }} tokens
           <span class="savings-bar-sep">&middot;</span>
-          ${{ formatDynamic(savingsData.costSaved) }}
+          {{ formatCost(savingsData.costSaved) }}
         </span>
       </div>
-      <div class="savings-track">
-        <div class="savings-fill" :style="{ width: savingsPct + '%' }"></div>
+      <div class="savings-bar-inline">
+        <div class="savings-track">
+          <div class="savings-fill" :style="{ width: savingsPct + '%' }"></div>
+        </div>
+        <SparklineChart v-if="savingsHistory.length > 1" :data="savingsHistory" color="var(--accent)" :height="20" />
       </div>
-      <SparklineChart v-if="savingsHistory.length > 1" :data="savingsHistory" color="var(--accent)" :height="32" />
-      <span class="savings-bar-note muted">Based on blended avg ${{ AVG_COST_PER_1K_TOKENS }}/1K tokens across major LLM providers</span>
+      <span class="savings-bar-note muted">Blended avg ${{ AVG_COST_PER_1K_TOKENS }}/1K tokens</span>
     </div>
 
     <!-- Session Projections -->
@@ -77,24 +79,24 @@
       </div>
       <div class="projections-grid">
         <div class="projection-tile">
-          <span class="tile-label">Monthly Cost Saved</span>
-          <strong class="projection-value accent-text">${{ formatDynamic(projections.monthlyCost) }}</strong>
+          <span class="tile-label">Monthly Cost Saved (USD)</span>
+          <strong class="projection-value accent-text">{{ formatCost(projections.monthlyCost) }}</strong>
           <span class="tile-subtitle">{{ projections.monthlyTokens.toLocaleString() }} tokens / month</span>
         </div>
         <div class="projection-tile">
-          <span class="tile-label">Yearly Cost Saved</span>
-          <strong class="projection-value accent-text">${{ formatDynamic(projections.yearlyCost) }}</strong>
+          <span class="tile-label">Yearly Cost Saved (USD)</span>
+          <strong class="projection-value accent-text">{{ formatCost(projections.yearlyCost) }}</strong>
           <span class="tile-subtitle">{{ projections.yearlyTokens.toLocaleString() }} tokens / year</span>
         </div>
         <div class="projection-tile">
           <span class="tile-label">Monthly CO&#x2082; Avoided</span>
-          <strong class="projection-value primary-text">{{ formatDynamic(projections.monthlyCo2Kg) }} kg</strong>
-          <span class="tile-subtitle">{{ formatDynamic(projections.monthlyKwh) }} kWh avoided</span>
+          <strong class="projection-value primary-text">{{ formatCo2(projections.monthlyCo2Kg) }}</strong>
+          <span class="tile-subtitle">{{ formatEnergy(projections.monthlyKwh) }} avoided</span>
         </div>
         <div class="projection-tile">
           <span class="tile-label">Yearly Tree Equivalent</span>
-          <strong class="projection-value tree-text">&#x1F333; {{ formatDynamic(projections.yearlyTrees) }}</strong>
-          <span class="tile-subtitle">mature trees' CO&#x2082; absorption</span>
+          <strong class="projection-value tree-text">&#x1F333; {{ formatTree(projections.yearlyTrees) }}</strong>
+          <span class="tile-subtitle">1 tree &#x2248; 22 kg CO&#x2082;/year</span>
         </div>
       </div>
     </section>
@@ -109,24 +111,24 @@
       </div>
       <div class="savings-grid">
         <div class="savings-tile cost-tile" :class="{ pulse: pulsing }">
-          <span class="tile-label">Cost Saved</span>
-          <strong class="savings-value">${{ formatDynamic(savingsData.costSaved) }}</strong>
-          <span class="tile-subtitle">@ ${{ AVG_COST_PER_1K_TOKENS }}/1K tokens</span>
+          <span class="tile-label">Cost Saved (USD)</span>
+          <strong class="savings-value">{{ formatCost(savingsData.costSaved) }}</strong>
+          <span class="tile-subtitle">@ ${{ AVG_COST_PER_1K_TOKENS }} USD/1K tokens</span>
         </div>
         <div class="savings-tile energy-tile" :class="{ pulse: pulsing }">
           <span class="tile-label">Energy Avoided</span>
-          <strong class="savings-value">{{ formatDynamic(savingsData.kwhAvoided) }} kWh</strong>
-          <span class="tile-subtitle">{{ formatDynamic(savingsData.kgCo2Avoided) }} kg CO&#x2082; not emitted</span>
+          <strong class="savings-value">{{ formatEnergy(savingsData.kwhAvoided) }}</strong>
+          <span class="tile-subtitle">{{ formatCo2(savingsData.kgCo2Avoided) }} CO&#x2082; not emitted</span>
         </div>
         <div class="savings-tile tree-tile" :class="{ pulse: pulsing }">
-          <span class="tile-label">Tree Equivalent</span>
-          <strong class="savings-value">&#x1F333; {{ formatDynamic(savingsData.treeFraction) }}</strong>
-          <span class="tile-subtitle">of a tree's yearly CO&#x2082; absorption</span>
+          <span class="tile-label">CO&#x2082; Absorbed (tree equiv.)</span>
+          <strong class="savings-value">&#x1F333; {{ formatTree(savingsData.treeFraction) }}</strong>
+          <span class="tile-subtitle">1 tree absorbs ~22 kg CO&#x2082;/year</span>
         </div>
         <div class="savings-tile ice-tile" :class="{ pulse: pulsing }">
           <span class="tile-label">Ice Preserved</span>
-          <strong class="savings-value">&#x1F9CA; {{ formatDynamic(savingsData.litresIceSaved) }} L</strong>
-          <span class="tile-subtitle">of ice-melt equivalent avoided</span>
+          <strong class="savings-value">&#x1F9CA; {{ formatIce(savingsData.litresIceSaved) }}</strong>
+          <span class="tile-subtitle">ice-melt equivalent avoided</span>
         </div>
       </div>
     </section>
@@ -227,7 +229,7 @@ const LITRES_ICE_PER_KG_CO2 = 5
 const pulsing = ref(false)
 let pulseTimer: ReturnType<typeof setTimeout> | null = null
 
-// Smart number formatting — dynamic precision based on magnitude
+// Smart number formatting — dynamic precision, never scientific notation
 function formatDynamic(v: number): string {
   if (v === 0) return '0'
   const abs = Math.abs(v)
@@ -236,7 +238,42 @@ function formatDynamic(v: number): string {
   if (abs >= 1) return v.toFixed(3)
   if (abs >= 0.01) return v.toFixed(4)
   if (abs >= 0.0001) return v.toFixed(6)
-  return v.toExponential(2)
+  return v.toFixed(8)
+}
+
+// Unit-adaptive formatters for human-readable display
+function formatCost(v: number): string {
+  if (v === 0) return '$0.00'
+  if (v >= 1) return '$' + v.toFixed(2)
+  const cents = v * 100
+  if (cents >= 1) return cents.toFixed(1) + '¢'
+  if (cents >= 0.01) return cents.toFixed(2) + '¢'
+  return '< 0.01¢'
+}
+function formatEnergy(kwh: number): string {
+  if (kwh === 0) return '0 Wh'
+  if (kwh >= 1) return kwh.toFixed(2) + ' kWh'
+  return (kwh * 1000).toFixed(1) + ' Wh'
+}
+function formatCo2(kg: number): string {
+  if (kg === 0) return '0 g'
+  if (kg >= 1) return kg.toFixed(2) + ' kg'
+  return (kg * 1000).toFixed(1) + ' g'
+}
+function formatTree(fraction: number): string {
+  if (fraction === 0) return '0 g CO\u2082'
+  if (fraction >= 1) return fraction.toFixed(1) + ' trees'
+  // Convert to grams of CO₂ saved: fraction × 22 kg × 1000
+  const gCo2 = fraction * KG_CO2_PER_TREE_YEAR * 1000
+  if (gCo2 >= 1000) return (gCo2 / 1000).toFixed(1) + ' kg CO\u2082'
+  if (gCo2 >= 1) return gCo2.toFixed(1) + ' g CO\u2082'
+  if (gCo2 >= 0.01) return gCo2.toFixed(2) + ' g CO\u2082'
+  return '< 0.01 g CO\u2082'
+}
+function formatIce(litres: number): string {
+  if (litres === 0) return '0 mL'
+  if (litres >= 1) return litres.toFixed(1) + ' L'
+  return (litres * 1000).toFixed(0) + ' mL'
 }
 
 const savingsData = computed(() => {
@@ -285,7 +322,7 @@ const lastImpact = computed(() => {
   const saved = Math.max(0, raw - compiled)
   return {
     tokensSaved: saved,
-    costSaved: formatDynamic((saved / 1000) * AVG_COST_PER_1K_TOKENS),
+    costSaved: formatCost((saved / 1000) * AVG_COST_PER_1K_TOKENS),
     intent: lr.intent ?? 'unknown',
     provider: lr.routed_provider?.replace(/^ollama-|^openrouter-/, '') ?? '—',
   }
@@ -415,12 +452,15 @@ const intentRows = computed(() => {
 
 /* Savings Bar */
 .savings-bar-wrap { padding: 16px 20px; margin-bottom: 20px; }
-.savings-bar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.savings-bar-title { font-weight: 600; font-size: 0.9rem; flex: 1; }
-.savings-bar-amounts { font-size: 0.88rem; color: var(--muted); }
-.savings-bar-sep { margin: 0 4px; }
-.savings-bar-note { font-size: 0.78rem; margin-top: 6px; display: block; }
-.savings-track { height: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); overflow: hidden; margin-bottom: 8px; }
+.savings-bar-compact { padding: 10px 16px; margin-bottom: 14px; }
+.savings-bar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.savings-bar-title { font-weight: 600; font-size: 0.82rem; flex: 1; }
+.savings-bar-amounts { font-size: 0.8rem; color: var(--muted); }
+.savings-bar-sep { margin: 0 3px; }
+.savings-bar-inline { display: flex; align-items: center; gap: 12px; }
+.savings-bar-inline .savings-track { flex: 1; }
+.savings-bar-note { font-size: 0.72rem; margin-top: 4px; display: block; }
+.savings-track { height: 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
 .savings-fill { height: 100%; border-radius: 6px; background: var(--accent, #2cffb3); transition: width 0.5s ease; }
 
 /* Last Request Impact */
