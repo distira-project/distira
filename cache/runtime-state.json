@@ -1,18 +1,16 @@
 {
   "snapshot": {
-    "ts": 1773535490,
-    "total_requests": 98,
-    "raw_tokens": 3253,
-    "compiled_tokens": 2405,
-    "memory_reused_tokens": 398,
-    "efficiency_score": 56.068245,
-    "local_ratio": 38.77551,
+    "ts": 1773535744,
+    "total_requests": 100,
+    "raw_tokens": 3283,
+    "compiled_tokens": 2441,
+    "memory_reused_tokens": 411,
+    "efficiency_score": 55.647274,
+    "local_ratio": 39.0,
     "cache_hits": 5,
-    "cache_misses": 93,
+    "cache_misses": 95,
     "cache_saved_tokens": 0,
     "history_raw": [
-      2550,
-      2559,
       2567,
       2572,
       2581,
@@ -34,11 +32,11 @@
       3194,
       3207,
       3231,
-      3253
+      3253,
+      3273,
+      3283
     ],
     "history_compiled": [
-      1835,
-      1847,
       1858,
       1868,
       1880,
@@ -60,11 +58,11 @@
       2328,
       2347,
       2377,
-      2405
+      2405,
+      2428,
+      2441
     ],
     "history_reused": [
-      174,
-      176,
       178,
       180,
       183,
@@ -86,7 +84,9 @@
       373,
       380,
       390,
-      398
+      398,
+      408,
+      411
     ],
     "history_hour_epochs": [
       1773450000,
@@ -138,7 +138,7 @@
       454,
       211,
       628,
-      295
+      325
     ],
     "history_hour_compiled": [
       43,
@@ -164,7 +164,7 @@
       320,
       154,
       521,
-      300
+      336
     ],
     "history_hour_reused": [
       0,
@@ -190,10 +190,10 @@
       25,
       58,
       185,
-      113
+      126
     ],
-    "routes_local": 38,
-    "routes_cloud": 57,
+    "routes_local": 39,
+    "routes_cloud": 58,
     "routes_midtier": 3,
     "intent_stats": {
       "summarize": {
@@ -202,14 +202,14 @@
         "compiled_tokens": 45
       },
       "general": {
-        "requests": 57,
-        "raw_tokens": 1986,
-        "compiled_tokens": 1319
+        "requests": 58,
+        "raw_tokens": 1996,
+        "compiled_tokens": 1332
       },
       "debug": {
-        "requests": 32,
-        "raw_tokens": 1149,
-        "compiled_tokens": 937
+        "requests": 33,
+        "raw_tokens": 1169,
+        "compiled_tokens": 960
       },
       "review": {
         "requests": 4,
@@ -226,12 +226,12 @@
       "mistral:7b-instruct@ollama-mistral-7b-instruct": {
         "model": "mistral:7b-instruct",
         "provider": "ollama-mistral-7b-instruct",
-        "requests": 32,
-        "raw_tokens": 1149,
-        "compiled_tokens": 937,
-        "memory_reused_tokens": 241,
-        "efficiency_score": 48.45083,
-        "sovereign_requests": 32,
+        "requests": 33,
+        "raw_tokens": 1169,
+        "compiled_tokens": 960,
+        "memory_reused_tokens": 251,
+        "efficiency_score": 47.87853,
+        "sovereign_requests": 33,
         "non_sovereign_requests": 0,
         "sovereign_ratio": 100.0,
         "avg_latency_ms": 0.0,
@@ -271,13 +271,13 @@
       "stepfun/step-3.5-flash:free@openrouter-step-3.5-flash-cloud": {
         "model": "stepfun/step-3.5-flash:free",
         "provider": "openrouter-step-3.5-flash-cloud",
-        "requests": 57,
-        "raw_tokens": 1986,
-        "compiled_tokens": 1319,
-        "memory_reused_tokens": 130,
-        "efficiency_score": 63.585094,
+        "requests": 58,
+        "raw_tokens": 1996,
+        "compiled_tokens": 1332,
+        "memory_reused_tokens": 133,
+        "efficiency_score": 63.266533,
         "sovereign_requests": 0,
-        "non_sovereign_requests": 57,
+        "non_sovereign_requests": 58,
         "sovereign_ratio": 0.0,
         "avg_latency_ms": 0.0,
         "latency_sum_ms": 0.0,
@@ -317,8 +317,8 @@
         "client_app": "VS Code Copilot Chat",
         "upstream_provider": "GitHub Copilot",
         "upstream_model": "Claude Opus 4.6",
-        "requests": 16,
-        "last_seen_ts": 1773535490
+        "requests": 18,
+        "last_seen_ts": 1773535744
       }
     },
     "last_request": {
@@ -328,17 +328,17 @@
       "tenant_id": "default-tenant",
       "project_id": "distira-platform",
       "policy_pack": "baseline",
-      "routed_provider": "ollama-mistral-7b-instruct",
-      "routed_model": "mistral:7b-instruct",
-      "intent": "debug",
+      "routed_provider": "openrouter-step-3.5-flash-cloud",
+      "routed_model": "stepfun/step-3.5-flash:free",
+      "intent": "general",
       "semantic_cache_hit": false,
-      "semantic_fingerprint": "13440456012360568813",
+      "semantic_fingerprint": "1727267593924206006",
       "cache_hit": false,
       "sensitive": false,
-      "ts": 1773535490,
+      "ts": 1773535744,
       "cost_usd": 0.0,
-      "raw_tokens": 22,
-      "compiled_tokens": 28,
+      "raw_tokens": 10,
+      "compiled_tokens": 13,
       "tokens_saved": 0
     },
     "request_history": [
@@ -2301,12 +2301,52 @@
         "raw_tokens": 22,
         "compiled_tokens": 28,
         "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Opus 4.6",
+        "tenant_id": "default-tenant",
+        "project_id": "distira-platform",
+        "policy_pack": "baseline",
+        "routed_provider": "ollama-mistral-7b-instruct",
+        "routed_model": "mistral:7b-instruct",
+        "intent": "debug",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "10797476244919711042",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773535585,
+        "cost_usd": 0.0,
+        "raw_tokens": 20,
+        "compiled_tokens": 23,
+        "tokens_saved": 0
+      },
+      {
+        "client_app": "VS Code Copilot Chat",
+        "upstream_provider": "GitHub Copilot",
+        "upstream_model": "Claude Opus 4.6",
+        "tenant_id": "default-tenant",
+        "project_id": "distira-platform",
+        "policy_pack": "baseline",
+        "routed_provider": "openrouter-step-3.5-flash-cloud",
+        "routed_model": "stepfun/step-3.5-flash:free",
+        "intent": "general",
+        "semantic_cache_hit": false,
+        "semantic_fingerprint": "1727267593924206006",
+        "cache_hit": false,
+        "sensitive": false,
+        "ts": 1773535744,
+        "cost_usd": 0.0,
+        "raw_tokens": 10,
+        "compiled_tokens": 13,
+        "tokens_saved": 0
       }
     ],
     "session_cost_usd": 0.0,
     "last_request_cost_usd": 0.0,
     "stable_blocks": 28,
-    "context_reuse_ratio_pct": 12.234859,
+    "context_reuse_ratio_pct": 12.519037,
     "session_budget_usd": 0.0
   },
   "sem_cache_entries": [
@@ -2851,6 +2891,15 @@
       "created_at": 1773535066
     },
     {
+      "fingerprint": 1727267593924206006,
+      "intent": "general",
+      "raw_tokens_estimate": 10,
+      "compiled_tokens_estimate": 13,
+      "summary": "Intent: general. Reduced estimated context from 10 to 13 tokens and trimmed low-signal context while preserving the main request.",
+      "compiled_context": "[k:general]|Use favicon ...",
+      "created_at": 1773535744
+    },
+    {
       "fingerprint": 15753786166317833697,
       "intent": "general",
       "raw_tokens_estimate": 50,
@@ -3076,6 +3125,15 @@
       "created_at": 1773526541
     },
     {
+      "fingerprint": 10797476244919711042,
+      "intent": "debug",
+      "raw_tokens_estimate": 20,
+      "compiled_tokens_estimate": 23,
+      "summary": "Intent: debug. Reduced estimated context from 20 to 23 tokens and trimmed repeated trace noise and preserved failure-focused lines.",
+      "compiled_context": "[k:debug]|Fix favicon not showing in dashboard - check index.html ...",
+      "created_at": 1773535585
+    },
+    {
       "fingerprint": 12638352127299873646,
       "intent": "general",
       "raw_tokens_estimate": 1,
@@ -3179,169 +3237,169 @@
   "context_blocks": [
     {
       "id": "12835899940023602922",
-      "stability": 0.31119293,
+      "stability": 0.2633937,
       "content": "[k:debug]|Fix spacing and margins between dashboard sections/tables across all Vue views ...",
       "intent": "debug"
     },
     {
       "id": "15540758157352734183",
-      "stability": 0.55784667,
+      "stability": 0.47216144,
       "content": "[k:general]|Make ...",
       "intent": "general"
     },
     {
       "id": "1170231593629826925",
-      "stability": 0.1597101,
+      "stability": 0.13517863,
       "content": "[k:review]|diff --git a/app.rs b/app.rs @@ -15 +15 @@ - old",
       "intent": "review"
     },
     {
       "id": "4143741196462168471",
-      "stability": 0.6590816,
+      "stability": 0.55784667,
       "content": "[k:general]|Remove X-axis labels from TvChart in OverviewView (timestamps ...",
       "intent": "general"
     },
     {
       "id": "498800550442627639",
-      "stability": 0.17359793,
+      "stability": 0.14693329,
       "content": "[k:general]|optimise ...",
       "intent": "general"
     },
     {
-      "id": "5079875529715615056",
-      "stability": 0.105261974,
-      "content": "[k:codegen]|write a ...",
-      "intent": "codegen"
-    },
-    {
       "id": "15234480775163776683",
-      "stability": 0.12436434,
+      "stability": 0.105261974,
       "content": "[k:review]|amÃ©liore ce code pour le ...",
       "intent": "review"
     },
     {
       "id": "4995726325512121937",
-      "stability": 0.33825317,
+      "stability": 0.2862975,
       "content": "[k:debug]|Fix three dashboard issues: (1) BenchmarksView Token Reduction by Intent only shows general+debug - feed from live intentStats, (2) FlowView detail cards have hardcoded ...",
       "intent": "debug"
     },
     {
+      "id": "1727267593924206006",
+      "stability": 1.0,
+      "content": "[k:general]|Use favicon ...",
+      "intent": "general"
+    },
+    {
       "id": "12895423068445960273",
-      "stability": 0.6063551,
+      "stability": 0.51321894,
       "content": "[k:debug]|Fix overflowing chart numbers, merge both Token Trends (24h ...",
       "intent": "debug"
     },
     {
+      "id": "10797476244919711042",
+      "stability": 0.92,
+      "content": "[k:debug]|Fix favicon not showing in dashboard - check index.html ...",
+      "intent": "debug"
+    },
+    {
       "id": "174982310014104257",
-      "stability": 0.1886934,
+      "stability": 0.1597101,
       "content": "[k:summarize]|can ...",
       "intent": "summarize"
     },
     {
       "id": "7902165198197839021",
-      "stability": 0.2633937,
+      "stability": 0.22293644,
       "content": "[k:general]|Resume V10.5 - complete the remaining steps: Vue ...",
       "intent": "general"
     },
     {
       "id": "13440456012360568813",
-      "stability": 1.0,
+      "stability": 0.8464,
       "content": "[k:debug]|Fix cargo fmt formatting in compiler/src/lib.rs and core/src/main.rs",
       "intent": "debug"
     },
     {
       "id": "9727199971999036089",
-      "stability": 0.47216144,
+      "stability": 0.39963746,
       "content": "[k:debug]|V10.8: 1) Move Audit KPI cards (tokens saved, requests on-prem) to Savings page 2) Simplify Ice Preserved animation to emoji style 3) ...",
       "intent": "debug"
     },
     {
       "id": "13487631492852359961",
-      "stability": 0.8464,
+      "stability": 0.716393,
       "content": "[k:debug]|Fix README.md: missing logo image and ...",
       "intent": "debug"
     },
     {
       "id": "10166406613266058702",
-      "stability": 0.716393,
+      "stability": 0.6063551,
       "content": "[k:debug]|Fix TvChart tooltip: restore hover values and # labels ...",
       "intent": "debug"
     },
     {
       "id": "3161690612879142121",
-      "stability": 0.43438855,
+      "stability": 0.36766648,
       "content": "[k:debug]|V10.8: 1) Move Audit KPI cards (tokens saved, requests on-prem) to Savings page. 2) Add RCTIA prompt structuring to ...",
       "intent": "debug"
     },
     {
-      "id": "9203258799588138172",
-      "stability": 0.11441519,
-      "content": "[k:debug]|fix ...",
-      "intent": "debug"
-    },
-    {
       "id": "7780796214675351978",
-      "stability": 0.51321894,
+      "stability": 0.43438855,
       "content": "[k:debug]|Fix git AUTO_MERGE.lock ...",
       "intent": "debug"
     },
     {
       "id": "5897848742684834700",
-      "stability": 0.13517863,
+      "stability": 0.11441519,
       "content": "[k:review]|optimize ...",
       "intent": "review"
     },
     {
       "id": "7677724919446320640",
-      "stability": 0.92,
+      "stability": 0.778688,
       "content": "[k:debug]|Fix clippy error: if_same_then_else on severity in core/src/main.rs line 2095",
       "intent": "debug"
     },
     {
       "id": "3983946655938271944",
-      "stability": 0.20510152,
+      "stability": 0.17359793,
       "content": "[k:review]|optimize this ...",
       "intent": "review"
     },
     {
       "id": "5921332943951817021",
-      "stability": 0.2423222,
+      "stability": 0.20510152,
       "content": "[k:general]|Optimization Suggestions panel: always show suggestions on page ...",
       "intent": "general"
     },
     {
       "id": "6972119353704504748",
-      "stability": 0.778688,
+      "stability": 0.6590816,
       "content": "[k:general]|End ...",
       "intent": "general"
     },
     {
       "id": "12127443344978287439",
-      "stability": 0.2862975,
+      "stability": 0.2423222,
       "content": "[k:general]|V10.6: Remove cost column from AuditView (security audit only). Add token savings cost calculator to OverviewView using ...",
       "intent": "general"
     },
     {
       "id": "17661830380011668280",
-      "stability": 0.22293644,
+      "stability": 0.1886934,
       "content": "[k:debug]|i have a segfault ...",
       "intent": "debug"
     },
     {
       "id": "18085626900750217281",
-      "stability": 0.39963746,
+      "stability": 0.33825317,
       "content": "[k:debug]|V10.7 implementation: create SavingsView page, fix ice cube visual, fix ...",
       "intent": "debug"
     },
     {
       "id": "3961151378703780321",
-      "stability": 0.14693329,
+      "stability": 0.12436434,
       "content": "[k:summarize]|summarize ...",
       "intent": "summarize"
     },
     {
       "id": "16631386739533951127",
-      "stability": 0.36766648,
+      "stability": 0.31119293,
       "content": "[k:debug]|V10.7: Fix session cost budget to show estimated savings from tokens saved. Fix ice cube rendering - replace black cube with translucent glowing ice crystal SVG/CSS gradient. ...",
       "intent": "debug"
     }
@@ -3383,9 +3441,9 @@
       0
     ],
     "1773532800": [
-      295,
-      300,
-      113
+      325,
+      336,
+      126
     ],
     "1773460800": [
       372,
