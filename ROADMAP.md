@@ -481,6 +481,7 @@ Requesting the LLM to be concise in plain language (no emojis, no markdown decor
 - `build_full_snapshot()` injects `session_budget_usd` into every SSE and REST metrics snapshot.
 - Dashboard store: `sessionBudgetUsd` reactive ref bound via `applySnapshot`.
 - **OverviewView**: Session Cost Budget utilisation bar — shows current cost / budget with colour-coded fill (green/amber/red) and percentage. Hidden when budget is `0` (disabled)., `cost_usd`.
+
 ### V10.6 — Savings & Environmental Impact Dashboard + Audit Cleanup
 
 **Status:** Delivered (VERSION 10.6.0).

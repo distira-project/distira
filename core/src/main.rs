@@ -2092,7 +2092,7 @@ async fn get_suggestions(State(state): State<SharedState>) -> Json<serde_json::V
     let total_cache = snapshot.cache_hits + snapshot.cache_misses;
     if total_cache > 0 {
         let hit_pct = (snapshot.cache_hits as f64 / total_cache as f64 * 100.0).round() as u64;
-        let severity = if hit_pct >= 30 { "info" } else { "info" };
+        let severity = if hit_pct >= 30 { "info" } else { "warning" };
         suggestions.push(json!({
             "severity": severity,
             "code": "cache_performance",
