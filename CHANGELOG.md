@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Concrete upstream provider normalization** — Generic `GitHub Copilot` provider labels are now normalized to the actual model vendor when the model is known (`Claude` → `Anthropic`, `GPT/Codex` → `OpenAI`), preventing the current-selection UI from showing the client brand instead of the real provider.
 - **Upstream model stale detection (Overview/Audit)** — MCP upstream metadata resolution now prioritizes per-request signals (`upstreamModel`, `model`, MCP `_meta`, dynamic resolver) over persisted runtime context, and auto-syncs runtime client context when fresher metadata is seen. Prevents stale values like fixed Claude labels when the active client model changed.
 - **Hidden MCP metadata detection** — MCP upstream detection now scans a much wider set of metadata paths and values for model/provider/client signals (including non-standard keys like selected/active/session model fields), improving automatic discovery when VS Code or Copilot emits undocumented metadata.
+- **VS Code poller drift repair** — The background `state.vscdb` poller now re-syncs `/v1/runtime/client-context` whenever the backend drifts away from the currently selected VS Code model, even if the selected raw model ID itself has not changed. Prevents fallback reversion to stale values like `Claude Opus 4.6` after a correct detection.
 
 ### Added
 - **Transparent directive templates (auto-selected)** — DISTIRA now chooses internal response templates automatically from intent + prompt signals (e.g. debug stack traces, security reviews, codegen patch requests). No user action or prompt formatting required.
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **RCTIA → RCT2I rename** — Renamed the prompt restructuring framework from RCTIA (Role/Context/Tasks/Instructions/Amélioration) to RCT2I (Role/Context/Tasks/Instructions/Improvement). All Rust source, dashboard views, metrics store, MCP server fields, docs, changelog, and roadmap updated. File `rctia.rs` → `rct2i.rs`. JSON API fields `rctia_applied` / `rctia_sections` → `rct2i_applied` / `rct2i_sections`. Section marker `[A]` → `[I]`.
+- **Community and governance docs refreshed** — `SECURITY.md`, `GOVERNANCE.md`, `CONTRIBUTING.md`, and `CODE_OF_CONDUCT.md` now reflect the current 10.18.x runtime, MCP-backed contributor workflow, upstream lineage and observability surfaces, and the correct separation between security disclosure and conduct reporting.
 
 ## [10.16.0] — Advanced Compression & Commvault-Style Deduplication
 

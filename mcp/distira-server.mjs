@@ -615,9 +615,8 @@ let _lastPolledModelId = null;
 setInterval(async () => {
   try {
     const rawId = readVSCodeCurrentModel();
-    if (!rawId || rawId === _lastPolledModelId) return;
+    if (!rawId) return;
 
-    _lastPolledModelId = rawId;
     const parsed = parseVSCodeModelId(rawId);
     if (!parsed.model) return;
 
@@ -628,6 +627,14 @@ setInterval(async () => {
       resolvedProvider === "GitHub Copilot" && inferred && inferred !== "GitHub Copilot"
         ? inferred
         : resolvedProvider;
+
+    const backendMatchesModel = backendContext.upstreamModel === parsed.model;
+    const backendMatchesProvider = backendContext.upstreamProvider === normalizedProvider;
+    if (rawId === _lastPolledModelId && backendMatchesModel && backendMatchesProvider) {
+      return;
+    }
+
+    _lastPolledModelId = rawId;
 
     maybeSyncRuntimeClientContext(
       {
